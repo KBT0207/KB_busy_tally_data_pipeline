@@ -1,29 +1,30 @@
-import unittest
-from unittest.mock import MagicMock, patch
-from busy import rep1
+import psutil
+import pytest
+from utils.busy_utils import is_process_running
 
-class TestStartBusy(unittest.TestCase):
+# Define fixtures if necessary
+@pytest.fixture
+def mock_process_iter(monkeypatch):
+    def mock_iter():
+        return [
+            psutil.Process(pid=100, name='Process1'),
+            psutil.Process(pid=101, name='Process2'),
+            psutil.Process(pid=102, name='Process3')
+        ]
+    monkeypatch.setattr(psutil, 'process_iter', mock_iter)
 
-    @patch('rep1.pg')
-    #@patch('rep1.time.sleep')
-    def test_start_busy(self, mock_pg):
-        # Mocking the return values and behaviors of pyautogui functions
-        mock_pg.locateCenterOnScreen.return_value = (100, 100)
+# Test cases
+def test_process_running(mock_process_iter):
+    assert is_process_running("Process2") == True
 
-        # Call the function
-        rep1.start_busy()
+def test_process_not_running(mock_process_iter):
+    assert is_process_running("NonexistentProcess") == False
 
-        # Assertions
-        mock_pg.hotkey.assert_any_call("win", "r")
-        mock_pg.typewrite.assert_any_call("mstsc")
-        mock_pg.press.assert_any_call("enter")
-        mock_pg.typewrite.assert_any_call("192.168.0.233:7217")
-        mock_pg.press.assert_any_call("enter")
-        mock_pg.typewrite.assert_any_call("GA@ur0107$")
-        mock_pg.click.assert_called_with((100, 100))
-        mock_pg.hotkey.assert_any_call("win", "d")
-        mock_pg.doubleClick.assert_called_with((100, 100), duration=0.3)
-        #mock_time_sleep.assert_any_call(2)
+def test_process_running_multiple(mock_process_iter):
+    assert is_process_running("Process1") == True
 
-if __name__ == '__main__':
-    unittest.main()
+def test_process_not_running_empty_list(monkeypatch):
+    def mock_iter():
+        return []
+    monkeypatch.setattr(psutil, 'process_iter', mock_iter)
+    assert is_process_running("NonexistentProcess") == False
