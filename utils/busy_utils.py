@@ -91,7 +91,12 @@ def open_busy() -> None:
 
 
 
-def company_selection(comp_code):
+def company_selection(comp_code:str):
+    """Selected the company in Busy
+
+    Args:
+        comp_code (str): Busy Company Code
+    """
     pg.press("enter")
     time.sleep(0.5)
     pg.typewrite(comp_code)
@@ -103,7 +108,15 @@ def company_selection(comp_code):
 
 
 
-def busy_login(username, password):    #implement logging and end script if incorrect user/pass [logging required here]
+def busy_login(username:str, password:str):    #implement logging and end script if incorrect user/pass [logging required here]
+    """Function starts after a company is selected and then logs into it 
+    using the provided credentials 
+    If either the username of password is found incorrect it closes the Busy and then the RDC
+       
+    Args:
+        username (str): Username for the Busy
+        password (str): Password for the Busy
+    """
     pg.write(username, interval= 0.3)
     time.sleep(0.4)
     pg.press("enter")
@@ -122,7 +135,7 @@ def busy_login(username, password):    #implement logging and end script if inco
 
         close_rdc()
     except:
-        pg.write(password)
+        pg.write(password, interval= 0.3)
         time.sleep(1)
         pg.press("enter")
         try:
