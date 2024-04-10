@@ -3,9 +3,12 @@ import time
 from utils import busy_utils
 import logging
 import os
+from logging_config import LOGGING_CONFIG 
+
+logging.config.dictConfig(LOGGING_CONFIG)
+logger = logging.getLogger("rep1")
 
 pg.PAUSE = 0.8
-
 
 
 def preparing_envs():
@@ -32,4 +35,13 @@ def report_selection():
 
 
 
-
+def test_1():
+    pg.hotkey("win", "d")
+    try:
+        new = pg.locateOnScreen('busy/images/delete_new_folder.png', confidence=0.9)
+        pg.click(new, duration=0.5)
+        logger.info("Image Found")
+    except pg.ImageNotFoundException as e:
+        logger.error("Image not Abort asap")
+    finally:
+        print("Testing Logs")
