@@ -37,19 +37,24 @@ def start_rdc(password:str) -> None:            #modify so that it takes passwor
         pg.hotkey("win", "r")
         pg.typewrite("mstsc")
         pg.press("enter")
+        find_img('busy/images/busy_connect.png')
         pg.typewrite("192.168.0.233:7217")
         pg.press("enter")
-        time.sleep(2)
+        find_img("busy/images/password_ok.png")
+        time.sleep(0.3)
         pg.typewrite(password)
-        time.sleep(2)
-        ok = pg.locateCenterOnScreen(image="busy/images/password_ok.png", confidence= 0.85)
-        pg.click(ok)
-        time.sleep(1)
+        pg.click()
+        find_img('busy/images/rdc_desktop.png')
+        time.sleep(0.5)
         pg.hotkey("win", 'up')
+        time.sleep(0.3)
+        pg.hotkey("win", "d")
     else:
         rdc = pg.locateCenterOnScreen('busy/images/rdc.png', confidence=0.9)
         pg.click(rdc)
         pg.hotkey("win", 'up')
+        time.sleep(0.3)
+        pg.hotkey('win', 'd')
 
 
 
@@ -69,8 +74,6 @@ def close_rdc() -> None:
 
 
 def open_busy() -> None:
-    time.sleep(2)
-    pg.hotkey("win", "d")
     try:
         busy = pg.locateCenterOnScreen(image="busy/images/busy_desktop_icon.png",
                                        confidence=0.8)
@@ -84,8 +87,9 @@ def open_busy() -> None:
         try:
             location = pg.locateOnScreen('busy/images/open_company.png', confidence= 0.9)
         except pg.ImageNotFoundException as e:
-            find_img('busy/images/busy_startup_prompt.png')
-            pg.click()
+            #find_img('busy/images/busy_startup_prompt.png')
+            pg.press('enter', interval=0.4)
+            time.sleep(0.5)
     pg.moveTo(location,duration=0.1)
 
 
@@ -117,10 +121,10 @@ def busy_login(username:str, password:str):    #implement logging and end script
         username (str): Username for the Busy
         password (str): Password for the Busy
     """
+    find_img('busy/images/busy_username.png')
     pg.write(username, interval= 0.3)
-    time.sleep(0.4)
     pg.press("enter")
-    time.sleep(1)
+    time.sleep(0.3)
     try:
         pg.locateCenterOnScreen('busy/images/incorrect_username.png', confidence=0.9)
         time.sleep(0.5)
@@ -136,7 +140,7 @@ def busy_login(username:str, password:str):    #implement logging and end script
         close_rdc()
     except:
         pg.write(password, interval= 0.3)
-        time.sleep(1)
+        time.sleep(0.4)
         pg.press("enter")
         try:
             pg.locateCenterOnScreen('busy/images/incorrect_password.png', confidence=0.9)
@@ -152,8 +156,10 @@ def busy_login(username:str, password:str):    #implement logging and end script
             close_rdc()
         except:
             pg.press("enter")
-            time.sleep(3)
-        
+            find_img('busy/images/busy_loggedin.png')
+            
+ 
+       
 
 
 
