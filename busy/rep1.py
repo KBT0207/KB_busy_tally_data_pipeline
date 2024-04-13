@@ -7,6 +7,7 @@ from logging_config import LOGGING_CONFIG
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 
+
 load_dotenv()
 
 logging.config.dictConfig(LOGGING_CONFIG)
@@ -14,15 +15,6 @@ logger = logging.getLogger("rep1")
 
 pg.PAUSE = 0.8
 
-
-
-def preparing_envs():
-    busy_utils.start_rdc(password= os.getenv('BUSY_RDC_PASSWORD'))
-    time.sleep(2)
-    busy_utils.open_busy()
-    busy_utils.company_selection(comp_code= 'COMP0005')
-    busy_utils.busy_login(username= os.getenv('BUSY_USERNAME') , password= os.getenv('BUSY_PASSWORD'))
-    
 
 
 def select_transaction():
@@ -36,7 +28,6 @@ def select_transaction():
                 pg.locateOnScreen('busy/images/busy_sel_transactions.png', confidence= 0.9)
             except Exception:
                 pass
-
 
 
 
@@ -68,15 +59,18 @@ def sales_list_format(standard_format, start_date, end_date):
     pg.typewrite(standard_format)     #format name
     pg.press('enter')
 
-    pg.typewrite("all")               #select branch
-    pg.press('up')
+    pg.typewrite("a")
+    pg.press("backspace")               #select branch
+    time.sleep(0.3)
     pg.press('enter')
 
-    pg.typewrite("all")               #voucher series
-    pg.press('up')
+    pg.typewrite("a")
+    pg.press("backspace")              #voucher series
+    time.sleep(0.3)
     pg.press('enter')
 
     pg.typewrite("all")               #salesman range
+    time.sleep(0.3)
     pg.press('enter')
 
     pg.typewrite(start_date)          #start date
@@ -113,40 +107,21 @@ def sales_list_format(standard_format, start_date, end_date):
 
 
 
-def export_format(save_location, filename):
-    file_location = os.path.join(save_location, filename)
-    busy_utils.find_img('busy/images/busy_report_list.png')
-    time.sleep(0.3)
-    pg.moveTo(150, 150,duration=0.3)
-    time.sleep(1)
-    pg.keyDown('alt')
-    pg.press('e')
-    pg.keyUp('alt')
-    
-    busy_utils.find_img('busy/images/busy_export_format.png')
-
-    pg.typewrite('micros')           #data format 
-    pg.press('enter')
-
-    pg.typewrite(file_location, interval=0.3)           #save location and file name 
-    pg.press('enter')
-
-    pg.press('f2')
-
-    busy_utils.find_img('busy/images/busy_openfile_prompt.png')
-    time.sleep(0.3)
-    pg.press('right')
-    pg.press('enter')
-
-
-
 
 def transaction_sales_report_selection():
-    #delete this
-    pg.hotkey('alt', 'tab')
-    pg.hotkey('win', 'up')
+    time.sleep(4)
     select_transaction()
     select_sales_list()
+    
+
+
+def sales_report():
+    busy_utils.preparing_envs(rdc_password= os.getenv('BUSY_RDC_PASSWORD'),
+                              company= 'COMP0005', 
+                              username= os.getenv('BUSY_USERNAME'),
+                              password= os.getenv('BUSY_PASSWORD'))
+    transaction_sales_report_selection()
+
     endate = datetime.today()
     startdate = endate - timedelta(days=0)
 
@@ -155,8 +130,32 @@ def transaction_sales_report_selection():
     sales_list_format(standard_format='new', 
                       start_date= startdate_str, 
                       end_date= endate_str)
+    
+    busy_utils.export_format(report_type = 'sales', company = 'comp0005', 
+                             filename= datetime.today().strftime("%d-%b-%Y"))
+    busy_utils.return_to_busy_home(esc=3)
+    busy_utils.close_rdc()
 
-    export_format(save_location= "C:\\Users\\jovo\\Desktop\\Test_Folder\\COMP0005",
-                  filename= "test2")
 
+
+def local_sales_report():
+    busy_utils.open_busy()
+    busy_utils.company_selection(comp_code='comp0005')
+    busy_utils.busy_login(username= os.getenv('BUSY_USERNAME'),
+                          password= os.getenv('BUSY_PASSWORD'))
+    transaction_sales_report_selection()
+
+    endate = datetime.today()
+    startdate = endate - timedelta(days=1)
+
+    endate_str = endate.strftime("%d-%m-%Y")
+    startdate_str = startdate.strftime("%d-%m-%Y")
+    sales_list_format(standard_format='new', 
+                      start_date= startdate_str, 
+                      end_date= endate_str)
+    
+    busy_utils.export_format(report_type = 'sales', company = 'comp0005', 
+                             filename= datetime.today().strftime("%d-%b-%Y"))
+    busy_utils.return_to_busy_home(esc=3)
+  
 

@@ -1,38 +1,56 @@
 import logging
 import os
-from logging_config import LOGGING_CONFIG 
-from redmail import EmailSender
+
 import schedule
 import time
+from datetime import datetime
 from dotenv import load_dotenv
+import yagmail
+
 
 load_dotenv()
 
-logging.config.dictConfig(LOGGING_CONFIG)
-logger = logging.getLogger("email")
+
+yag = yagmail.SMTP("jovokb@gmail.com", 
+                   os.getenv('SENDER_EMAIL_PASSWORD')) 
+# Adding Content and sending it 
 
 
-# Change these variables with your email settings
-email = EmailSender(host='smtp.google.com',
-                    port='537',
-                    username='s.gaurav@kaybeeexports.com',
-                    password=os.getenv('SENDER_EMAIL_PASSWORD'))
+def email_send(reciever, cc = None, bcc = None, subject=None, contents= None, attachemnts=None):
+    yag.send(to= reciever, 
+             cc= cc ,
+             bcc= bcc, 
+             subject = subject, 
+             contents= contents, 
+             attachments= attachemnts)
+
+                
+
+class YagmailHandler(logging.Handler):
+    def __init__(self, to, subject, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.to = to
+        self.subject = subject
+
+    def emit(self, record):
+        log_entry = self.format(record)
+        #yag = yagmail.SMTP("jovokb@gmail.com", os.getenv('SENDER_EMAIL_PASSWORD')) 
+        yag.send(to=self.to, subject=self.subject, contents=log_entry)
 
 
-receivers_list = ['sharmagaurav4510@gmail.com']
+class YagmailDailyHandler(logging.Handler):
+    def __init__(self, to, subject, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.to = to
+        self.subject = subject
+        self.last_emailed_date = None
 
-# Define a function to send logs via email
-def send_logs_email():
-    email.send(
-        subject="important email",
-        receivers=receivers_list,
-        text="Today's logs",
-    )
-    logging.info("Logs sent via email.")
+    def emit(self, record):
+        log_entry = self.format(record)
+        now = datetime.now()
+        if self.last_emailed_date is None or now.date() != self.last_emailed_date:
+            #yag = yagmail.SMTP("jovokb@gmail.com", os.getenv('SENDER_EMAIL_PASSWORD')) 
+            yag.send(to=self.to, subject=self.subject, contents=log_entry)
+            self.last_emailed_date = now.date()
 
-
-
-def schedule_email_task():
-    # Schedule email sending every day at 8:00 AM
-    schedule.every().day.at("08:00").do(send_logs_email)
 

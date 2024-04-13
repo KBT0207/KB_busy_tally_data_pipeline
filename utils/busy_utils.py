@@ -1,10 +1,12 @@
 import pyautogui as pg
 import time
+from datetime import datetime
 from typing import Union
 from utils import common_utils
 from dotenv import load_dotenv
 
 load_dotenv()
+
 
 
 def find_img(img, conf: Union[float, int] = 0.9 , **args ) -> None:
@@ -74,6 +76,8 @@ def close_rdc() -> None:
 
 
 def open_busy() -> None:
+    pg.hotkey('win', 'd')
+    time.sleep(0.5)
     try:
         busy = pg.locateCenterOnScreen(image="busy/images/busy_desktop_icon.png",
                                        confidence=0.8)
@@ -87,10 +91,9 @@ def open_busy() -> None:
         try:
             location = pg.locateOnScreen('busy/images/open_company.png', confidence= 0.9)
         except pg.ImageNotFoundException as e:
-            #find_img('busy/images/busy_startup_prompt.png')
             pg.press('enter', interval=0.4)
-            time.sleep(0.5)
-    pg.moveTo(location,duration=0.1)
+            time.sleep(1)
+    pg.click(location,duration=0.3)
 
 
 
@@ -101,13 +104,12 @@ def company_selection(comp_code:str):
     Args:
         comp_code (str): Busy Company Code
     """
-    pg.press("enter")
+    find_img('busy/images/select_company.png')
     time.sleep(0.5)
     pg.typewrite(comp_code)
     pg.press('tab')
     pg.press("enter")
-    time.sleep(1)
-
+    
 
 
 
@@ -158,8 +160,69 @@ def busy_login(username:str, password:str):    #implement logging and end script
             pg.press("enter")
             find_img('busy/images/busy_loggedin.png')
             
- 
-       
+
+
+def export_format(report_type:str, company:str, filename):
+    save_location = f"D:\\automated_busy_downloads\{company}\{report_type}\{filename}"
+    find_img('busy/images/busy_report_list.png')
+    time.sleep(0.3)
+    pg.moveTo(150, 150,duration=0.3)
+    time.sleep(1)
+    pg.hotkey('alt', 'e')
+    
+    find_img('busy/images/busy_export_format.png')
+
+    pg.typewrite('micros')           #data format 
+    pg.press('enter')
+
+    #save location and file name
+    pg.typewrite(save_location, interval=0.1)           
+    pg.press('enter')
+
+    pg.press('f2')
+
+    find_img('busy/images/busy_download_prompt.png')
+    time.sleep(0.5)
+    pg.click()
+
+
+
+
+
+def preparing_envs(rdc_password:str , company:str ,username:str, password:str) -> None:
+    start_rdc(rdc_password )
+    time.sleep(2)
+    open_busy()
+    company_selection(comp_code= company)
+    busy_login(username, password)
+           
+
+
+
+def exit_busy():
+    find_img('busy/images/busy_home.png')
+    time.sleep(0.5)
+    location = None
+    while location == None:
+        try:
+            location = pg.locateOnScreen('busy/images/busy_menu_company.png', confidence= 0.9)
+            pg.click(location, duration=0.3)
+            pg.press('enter')
+        except Exception:
+            location = pg.locateOnScreen('busy/images/busy_sel_menu_company.png', confidence= 0.9)
+            pg.press('enter')
+    time.sleep(0.4)
+    pg.press('e')
+    pg.press('enter')
+
+
+
+def return_to_busy_home(esc=3):
+    time.sleep(0.5)
+    for _ in range(1, esc+1):
+        pg.press('esc')
+        time.sleep(1)
+    exit_busy()
 
 
 
