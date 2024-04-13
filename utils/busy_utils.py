@@ -5,7 +5,7 @@ from typing import Union
 from utils import common_utils
 from dotenv import load_dotenv
 import logging
-from logging_config import LOGGING_CONFIG
+from logging_config import logger
 
 load_dotenv()
 
@@ -85,7 +85,7 @@ def open_busy() -> None:
         pg.doubleClick(busy, duration=0.3)
     except pg.ImageNotFoundException as e:
         print("logging here...")
-        #logger.critical(f"Busy Icon not found!: {e}")         
+        logger.critical(f"Busy Icon not found!: {e}")         
     finally:
         time.sleep(3)
     location = None
@@ -96,7 +96,7 @@ def open_busy() -> None:
             pg.press('enter', interval=0.4)
             time.sleep(1)
     pg.click(location,duration=0.3)
-    #logger.info("Busy opened successfully..")
+    logger.info("Busy opened successfully..")
 
 
 

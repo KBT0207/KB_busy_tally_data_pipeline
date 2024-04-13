@@ -3,15 +3,14 @@ import time
 from utils import busy_utils
 import logging
 import os
-from logging_config import LOGGING_CONFIG 
+from logging_config import logger
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 
 
 load_dotenv()
 
-logging.config.dictConfig(LOGGING_CONFIG)
-logger = logging.getLogger('main')
+
 
 
 pg.PAUSE = 0.8
@@ -148,10 +147,9 @@ def local_sales_report():
     try:
         busy_utils.busy_login(username= os.getenv('BUSY_USERNAME'),
                           password= os.getenv('BUSY_PASSWORD'))
-        #logger.info("Logged into Busy successfully...")
+        logger.info("Logged into Busy successfully...")
     except Exception as e:
-        pass
-        #logger.critical(f"Logging into Busy Failed! : {e}")
+        logger.critical(f"Logging into Busy Failed! : {e}")
     
     transaction_sales_report_selection()
 
@@ -165,31 +163,21 @@ def local_sales_report():
         sales_list_format(standard_format='new', 
                         start_date= startdate_str, 
                         end_date= endate_str)
-        #logger.info("Generated data to export successfully...")
+        logger.info("Generated data to export successfully...")
     except Exception as e:
-        pass
-        #logger.critical(f"Data Generation Failed! : {e}")
+        logger.critical(f"Data Generation Failed! : {e}")
 
     try:
         busy_utils.export_format(report_type = 'sales', company = 'comp0005', 
                                 filename= datetime.today().strftime("%d-%b-%Y"))
-        #logger.info("Exported data successfully...")
+        logger.info("Exported data successfully...")
     except Exception as e:
-        pass
-        #logger.critical(f"Exporting Data Failed! : {e}")
+        logger.critical(f"Exporting Data Failed! : {e}")
 
     try:    
         busy_utils.return_to_busy_home(esc=3)
-        #logger.info("Report Generated Successfully and Quit Busy...")
+        logger.info("Report Generated Successfully and Quit Busy...")
     except Exception as e:
-        pass
-        #logger.critical(f"Failed to Quit Busy! : {e}")
+        logger.critical(f"Failed to Quit Busy! : {e}")
 
 
-def test():
-    try:
-        1/0
-        #logger.info("Divided")
-    except ZeroDivisionError as e:
-        print(e)
-        #logger.critical("failed",e) 
