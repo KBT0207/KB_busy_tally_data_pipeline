@@ -1,7 +1,7 @@
 import logging
 import logging.config
 from logging.handlers import TimedRotatingFileHandler
-from utils.email import YagmailDailyHandler  # Import YagmailDailyHandler from email module
+from utils.email import YagmailDailyHandler, YagmailHandler  
 import yagmail
 import os
 
@@ -21,14 +21,14 @@ LOGGING_CONFIG = {
     'handlers': {
         'file_handler': {
             'class': 'logging.handlers.TimedRotatingFileHandler',
-            'filename': 'logs/app.log',
+            'filename': 'logs/main.log',
             'when': 'midnight',
             'interval': 7, 
             'backupCount': 0, 
             'formatter': 'standard'
         },
         'daily_email_handler': {
-            'class': 'utils.email.YagmailDailyHandler',  # Specify correct import path
+            'class': 'utils.email.YagmailDailyHandler',  
             'to': email_recipients,
             'subject': 'Daily Log from Python Application',
             'formatter': 'standard'
@@ -36,9 +36,9 @@ LOGGING_CONFIG = {
         'critical_email_handler': {
             'class': 'logging.handlers.MemoryHandler',
             'target': 'yagmail_handler',
-            'level': 'CRITICAL',  # Only process critical messages
+            'level': 'CRITICAL',  
             'formatter': 'standard',
-            'capacity': 100  # Specify the capacity (number of records to buffer)
+            'capacity': 100  
         },
         'yagmail_handler': {
             'class': 'utils.email.YagmailHandler',
@@ -51,8 +51,11 @@ LOGGING_CONFIG = {
         '': {
             'handlers': ['file_handler', 'daily_email_handler', 'critical_email_handler'],
             'level': 'INFO',
-            'propagate': True
+            'propagate': False
         }
     }
 }
 
+
+logging.config.dictConfig(LOGGING_CONFIG)
+logger = logging.getLogger("main")

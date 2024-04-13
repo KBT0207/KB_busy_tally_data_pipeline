@@ -4,12 +4,13 @@ from datetime import datetime
 from typing import Union
 from utils import common_utils
 from dotenv import load_dotenv
+import logging
+from logging_config import LOGGING_CONFIG
 
 load_dotenv()
 
 
-
-def find_img(img, conf: Union[float, int] = 0.9 , **args ) -> None:
+def find_img(img, conf: Union[float, int] = 0.9 ) -> None:
     """Function will continue to look for the image and will not continue
        until it finds the image.
 
@@ -83,7 +84,8 @@ def open_busy() -> None:
                                        confidence=0.8)
         pg.doubleClick(busy, duration=0.3)
     except pg.ImageNotFoundException as e:
-        print("Busy Icon not found!", e)          # [logging required here]
+        print("logging here...")
+        #logger.critical(f"Busy Icon not found!: {e}")         
     finally:
         time.sleep(3)
     location = None
@@ -94,6 +96,7 @@ def open_busy() -> None:
             pg.press('enter', interval=0.4)
             time.sleep(1)
     pg.click(location,duration=0.3)
+    #logger.info("Busy opened successfully..")
 
 
 

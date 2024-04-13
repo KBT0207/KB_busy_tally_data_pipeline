@@ -11,10 +11,10 @@ from datetime import datetime, timedelta
 load_dotenv()
 
 logging.config.dictConfig(LOGGING_CONFIG)
-logger = logging.getLogger("rep1")
+logger = logging.getLogger('main')
+
 
 pg.PAUSE = 0.8
-
 
 
 def select_transaction():
@@ -127,6 +127,7 @@ def sales_report():
 
     endate_str = endate.strftime("%d-%m-%Y")
     startdate_str = startdate.strftime("%d-%m-%Y")
+    
     sales_list_format(standard_format='new', 
                       start_date= startdate_str, 
                       end_date= endate_str)
@@ -138,24 +139,57 @@ def sales_report():
 
 
 
+
 def local_sales_report():
     busy_utils.open_busy()
+    
     busy_utils.company_selection(comp_code='comp0005')
-    busy_utils.busy_login(username= os.getenv('BUSY_USERNAME'),
+    
+    try:
+        busy_utils.busy_login(username= os.getenv('BUSY_USERNAME'),
                           password= os.getenv('BUSY_PASSWORD'))
+        #logger.info("Logged into Busy successfully...")
+    except Exception as e:
+        pass
+        #logger.critical(f"Logging into Busy Failed! : {e}")
+    
     transaction_sales_report_selection()
 
     endate = datetime.today()
-    startdate = endate - timedelta(days=1)
+    startdate = endate - timedelta(days=0)
 
     endate_str = endate.strftime("%d-%m-%Y")
     startdate_str = startdate.strftime("%d-%m-%Y")
-    sales_list_format(standard_format='new', 
-                      start_date= startdate_str, 
-                      end_date= endate_str)
     
-    busy_utils.export_format(report_type = 'sales', company = 'comp0005', 
-                             filename= datetime.today().strftime("%d-%b-%Y"))
-    busy_utils.return_to_busy_home(esc=3)
-  
+    try:
+        sales_list_format(standard_format='new', 
+                        start_date= startdate_str, 
+                        end_date= endate_str)
+        #logger.info("Generated data to export successfully...")
+    except Exception as e:
+        pass
+        #logger.critical(f"Data Generation Failed! : {e}")
 
+    try:
+        busy_utils.export_format(report_type = 'sales', company = 'comp0005', 
+                                filename= datetime.today().strftime("%d-%b-%Y"))
+        #logger.info("Exported data successfully...")
+    except Exception as e:
+        pass
+        #logger.critical(f"Exporting Data Failed! : {e}")
+
+    try:    
+        busy_utils.return_to_busy_home(esc=3)
+        #logger.info("Report Generated Successfully and Quit Busy...")
+    except Exception as e:
+        pass
+        #logger.critical(f"Failed to Quit Busy! : {e}")
+
+
+def test():
+    try:
+        1/0
+        #logger.info("Divided")
+    except ZeroDivisionError as e:
+        print(e)
+        #logger.critical("failed",e) 
