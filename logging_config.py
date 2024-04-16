@@ -10,9 +10,9 @@ from datetime import datetime
 # Import Yagmail and configure email sender
 yag = yagmail.SMTP('jovokb@gmail.com', os.getenv('SENDER_EMAIL_PASSWORD'))
 
-email_recipients = ['sharmagaurav4510@gmail.com']
+email_recipients = ['s.gaurav@kaybeeexports.com', 'sharmagaurav4510@gmail.com', 'danish@kaybeeexports.com']
 
-today_date = datetime.now().strftime('%Y-%m-%d')
+today_date = datetime.now().strftime('%d-%b-%Y')
 
 # Logging configuration
 LOGGING_CONFIG = {

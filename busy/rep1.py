@@ -6,6 +6,7 @@ import os
 from logging_config import logger
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
+from utils import email
 
 
 load_dotenv()
@@ -24,7 +25,7 @@ def select_transaction():
             pg.click(location)    
         except Exception:
             try:
-                pg.locateOnScreen('busy/images/busy_sel_transactions.png', confidence= 0.9)
+                location = pg.locateOnScreen('busy/images/busy_sel_transactions.png', confidence= 0.9)
             except Exception:
                 pass
 
@@ -50,6 +51,35 @@ def select_sales_list():
                 pg.press("l")
             except:
                 pass
+
+
+
+def select_salesreturn_list():
+    try:
+        sales = pg.locateOnScreen('busy/images/salesreturn.PNG')
+        pg.moveTo(sales)
+        pg.click() 
+        pg.press('l')
+        print("not down")
+    except:
+        try:
+            pg.locateOnScreen('busy/images/sel_salesreturn.png', confidence=0.95)
+            pg.press('enter')
+            time.sleep(0.2)
+            pg.press('l')
+            pg.press("enter")
+            print('selected not down')
+        except:
+            try:
+                down = pg.locateOnScreen('busy/images/down_salesreturn.png',confidence=0.95)
+                pg.click(down)
+                pg.click()
+                time.sleep(0.4)
+                pg.press("l")
+                print("down")
+            except:
+                pass
+
 
 
 
@@ -107,10 +137,10 @@ def sales_list_format(standard_format, start_date, end_date):
 
 
 
-def transaction_sales_report_selection():
-    time.sleep(4)
+def transaction_report_selection(report):
+    time.sleep(10)
     select_transaction()
-    select_sales_list()
+    rep = report()
     
 
 
@@ -119,7 +149,7 @@ def sales_report():
                               company= 'COMP0005', 
                               username= os.getenv('BUSY_USERNAME'),
                               password= os.getenv('BUSY_PASSWORD'))
-    transaction_sales_report_selection()
+    transaction_report_selection()
 
     endate = datetime.today()
     startdate = endate - timedelta(days=0)
@@ -151,10 +181,10 @@ def local_sales_report():
     except Exception as e:
         logger.critical(f"Logging into Busy Failed! : {e}")
     
-    transaction_sales_report_selection()
+    transaction_report_selection(report= select_sales_list)
 
     endate = datetime.today()
-    startdate = endate - timedelta(days=0)
+    startdate = endate - timedelta(days=2)
 
     endate_str = endate.strftime("%d-%m-%Y")
     startdate_str = startdate.strftime("%d-%m-%Y")
@@ -168,7 +198,9 @@ def local_sales_report():
         logger.critical(f"Data Generation Failed! : {e}")
 
     try:
-        busy_utils.export_format(report_type = 'sales', company = 'comp0005', 
+        rep_type = "sales"
+        comp_code = "comp0005"
+        busy_utils.export_format(report_type = rep_type, company = comp_code, 
                                 filename= datetime.today().strftime("%d-%b-%Y"))
         logger.info("Exported data successfully...")
     except Exception as e:
@@ -179,5 +211,21 @@ def local_sales_report():
         logger.info("Report Generated Successfully and Quit Busy...")
     except Exception as e:
         logger.critical(f"Failed to Quit Busy! : {e}")
+
+    time.sleep(5)
+    try:
+        today_date = datetime.today().strftime("%d-%b-%Y")
+        receivers = ['shivprasad@kaybeebio.com', 'danish@kaybeeexports.com']
+        subj = f"{comp_code} {rep_type} data of {endate_str}"
+        attachment_path = rf"D:\automated_busy_downloads\{comp_code}\{rep_type}\{today_date}.xlsx"
+        email.email_send(reciever=receivers, cc = "s.gaurav@kaybeeexports.com", 
+                         subject= subj, 
+                         contents= f"Kindly find the attached {rep_type} data of {comp_code} from {startdate_str} to {endate_str}", 
+                         attachemnts= attachment_path)
+        logger.info("Attachment emailed successfully... ")
+    except Exception as e:
+        logger.critical(f"Failed to email the attachment! : {e}")
+
+
 
 
