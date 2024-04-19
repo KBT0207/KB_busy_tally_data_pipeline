@@ -11,6 +11,8 @@ from datetime import datetime
 yag = yagmail.SMTP('jovokb@gmail.com', os.getenv('SENDER_EMAIL_PASSWORD'))
 
 email_recipients = ['s.gaurav@kaybeeexports.com', 'sharmagaurav4510@gmail.com', 'danish@kaybeeexports.com']
+#email_recipients = ['sharmagaurav4510@gmail.com']
+
 
 today_date = datetime.now().strftime('%d-%b-%Y')
 

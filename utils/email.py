@@ -1,8 +1,7 @@
 import logging
 import os
 import schedule
-import time
-from datetime import datetime
+from datetime import datetime, time
 from dotenv import load_dotenv
 import yagmail
 
@@ -47,9 +46,10 @@ class YagmailDailyHandler(logging.Handler):
     def emit(self, record):
         log_entry = self.format(record)
         now = datetime.now()
-        if self.last_emailed_date is None or now.date() != self.last_emailed_date:
-            #yag = yagmail.SMTP("jovokb@gmail.com", os.getenv('SENDER_EMAIL_PASSWORD')) 
-            yag.send(to=self.to, subject=self.subject, contents=log_entry)
-            self.last_emailed_date = now.date()
+        
+        if now.time() >= time(23, 0) and now.time() <= time(23, 59):
+            if self.last_emailed_date is None or now.date() != self.last_emailed_date:
+                yag.send(to=self.to, subject=self.subject, contents=log_entry)
+                self.last_emailed_date = now.date()
 
 

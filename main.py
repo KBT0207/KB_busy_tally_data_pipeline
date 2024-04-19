@@ -6,8 +6,8 @@ import pyautogui as pg
 
 
 if __name__ == "__main__":
-    #pg.hotkey("alt", "tab")
-    #time.sleep(0.5)
+    # pg.hotkey("alt", "tab")
+    # time.sleep(0.5)
     #rep1.test()
     #rep1.local_sales_report()
 

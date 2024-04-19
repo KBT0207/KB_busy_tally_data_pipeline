@@ -7,6 +7,7 @@ from logging_config import logger
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from utils import email
+import glob
 
 
 load_dotenv()
@@ -62,7 +63,6 @@ def select_salesreturn_list():
         pg.press('down')
         pg.press('down')
         pg.press('enter')
-        print("unsele")
     except:
         try:
             pg.locateOnScreen('busy/images/sel_salesreturn.png', confidence=0.95)
@@ -70,7 +70,6 @@ def select_salesreturn_list():
             time.sleep(0.2)
             pg.press('l')
             pg.press("enter")
-            print("selected")
         except:
             try:
                 down = pg.locateOnScreen('busy/images/down_salesreturn.png', confidence=0.95)
@@ -78,7 +77,6 @@ def select_salesreturn_list():
                 pg.click()
                 time.sleep(0.4)
                 pg.press("l")
-                print("down")
             except:
                 pass
 
@@ -86,7 +84,7 @@ def select_salesreturn_list():
 
 
 def sales_list_format(standard_format, start_date, end_date):
-    busy_utils.find_img('busy/images/busy_list.png')
+    busy_utils.find_img('busy/images/busy_list.png', timeout=20)
     pg.typewrite(standard_format)     #format name
     pg.press('enter')
 
@@ -140,105 +138,104 @@ def sales_list_format(standard_format, start_date, end_date):
 
 
 def transaction_report_selection(report):
-    time.sleep(10)
+    time.sleep(15)
     select_transaction()
     report()
     
 
 
-def sales_report():
-    busy_utils.preparing_envs(rdc_password= os.getenv('BUSY_RDC_PASSWORD'),
-                              company= 'COMP0005', 
-                              username= os.getenv('BUSY_USERNAME'),
-                              password= os.getenv('BUSY_PASSWORD'))
-    transaction_report_selection()
-
-    endate = datetime.today()
-    startdate = endate - timedelta(days=0)
-
-    endate_str = endate.strftime("%d-%m-%Y")
-    startdate_str = startdate.strftime("%d-%m-%Y")
-    
-    sales_list_format(standard_format='new', 
-                      start_date= startdate_str, 
-                      end_date= endate_str)
-    
-    busy_utils.export_format(report_type = 'sales', company = 'comp0005', 
-                             filename= datetime.today().strftime("%d-%b-%Y"))
-    busy_utils.return_to_busy_home(esc=3)
-    busy_utils.close_rdc()
-
-
-
 
 def local_sales_report():
+
+    companies = ['comp0005', 'comp0010', 'comp0011', 'comp0014', 'comp0015' ]
+
     transaction_dict = {'trans_list': [select_sales_list, select_salesreturn_list] ,
                         'reports': ['sales', 'sales_return'] }
 
     busy_utils.open_busy()
     
-    busy_utils.company_selection(comp_code='comp0005')
-    
-    try:
-        busy_utils.busy_login(username= os.getenv('BUSY_USERNAME'),
-                          password= os.getenv('BUSY_PASSWORD'))
-        logger.info("Logged into Busy successfully...")
-    except Exception as e:
-        logger.critical(f"Logging into Busy Failed! : {e}")
-    
-
-    for rep_func, report in zip(transaction_dict['trans_list'], transaction_dict['reports']):
-        transaction_report_selection(report= rep_func)
-
-        endate = datetime.today()
-        startdate = endate - timedelta(days=0)
-
-        endate_str = endate.strftime("%d-%m-%Y")
-        startdate_str = startdate.strftime("%d-%m-%Y")
+    for comp in companies:
+        busy_utils.company_selection(comp_code = comp)
         
         try:
-            sales_list_format(standard_format='new', 
-                            start_date= startdate_str, 
-                            end_date= endate_str)
-            logger.info("Generated data to export successfully...")
+            busy_utils.busy_login(username= os.getenv('BUSY_USERNAME'),
+                            password= os.getenv('BUSY_PASSWORD'))
+            logger.info(f"Logged into Busy of {comp} successfully...")
         except Exception as e:
-            logger.critical(f"Data Generation Failed! : {e}")
+            logger.critical(f"Logging into Busy of {comp} Failed! : {e}")
+        
 
-        try:
-            rep_type = report
-            comp_code = "comp0005"
-            busy_utils.export_format(report_type = rep_type, company = comp_code, 
-                                    filename= datetime.today().strftime("%d-%b-%Y"))
-            logger.info("Exported data successfully...")
-        except Exception as e:
-            logger.critical(f"Exporting Data Failed! : {e}")
+        for rep_func, report in zip(transaction_dict['trans_list'], transaction_dict['reports']):
+            transaction_report_selection(report= rep_func)
+
+            endate = datetime.today()
+            startdate = endate - timedelta(days=2)
+
+            endate_str = endate.strftime("%d-%m-%Y")
+            startdate_str = startdate.strftime("%d-%m-%Y")
+            
+            try:
+                sales_list_format(standard_format='new', 
+                                start_date= startdate_str, 
+                                end_date= endate_str)
+                logger.info(f"Generated data for {comp} and {report} to export successfully...")
+            except Exception as e:
+                logger.critical(f"Data Generation for {comp} and {report} Failed! : {e}")
+
+            try:
+                curr_date = datetime.today().strftime("%d-%b-%Y")
+                busy_utils.export_format(report_type = report, company = comp, 
+                                        filename= f"{comp}_{report}_{curr_date}")
+                logger.info(f"Exported data for {comp} and {report} successfully...")
+            except Exception as e:
+                logger.critical(f"Exporting Data for {comp} and {report} Failed! : {e}")
+
+            try:    
+                busy_utils.return_to_busy_home(esc=3)
+                time.sleep(5)
+
+                logger.info(f"Report Generated for {comp} and {report} successfully and back to busy home...")
+            except Exception as e:
+                logger.critical(f"Failed to go back busy home! : {e}")
 
         try:    
-            busy_utils.return_to_busy_home(esc=3)
-            logger.info("Report Generated Successfully and back to busy home...")
+            busy_utils.change_company()
+            time.sleep(5)
+            pg.press('enter')
+            logger.info(f"Successfully came to company page after {comp} page...")
         except Exception as e:
-            logger.critical(f"Failed to go back busy home! : {e}")
-
-
-    try:    
-        busy_utils.exit_busy()
-        logger.info("Successfully Quit Busy...")
-    except Exception as e:
-        logger.critical(f"Failed to Quit Busy! : {e}")
+            logger.critical(f"Failed to go to company page! : {e}")
 
     time.sleep(2)
-    try:
-        today_date = datetime.today().strftime("%d-%b-%Y")
-        receivers = ['shivprasad@kaybeebio.com', 'danish@kaybeeexports.com', 'sharmagaurav4510@gmail.com']
-        reps = [r for r in transaction_dict['reports']]
-        subj = f"{comp_code} [{', '.join(reps)}] data of {endate_str}"
-        attachment_path = [rf"D:\automated_busy_downloads\{comp_code}\{report}\{today_date}.xlsx" for report in transaction_dict['reports']]
-        email.email_send(reciever=receivers, cc = "s.gaurav@kaybeeexports.com", 
-                         subject= subj, 
-                         contents= f"Kindly find the attached {rep_type} data of {comp_code} from {startdate_str} to {endate_str}", 
-                         attachemnts= attachment_path)
-        logger.info("Attachment emailed successfully... ")
-    except Exception as e:
-        logger.critical(f"Failed to email the attachment! : {e}")
+
+    busy_utils.find_img(img='busy/images/busy_transactions.png', timeout= 300)
+    pg.click()
+    pg.press("e")
+    pg.press('enter')
+    logger.info("Quit Busy Successfully!")
+
+    today_date = datetime.today().strftime("%d-%b-%Y")
+    receivers = ['shivprasad@kaybeebio.com', 'danish@kaybeeexports.com', 'sharmagaurav4510@gmail.com']
+    #receivers = ['sharmagaurav4510@gmail.com']
+    reps = [r for r in transaction_dict['reports']]
+    subj = f"KB Companies [{', '.join(reps)}] data of {endate_str}"
+    attachment_path = glob.glob("D:\\automated_busy_downloads\\" + f"**\\{today_date}*.xlsx", recursive=True)
+    body = f"Kindly find the attached [{', '.join(reps)} data of {companies} from {startdate_str} to {endate_str}"
+    if len(attachment_path) != 0:
+        try:
+            email.email_send(reciever=receivers, cc = "s.gaurav@kaybeeexports.com", 
+                            subject= subj, 
+                            contents= body, 
+                            attachemnts= attachment_path)
+            logger.info("Attachment emailed successfully... ")
+        except Exception as e:
+            logger.critical(f"Failed to email the attachment! : {e}")
+    else:
+        logger.critical("No data exported today")
 
 
+# def test():
+#     pg.hotkey('win', 'd')
+    
+#     busy_utils.company_selection(comp_code= 'comp0005')  
+#     logger.info("Testing...")

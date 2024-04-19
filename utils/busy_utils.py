@@ -10,22 +10,25 @@ from logging_config import logger
 load_dotenv()
 
 
-def find_img(img, conf: Union[float, int] = 0.9 ) -> None:
-    """Function will continue to look for the image and will not continue
-       until it finds the image.
+def find_img(img:str, timeout:int = 10, conf: Union[float, int] = 0.9, gs:bool=False ) -> None:
+    """Function will continue to look for the image for the time given as timeout parameter seconds (default is 10 secs).
 
     Args:
-        img (float, int): The image you want to find.
-        conf (float, optional): Confidence parameter same as found in location methods
-                                in Pyautogui. Defaults to 0.9.
+        img (str): The image you want to find.
+        timeout(int): Amount of seconds it should take to find the image the image 
+                    if None is given then it waits indefinetly. Defaults to 10 seconds
+        conf (float, optional): Confidence parameter same as found in             location methods in Pyautogui. Defaults to 0.9.
+        gs(bool, optional): Grayscale property applied to image or not. Defaults to False 
     """
     location = None
-    while location == None:
+    start_time = time.time()
+    while (location == None) and (timeout is None or (time.time() - start_time) < timeout):
         try:
-            location = pg.locateOnScreen(img, confidence= conf)
+            location = pg.locateOnScreen(img, confidence= conf, grayscale=gs)
         except Exception:
             continue
     pg.moveTo(location,duration=0.1)
+
 
 
 
@@ -84,7 +87,6 @@ def open_busy() -> None:
                                        confidence=0.8)
         pg.doubleClick(busy, duration=0.3)
     except pg.ImageNotFoundException as e:
-        print("logging here...")
         logger.critical(f"Busy Icon not found!: {e}")         
     finally:
         time.sleep(3)
@@ -107,7 +109,7 @@ def company_selection(comp_code:str):
     Args:
         comp_code (str): Busy Company Code
     """
-    find_img('busy/images/select_company.png')
+    find_img('busy/images/select_company.png', timeout= 50)
     time.sleep(0.5)
     pg.typewrite(comp_code)
     pg.press('tab')
@@ -126,7 +128,7 @@ def busy_login(username:str, password:str):    #implement logging and end script
         username (str): Username for the Busy
         password (str): Password for the Busy
     """
-    find_img('busy/images/busy_username.png')
+    find_img('busy/images/busy_username.png', timeout= 150)
     pg.write(username, interval= 0.3)
     pg.press("enter")
     time.sleep(0.3)
@@ -161,19 +163,19 @@ def busy_login(username:str, password:str):    #implement logging and end script
             close_rdc()
         except:
             pg.press("enter")
-            find_img('busy/images/busy_loggedin.png')
+            find_img('busy/images/busy_loggedin.png', timeout= 25)
             
 
 
 def export_format(report_type:str, company:str, filename):
     save_location = f"D:\\automated_busy_downloads\{company}\{report_type}\{filename}"
-    find_img('busy/images/busy_report_list.png')
+    find_img('busy/images/busy_report_list.png', timeout=3000)
     time.sleep(0.3)
     pg.moveTo(150, 150,duration=0.3)
     time.sleep(1)
     pg.hotkey('alt', 'e')
     
-    find_img('busy/images/busy_export_format.png')
+    find_img('busy/images/busy_export_format.png', timeout=600)
 
     pg.typewrite('micros')           #data format 
     pg.press('enter')
@@ -184,7 +186,7 @@ def export_format(report_type:str, company:str, filename):
 
     pg.press('f2')
 
-    find_img('busy/images/busy_download_prompt.png')
+    find_img('busy/images/busy_download_prompt.png', timeout= 300)
     time.sleep(0.5)
     pg.click()
 
@@ -202,8 +204,8 @@ def preparing_envs(rdc_password:str , company:str ,username:str, password:str) -
 
 
 
-def exit_busy():
-    find_img('busy/images/busy_home.png')
+def change_company():
+    find_img('busy/images/busy_home.png', timeout= 60)
     time.sleep(0.5)
     location = None
     while location == None:
@@ -214,9 +216,8 @@ def exit_busy():
         except Exception:
             location = pg.locateOnScreen('busy/images/busy_sel_menu_company.png', confidence= 0.9)
             pg.press('enter')
-    time.sleep(0.4)
-    pg.press('e')
-    pg.press('enter')
+    time.sleep(0.5)
+    
 
 
 
@@ -224,7 +225,7 @@ def return_to_busy_home(esc=3):
     time.sleep(0.5)
     for _ in range(1, esc+1):
         pg.press('esc')
-        time.sleep(1)
+        time.sleep(2)
     
 
 
