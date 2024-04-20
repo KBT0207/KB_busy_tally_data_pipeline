@@ -55,6 +55,33 @@ def select_sales_list():
 
 
 
+def select_mitp_list():
+    try:
+        sales = pg.locateOnScreen('busy/images/mitp.PNG', confidence=0.99)
+        pg.moveTo(sales)
+        pg.click() 
+        pg.press('down')
+        pg.press('down')
+        pg.press('enter')
+    except:
+        try:
+            pg.locateOnScreen('busy/images/sel_mitp.png', confidence=0.95)
+            pg.press('enter')
+            time.sleep(0.2)
+            pg.press('l')
+            pg.press("enter")
+        except:
+            try:
+                down = pg.locateOnScreen('busy/images/down_mitp.png', confidence=0.95)
+                pg.click(down)
+                pg.click()
+                time.sleep(0.4)
+                pg.press("l")
+            except:
+                pass
+
+
+
 def select_salesreturn_list():
     try:
         sales = pg.locateOnScreen('busy/images/salesreturn.PNG', confidence=0.99)
@@ -82,10 +109,72 @@ def select_salesreturn_list():
 
 
 
+def select_mrfp_list():
+    try:
+        sales = pg.locateOnScreen('busy/images/mrfp.PNG', confidence=0.99)
+        pg.moveTo(sales)
+        pg.click() 
+        pg.press('down')
+        pg.press('down')
+        pg.press('enter')
+    except:
+        try:
+            pg.locateOnScreen('busy/images/sel_mrfp.png', confidence=0.95)
+            pg.press('enter')
+            time.sleep(0.2)
+            pg.press('l')
+            pg.press("enter")
+        except:
+            try:
+                down = pg.locateOnScreen('busy/images/down_mrfp.png', confidence=0.95)
+                pg.click(down)
+                pg.click()
+                time.sleep(0.4)
+                pg.press("l")
+            except:
+                pass
 
-def sales_list_format(standard_format, start_date, end_date):
+
+
+def select_salesorder_list():
+    try:
+        sales = pg.locateOnScreen('busy/images/salesorder.png', confidence=0.99)
+        pg.moveTo(sales)
+        pg.click() 
+        pg.press('down')
+        pg.press('down')
+        pg.press('enter')
+    except:
+        try:
+            pg.locateOnScreen('busy/images/sel_salesorder.png', confidence=0.95)
+            pg.press('enter')
+            time.sleep(0.2)
+            pg.press('l')
+            pg.press("enter")
+        except:
+            try:
+                down = pg.locateOnScreen('busy/images/down_salesorder.png', confidence=0.95)
+                pg.click(down)
+                pg.click()
+                time.sleep(0.4)
+                pg.press("l")
+            except:
+                pass
+
+
+
+def list_format(report_type, start_date, end_date):
     busy_utils.find_img('busy/images/busy_list.png', timeout=20)
-    pg.typewrite(standard_format)     #format name
+    time.sleep(1)
+    
+    #format name
+    if report_type == "sales" or report_type == "sales_return":  
+        pg.typewrite('new')
+    if report_type == "material_received_from_party" or report_type == "material_issued_to_party":
+        pg.typewrite('new')
+    if report_type == "sales_order":
+        pg.typewrite('order value')    
+    
     pg.press('enter')
 
     pg.typewrite("a")
@@ -123,17 +212,22 @@ def sales_list_format(standard_format, start_date, end_date):
     pg.typewrite('y')           #show value of items 
     pg.press('enter')
 
-    pg.typewrite('n')           #show batch items 
-    pg.press('enter')
+    if report_type != "sales_order":
+        pg.typewrite('n')           #show batch details 
+        pg.press('enter')
+    else:
+        pass
 
-    pg.typewrite('y')           #show party TIN/GSTIN no 
-    pg.press('enter')
+    if report_type == "sales" or report_type == "sales_return":
+        pg.typewrite('y')           #show party TIN/GSTIN no 
+        pg.press('enter')
+    if report_type == "material_received_from_party" or report_type == "material_issued_to_party" or report_type == "sales_order":
+        pass
 
     pg.typewrite('n')           #show report notes in column 
     pg.press('enter')
 
-    pg.press('enter')
-
+    #pg.press('enter')  
 
 
 
@@ -149,12 +243,17 @@ def local_sales_report():
 
     companies = ['comp0005', 'comp0010', 'comp0011', 'comp0014', 'comp0015' ]
 
-    transaction_dict = {'trans_list': [select_sales_list, select_salesreturn_list] ,
-                        'reports': ['sales', 'sales_return'] }
+    transaction_dict = {'trans_list': [select_sales_list, select_salesreturn_list, 
+                                       select_mrfp_list, select_mitp_list, 
+                                       select_salesorder_list], 
+                        'reports': ['sales', 'sales_return', 
+                                    "material_received_from_party", "material_issued_to_party", 
+                                    "sales_order"] }
 
     busy_utils.open_busy()
     
     for comp in companies:
+
         busy_utils.company_selection(comp_code = comp)
         
         try:
@@ -166,37 +265,40 @@ def local_sales_report():
         
 
         for rep_func, report in zip(transaction_dict['trans_list'], transaction_dict['reports']):
-            transaction_report_selection(report= rep_func)
+            if comp != "comp0005" and report == "sales_order" and rep_func == select_salesorder_list:
+                continue
+            else:
+                transaction_report_selection(report= rep_func)
 
-            endate = datetime.today()
-            startdate = endate - timedelta(days=2)
+                endate = datetime.today()
+                startdate = endate - timedelta(days=2)
 
-            endate_str = endate.strftime("%d-%m-%Y")
-            startdate_str = startdate.strftime("%d-%m-%Y")
-            
-            try:
-                sales_list_format(standard_format='new', 
-                                start_date= startdate_str, 
-                                end_date= endate_str)
-                logger.info(f"Generated data for {comp} and {report} to export successfully...")
-            except Exception as e:
-                logger.critical(f"Data Generation for {comp} and {report} Failed! : {e}")
+                endate_str = endate.strftime("%d-%m-%Y")
+                startdate_str = startdate.strftime("%d-%m-%Y")
+                
+                try:
+                    list_format(report_type= report, 
+                                    start_date= startdate_str, 
+                                    end_date= endate_str)
+                    logger.info(f"Generated data for {comp} and {report} to export successfully...")
+                except Exception as e:
+                    logger.critical(f"Data Generation for {comp} and {report} Failed! : {e}")
 
-            try:
-                curr_date = datetime.today().strftime("%d-%b-%Y")
-                busy_utils.export_format(report_type = report, company = comp, 
-                                        filename= f"{comp}_{report}_{curr_date}")
-                logger.info(f"Exported data for {comp} and {report} successfully...")
-            except Exception as e:
-                logger.critical(f"Exporting Data for {comp} and {report} Failed! : {e}")
+                try:
+                    curr_date = datetime.today().strftime("%d-%b-%Y")
+                    busy_utils.export_format(report_type = report, company = comp, 
+                                            filename= f"{comp}_{report}_{curr_date}")
+                    logger.info(f"Exported data for {comp} and {report} successfully...")
+                except Exception as e:
+                    logger.critical(f"Exporting Data for {comp} and {report} Failed! : {e}")
 
-            try:    
-                busy_utils.return_to_busy_home(esc=3)
-                time.sleep(5)
+                try:    
+                    busy_utils.return_to_busy_home(esc=3)
+                    time.sleep(5)
 
-                logger.info(f"Report Generated for {comp} and {report} successfully and back to busy home...")
-            except Exception as e:
-                logger.critical(f"Failed to go back busy home! : {e}")
+                    logger.info(f"Report Generated for {comp} and {report} successfully and back to busy home...")
+                except Exception as e:
+                    logger.critical(f"Failed to go back busy home! : {e}")
 
         try:    
             busy_utils.change_company()
@@ -208,7 +310,7 @@ def local_sales_report():
 
     time.sleep(2)
 
-    busy_utils.find_img(img='busy/images/busy_transactions.png', timeout= 300)
+    busy_utils.find_img(img='busy/images/quit_at_login.png', timeout= 300)
     pg.click()
     pg.press("e")
     pg.press('enter')
@@ -219,7 +321,7 @@ def local_sales_report():
     #receivers = ['sharmagaurav4510@gmail.com']
     reps = [r for r in transaction_dict['reports']]
     subj = f"KB Companies [{', '.join(reps)}] data of {endate_str}"
-    attachment_path = glob.glob("D:\\automated_busy_downloads\\" + f"**\\{today_date}*.xlsx", recursive=True)
+    attachment_path = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*{today_date}.xlsx", recursive=True)
     body = f"Kindly find the attached [{', '.join(reps)} data of {companies} from {startdate_str} to {endate_str}"
     if len(attachment_path) != 0:
         try:
@@ -234,8 +336,9 @@ def local_sales_report():
         logger.critical("No data exported today")
 
 
-# def test():
-#     pg.hotkey('win', 'd')
-    
-#     busy_utils.company_selection(comp_code= 'comp0005')  
-#     logger.info("Testing...")
+
+
+
+
+
+

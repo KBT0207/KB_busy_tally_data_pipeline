@@ -37,7 +37,7 @@ LOGGING_CONFIG = {
         'daily_email_handler': {
             'class': 'utils.email.YagmailDailyHandler',
             'to': email_recipients,
-            'subject': 'Daily Log from Python Application',
+            'subject': 'Daily Log',
             'formatter': 'standard'
         },
         'critical_email_handler': {
@@ -50,7 +50,7 @@ LOGGING_CONFIG = {
         'yagmail_handler': {
             'class': 'utils.email.YagmailHandler',
             'to': email_recipients,
-            'subject': 'Log from Python Application',
+            'subject': 'Critical Log',
             'formatter': 'standard'
         }
     },

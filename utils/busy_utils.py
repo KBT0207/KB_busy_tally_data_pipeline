@@ -193,7 +193,6 @@ def export_format(report_type:str, company:str, filename):
 
 
 
-
 def preparing_envs(rdc_password:str , company:str ,username:str, password:str) -> None:
     start_rdc(rdc_password )
     time.sleep(2)
@@ -201,7 +200,6 @@ def preparing_envs(rdc_password:str , company:str ,username:str, password:str) -
     company_selection(comp_code= company)
     busy_login(username, password)
            
-
 
 
 def change_company():
@@ -218,7 +216,6 @@ def change_company():
             pg.press('enter')
     time.sleep(0.5)
     
-
 
 
 def return_to_busy_home(esc=3):
