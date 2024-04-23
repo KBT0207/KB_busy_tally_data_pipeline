@@ -227,7 +227,7 @@ def list_format(report_type, start_date, end_date):
     pg.typewrite('n')           #show report notes in column 
     pg.press('enter')
 
-    #pg.press('enter')  
+    pg.press('enter')  
 
 
 
@@ -317,24 +317,55 @@ def local_sales_report():
     logger.info("Quit Busy Successfully!")
 
     today_date = datetime.today().strftime("%d-%b-%Y")
-    receivers = ['shivprasad@kaybeebio.com', 'danish@kaybeeexports.com', 'sharmagaurav4510@gmail.com']
-    #receivers = ['sharmagaurav4510@gmail.com']
+    receivers = ['shivprasad@kaybeebio.com', 'danish@kaybeeexports.com']
+    #receivers = ['s.gaurav@kaybeeexports.com']
     reps = [r for r in transaction_dict['reports']]
-    subj = f"KB Companies [{', '.join(reps)}] data of {endate_str}"
-    attachment_path = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*{today_date}.xlsx", recursive=True)
     body = f"Kindly find the attached [{', '.join(reps)} data of {companies} from {startdate_str} to {endate_str}"
-    if len(attachment_path) != 0:
+    attachment_path = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*{today_date}.xlsx", recursive=True)
+
+    subj_material = f"KB Companies ['MITP & MRFP'] data of {endate_str}"
+    attachment_path_material = []
+    for file in attachment_path:
+        if 'material' in file:
+            attachment_path_material.append(file) 
+    if len(attachment_path_material) != 0:
         try:
             email.email_send(reciever=receivers, cc = "s.gaurav@kaybeeexports.com", 
-                            subject= subj, 
+                            subject= subj_material, 
                             contents= body, 
-                            attachemnts= attachment_path)
-            logger.info("Attachment emailed successfully... ")
+                            attachemnts= attachment_path_material)
+            logger.info("Attachments (MITP & MRFP) emailed successfully... ")
         except Exception as e:
-            logger.critical(f"Failed to email the attachment! : {e}")
+            logger.critical(f"Failed to email the attachment for (MITP & MRFP)! : {e}")
     else:
-        logger.critical("No data exported today")
+        logger.critical("No data for (MITP & MRFP) exported today")
 
+    subj_sales = f"KB Companies ['Sales, Sales Voucher and Sales Order'] data of {endate_str}"
+    attachment_path_sales = []
+    for file in attachment_path:
+        if 'sale' in file:
+            attachment_path_sales.append(file) 
+    if len(attachment_path_sales) != 0:
+        try:
+            email.email_send(reciever=receivers, cc = "s.gaurav@kaybeeexports.com", 
+                            subject= subj_sales, 
+                            contents= body, 
+                            attachemnts= attachment_path_sales)
+            logger.info("Attachments (All Sales) emailed successfully... ")
+        except Exception as e:
+            logger.critical(f"Failed to email the attachment for (All Sales)! : {e}")
+    else:
+        logger.critical("No data for (All Sales) exported today")
+
+
+
+#def test():
+#     try:
+#         1/1
+#         logger.info("Testing_Info")
+#         print('test..')
+#     except:
+#         logger.critical("Testing_critical")
 
 
 

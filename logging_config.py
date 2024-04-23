@@ -1,17 +1,16 @@
 import logging
 import logging.config
 from logging.handlers import TimedRotatingFileHandler
-from utils.email import YagmailDailyHandler, YagmailHandler
+from utils.email import  YagmailHandler
 import yagmail
 import os
 from datetime import datetime
 
 
-# Import Yagmail and configure email sender
-yag = yagmail.SMTP('jovokb@gmail.com', os.getenv('SENDER_EMAIL_PASSWORD'))
+yag = yagmail.SMTP('Jovo@kaybeebio.com', os.getenv('SENDER_EMAIL_PASSWORD'))
 
-email_recipients = ['s.gaurav@kaybeeexports.com', 'sharmagaurav4510@gmail.com', 'danish@kaybeeexports.com']
-#email_recipients = ['sharmagaurav4510@gmail.com']
+email_recipients = ['s.gaurav@kaybeeexports.com', 'danish@kaybeeexports.com']
+#email_recipients = ['s.gaurav@kaybeeexports.com']
 
 
 today_date = datetime.now().strftime('%d-%b-%Y')
@@ -28,16 +27,9 @@ LOGGING_CONFIG = {
         'file_handler': {
             'class': 'logging.handlers.TimedRotatingFileHandler',
             'filename': f'logs/main_{today_date}.log',
-            'when': 'S',
-            'interval': 86400, 
-            'atTime': '22:30', 
+            'atTime': 'midnight', 
+            'interval':1,
             'backupCount': 0,
-            'formatter': 'standard'
-        },
-        'daily_email_handler': {
-            'class': 'utils.email.YagmailDailyHandler',
-            'to': email_recipients,
-            'subject': 'Daily Log',
             'formatter': 'standard'
         },
         'critical_email_handler': {
@@ -56,7 +48,7 @@ LOGGING_CONFIG = {
     },
     'loggers': {
         '': {
-            'handlers': ['file_handler', 'daily_email_handler', 'critical_email_handler'],
+            'handlers': ['file_handler',  'critical_email_handler'],
             'level': 'INFO',
             'propagate': False
         }

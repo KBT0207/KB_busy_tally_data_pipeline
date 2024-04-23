@@ -109,7 +109,7 @@ def company_selection(comp_code:str):
     Args:
         comp_code (str): Busy Company Code
     """
-    find_img('busy/images/select_company.png', timeout= 50)
+    find_img('busy/images/select_company.png', timeout= 200)
     time.sleep(0.5)
     pg.typewrite(comp_code)
     pg.press('tab')
@@ -128,7 +128,7 @@ def busy_login(username:str, password:str):    #implement logging and end script
         username (str): Username for the Busy
         password (str): Password for the Busy
     """
-    find_img('busy/images/busy_username.png', timeout= 150)
+    find_img('busy/images/busy_username.png', timeout= 300)
     pg.write(username, interval= 0.3)
     pg.press("enter")
     time.sleep(0.3)

@@ -9,7 +9,7 @@ import yagmail
 load_dotenv()
 
 
-yag = yagmail.SMTP("jovokb@gmail.com", 
+yag = yagmail.SMTP("Jovo@kaybeebio.com", 
                    os.getenv('SENDER_EMAIL_PASSWORD')) 
 # Adding Content and sending it 
 
@@ -35,20 +35,17 @@ class YagmailHandler(logging.Handler):
         yag.send(to=self.to, subject=self.subject, contents=log_entry)
 
 
-class YagmailDailyHandler(logging.Handler):
-    def __init__(self, to, subject, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.to = to
-        self.subject = subject
-        self.last_emailed_date = None
+today_date = datetime.now().strftime('%d-%b-%Y')
+email_recipients = ['s.gaurav@kaybeeexports.com', 'danish@kaybeeexports.com']
 
-    def emit(self, record):
-        log_entry = self.format(record)
-        now = datetime.now()
-        
-        if now.time() >= time(hour=9, minute=0) or now.time() <= time(hour=10, minute=59):
-            if self.last_emailed_date is None or now.date() != self.last_emailed_date:
-                yag.send(to=self.to, subject=self.subject, contents=log_entry)
-                self.last_emailed_date = now.date()
+
+def send_daily_logs():
+    # Read the contents of the log file
+    log_file_path = f'logs/main_{today_date}.log'
+    with open(log_file_path, 'r') as log_file:
+        log_contents = log_file.read()
+
+    # Send the log contents via Yagmail
+    yag.send(to=email_recipients, subject=f'Daily Log of {today_date}', contents=log_contents)
 
 
