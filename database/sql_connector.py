@@ -25,6 +25,6 @@ PORT = os.getenv('DB_PORT')
 DATABASE = os.getenv('DATABASE')
 
 
-db_connector = DatabaseConnector(USERNAME, PASSWORD, HOST, PORT, DATABASE)
+# db_connector = DatabaseConnector(USERNAME, PASSWORD, HOST, PORT, DATABASE)
 
-db_engine = db_connector.engine
+# db_engine = db_connector.engine

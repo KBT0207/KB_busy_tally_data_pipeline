@@ -14,7 +14,6 @@ load_dotenv()
 
 
 
-
 pg.PAUSE = 0.8
 
 
