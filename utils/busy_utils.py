@@ -184,7 +184,13 @@ def export_format(report_type:str, company:str, filename):
     pg.typewrite(save_location, interval=0.1)           
     pg.press('enter')
 
-    pg.press('f2')
+    pg.typewrite("zero")
+    pg.press('enter')
+    pg.press('enter')
+
+    pg.typewrite("not req")
+    pg.press('enter')    
+    pg.press('enter')
 
     find_img('busy/images/busy_download_prompt.png', timeout= 300)
     time.sleep(0.5)
