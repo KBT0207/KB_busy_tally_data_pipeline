@@ -2,16 +2,25 @@ import pandas as pd
 from xlwings import view
 
 
+def get_filename(path:str):
+    return path.split("\\")[-1].split("_", maxsplit=1)[-1].rsplit("_", 1)[:-1][0]
 
-def apply_sales_transformation(df:pd.DataFrame):
-    df = df.loc[~df["Product Group"].isnull()]
 
+def get_compname(path:str):
+    return path.split("\\")[-1].split("_")[0]
+
+
+def apply_sales_transformation(file_path:str, top_row, bottom_row):
+    df =  pd.read_excel(file_path,skiprows= top_row, skipfooter= bottom_row)
+    if df.empty:
+        return None
+    
     columns_ffill = ["Date", "Vch/Bill No", "Party Type", "Material Centre", "Particulars", "State"]
     df.loc[:, columns_ffill] = df[columns_ffill].ffill()
 
     columns_fillna_with_0 = ["Disc %", "Discount Amt", "Tax Amt", "Bill Amount"]
     df.loc[:,columns_fillna_with_0] = df[columns_fillna_with_0].fillna(0)
-    
+
     columns_conditional_ffill = ["Dealer Code", "TIN/GSTIN No.", "DC No",
                                     "DC Date", "E Invoice", "Salesman",
                                     "SALES ORDER NO", "SALES ORDER DATE", 
@@ -21,13 +30,26 @@ def apply_sales_transformation(df:pd.DataFrame):
     for column in columns_conditional_ffill:
         vch_to_dc = df[["Vch/Bill No", column]].dropna().set_index('Vch/Bill No')[column].to_dict()
         df.loc[:, column] = df['Vch/Bill No'].map(vch_to_dc)
+    
+    df.columns = df.columns.str.lower().str.replace(" ", "_").str.replace(".", "")
+    df = df.rename(columns= {"vch/bill_no": "voucher_no", "tin/gstin_no": "gst_no",
+                             "qty": "main_qty", "unit": "main_unit", "price": "main_price",
+                             "qty1": "alt_qty", "unit1": "alt_unit", "price1": "alt_price", 
+                             "disc_%": "discount_perc", "bill_amount": "bill_amt",
+                             })
+
+    df["mfg_date"] = pd.to_datetime(df["mfg_date"]).dt.strftime("%b-%Y")
+    df["exp_date"] = pd.to_datetime(df["exp_date"]).dt.strftime("%b-%Y")
+    
     return df
 
 
 
-def apply_sales_order_transformation(df:pd.DataFrame):
-    df = df.loc[~df["Item Details"].isnull()]
-
+def apply_sales_order_transformation(file_path:str, top_row, bottom_row):
+    df =  pd.read_excel(file_path,skiprows= top_row, skipfooter= bottom_row)
+    if df.empty:
+        return None
+    
     columns_ffill = ["Date", "Vch/Bill No", "Particulars", "Material Centre"]
     df.loc[:, columns_ffill] = df[columns_ffill].ffill()
 
@@ -40,19 +62,29 @@ def apply_sales_order_transformation(df:pd.DataFrame):
     for column in columns_conditional_ffill:
         vch_to_dc = df[["Vch/Bill No", column]].dropna().set_index('Vch/Bill No')[column].to_dict()
         df.loc[:, column] = df['Vch/Bill No'].map(vch_to_dc)
-    return df
+
+    df.columns = df.columns.str.lower().str.replace(" ", "_").str.replace(".", "")
+    df = df.rename(columns= {"vch/bill_no": "voucher_no", "qty": "main_qty", 
+                             "unit": "main_unit", "price": "main_price",
+                             "qty1": "alt_qty", "unit1": "alt_unit", "price1": "alt_price", 
+                             "order_total": "order_amt", "tax": "tax_amt",
+                             })
+
+    return df    
 
 
 
-def apply_sales_return_transformation(df:pd.DataFrame):
-    df = df.loc[~df["Product Group"].isnull()]
-
+def apply_sales_return_transformation(file_path:str, top_row, bottom_row):
+    df =  pd.read_excel(file_path,skiprows= top_row, skipfooter= bottom_row)
+    if df.empty:
+        return None
+    
     columns_ffill = ["Date", "Vch/Bill No", "Party Type", "State", "Material Centre", "Particulars", ]
     df.loc[:, columns_ffill] = df[columns_ffill].ffill()
 
     columns_fillna_with_0 = ["Disc %", "Disc Amt", "Tax Amount", "Price", "Amount", "Bill Amount"]
     df.loc[:,columns_fillna_with_0] = df[columns_fillna_with_0].fillna(0)
-    
+
     columns_conditional_ffill = ["Dealer Code", "TIN/GSTIN No.",
                                 "GRN No", "GRN Date", 
                                 "E-Invoice", "Salesman",
@@ -62,17 +94,32 @@ def apply_sales_return_transformation(df:pd.DataFrame):
     for column in columns_conditional_ffill:
         vch_to_dc = df[["Vch/Bill No", column]].dropna().set_index('Vch/Bill No')[column].to_dict()
         df.loc[:, column] = df['Vch/Bill No'].map(vch_to_dc)
+    
+    df.columns = df.columns.str.lower().str.replace(" ", "_").str.replace(".", "")
+    df = df.rename(columns= {"vch/bill_no": "voucher_no", "tin/gstin_no": "gst_no",
+                             "qty": "main_qty", "unit": "main_unit", "price": "main_price",
+                             "qty1": "alt_qty", "unit1": "alt_unit", "price1": "alt_price", 
+                             "disc_%": "discount_perc", "bill_amount": "bill_amt",
+                             "so_no": "sales_order_no" ,"so_date": "sales_order_date",
+                             "disc_amt": "discount_amt", "tax_amount": "tax_amt",
+                             "e-invoice": "e_invoice", "e-way_bill_no": "e_way_bill",
+                             })
+
+    df["mfg_date"] = pd.to_datetime(df["mfg_date"]).dt.strftime("%b-%Y")
+    df["exp_date"] = pd.to_datetime(df["exp_date"]).dt.strftime("%b-%Y")
+    
     return df
 
 
 
-def apply_material_issued_to_party_transformation(df:pd.DataFrame):
-    df = df.loc[~df["Product Group"].isnull()]
-
+def apply_material_issued_to_party_transformation(file_path:str, top_row, bottom_row):
+    df =  pd.read_excel(file_path,skiprows= top_row, skipfooter= bottom_row)
+    if df.empty:
+        return None
     columns_ffill = ["Date", "Vch/Bill No", "Account Group", "Particulars", "Material Centre"]
     df.loc[:, columns_ffill] = df[columns_ffill].ffill()
-
-    columns_fillna_with_0 = ["CGST AMT", "SGST AMT", "IGST AMT"]
+    
+    columns_fillna_with_0 = ["Price", "Amount", "CGST AMT", "SGST AMT", "IGST AMT"]
     df.loc[:,columns_fillna_with_0] = df[columns_fillna_with_0].fillna(0)
     
     columns_conditional_ffill = ["Salesman", "Sales Order No", "Territory", 
@@ -81,27 +128,49 @@ def apply_material_issued_to_party_transformation(df:pd.DataFrame):
     for column in columns_conditional_ffill:
         vch_to_dc = df[["Vch/Bill No", column]].dropna().set_index('Vch/Bill No')[column].to_dict()
         df.loc[:, column] = df['Vch/Bill No'].map(vch_to_dc)
+    
+    df.columns = df.columns.str.lower().str.replace(" ", "_").str.replace(".", "")
+    df = df.rename(columns= {"vch/bill_no": "voucher_no", "account_group": "party_type",
+                             "qty": "main_qty", "unit": "main_unit", "price": "main_price",
+                             "qty1": "alt_qty", "unit1": "alt_unit", "price1": "alt_price", 
+                             })
+    df["alt_price"] = df["alt_price"].fillna(0)
+
+    df["mfg_date"] = pd.to_datetime(df["mfg_date"]).dt.strftime("%b-%Y")
+    df["exp_date"] = pd.to_datetime(df["exp_date"]).dt.strftime("%b-%Y")
+
     return df
 
 
 
-def apply_material_received_from_party_transformation(df:pd.DataFrame):
-    df = df.loc[~df["Item Details"].isnull()]
-
+def apply_material_received_from_party_transformation(file_path:str, top_row, bottom_row):
+    df =  pd.read_excel(file_path, skiprows= top_row, skipfooter= bottom_row)
+    if df.empty:
+        return None
     columns_ffill = ["Date", "Vch/Bill No", "Particulars", "Material Centre"]
     df.loc[:, columns_ffill] = df[columns_ffill].ffill()
 
-    columns_fillna_with_0 = ["CGST AMT", "SGST AMT", "IGST AMT"]
+    columns_fillna_with_0 = ["Price", "Amount", "CGST", "SGST", "IGST"]
     df.loc[:,columns_fillna_with_0] = df[columns_fillna_with_0].fillna(0)
     
-    columns_conditional_ffill = ["Salesman", "Sales Order No", "Territory", 
-                                 "Narration", "Transporter"]
+    columns_conditional_ffill = ["Narration"]
     
     for column in columns_conditional_ffill:
         vch_to_dc = df[["Vch/Bill No", column]].dropna().set_index('Vch/Bill No')[column].to_dict()
         df.loc[:, column] = df['Vch/Bill No'].map(vch_to_dc)
-    return df
+    
+    df.columns = df.columns.str.lower().str.replace(" ", "_").str.replace(".", "")
+    df = df.rename(columns= {"vch/bill_no": "voucher_no", "qty": "main_qty", 
+                             "unit": "main_unit", "price": "main_price",
+                             "qty1": "alt_qty", "unit1": "alt_unit", "price1": "alt_price", 
+                             "cgst": "cgst_amt", "sgst": "sgst_amt", "igst": "igst_amt",
+                             })
+    df["alt_price"] = df["alt_price"].fillna(0)
 
+    df["mfg_date"] = pd.to_datetime(df["mfg_date"]).dt.strftime("%b-%Y")
+    df["exp_date"] = pd.to_datetime(df["exp_date"]).dt.strftime("%b-%Y")
+
+    return df
 
 
 
@@ -109,25 +178,36 @@ class ExcelProcessor:
     def __init__(self, excel_file_path) -> None:
         self.excel_file_path = excel_file_path
 
-    def clean_and_transform(self):
-        data = pd.read_excel(self.excel_file_path, skiprows= 3) 
-        
-        file_name = self.excel_file_path.split("\\")[-1].split("_", maxsplit=1)[-1].rsplit("_", 1)[:-1][0]
-        
-        if file_name == "sales":
-            df = apply_sales_transformation(data)
+    def clean_and_transform(self): 
+        if get_filename(self.excel_file_path) == "sales" and get_compname(self.excel_file_path) != "comp0014" :
+            df = apply_sales_transformation(self.excel_file_path, top_row=3, bottom_row= 2)
 
-        if file_name == "sales_order":
-            df = apply_sales_order_transformation(data)
+        if get_filename(self.excel_file_path) == "sales" and get_compname(self.excel_file_path) == "comp0014" :
+            df = apply_sales_transformation(self.excel_file_path, top_row=5, bottom_row= 2)
 
-        if file_name == "sales_return":
-            df = apply_sales_return_transformation(data)
+        if get_filename(self.excel_file_path) == "sales_return" and get_compname(self.excel_file_path) != "comp0014" :
+            df = apply_sales_return_transformation(self.excel_file_path, top_row= 3, bottom_row=2)
 
-        if file_name == "material_issued_to_party":
-            df = apply_material_issued_to_party_transformation(data)
+        if get_filename(self.excel_file_path) == "sales_return" and get_compname(self.excel_file_path) == "comp0014" :
+            df = apply_sales_return_transformation(self.excel_file_path, top_row= 5, bottom_row=2)
 
-        if file_name == "material_received_from_party":
-            df = apply_material_received_from_party_transformation(data)
-            
+        if get_filename(self.excel_file_path) == "sales_order" and get_compname(self.excel_file_path) != "comp0014" :
+            df = apply_sales_order_transformation(self.excel_file_path, top_row= 3, bottom_row=2)
+
+        if get_filename(self.excel_file_path) == "sales_order" and get_compname(self.excel_file_path) == "comp0014" :
+            df = apply_sales_order_transformation(self.excel_file_path, top_row= 5, bottom_row=2)
+
+        if get_filename(self.excel_file_path) == "material_issued_to_party" and get_compname(self.excel_file_path) != "comp0014" :
+            df = apply_material_issued_to_party_transformation(self.excel_file_path, top_row= 3, bottom_row=2)
+
+        if get_filename(self.excel_file_path) == "material_issued_to_party" and get_compname(self.excel_file_path) == "comp0014" :
+            df = apply_material_issued_to_party_transformation(self.excel_file_path, top_row= 5, bottom_row=2)
+
+        if get_filename(self.excel_file_path) == "material_received_from_party" and get_compname(self.excel_file_path) != "comp0014" :
+            df = apply_material_received_from_party_transformation(self.excel_file_path, top_row=3, bottom_row= 2)
+
+        if get_filename(self.excel_file_path) == "material_received_from_party" and get_compname(self.excel_file_path) == "comp0014" :
+            df = apply_material_received_from_party_transformation(self.excel_file_path, top_row= 5, bottom_row=2)
+
         return df
-        
+    
