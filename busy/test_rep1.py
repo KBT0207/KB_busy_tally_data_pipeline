@@ -1,6 +1,6 @@
 import psutil
 import pytest
-from utils.busy_utils import is_process_running
+from busy.busy_utils import is_process_running
 
 # Define fixtures if necessary
 @pytest.fixture

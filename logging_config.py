@@ -56,4 +56,6 @@ LOGGING_CONFIG = {
 }
 
 logging.config.dictConfig(LOGGING_CONFIG)
+
 logger = logging.getLogger("main")
+#logger_db = logging.getLogger("db")

@@ -1,5 +1,5 @@
 import pandas as pd
-from xlwings import view
+from logging_config import logger
 
 
 def get_filename(path:str):
@@ -10,9 +10,13 @@ def get_compname(path:str):
     return path.split("\\")[-1].split("_")[0]
 
 
-def apply_sales_transformation(file_path:str, top_row, bottom_row):
-    df =  pd.read_excel(file_path,skiprows= top_row, skipfooter= bottom_row)
+def apply_sales_transformation(file_path:str, top_row:int) -> pd.DataFrame:
+    try:
+        df =  pd.read_excel(file_path,skiprows= top_row, skipfooter= 2)
+    except FileNotFoundError as e:
+        logger.warning(f"Excel File not found in the given {file_path}: {e}")
     if df.empty:
+        logger.warning(f"Empty Excel File of {get_compname(file_path)} and report {get_filename(file_path)}")
         return None
     
     columns_ffill = ["Date", "Vch/Bill No", "Party Type", "Material Centre", "Particulars", "State"]
@@ -45,9 +49,13 @@ def apply_sales_transformation(file_path:str, top_row, bottom_row):
 
 
 
-def apply_sales_order_transformation(file_path:str, top_row, bottom_row):
-    df =  pd.read_excel(file_path,skiprows= top_row, skipfooter= bottom_row)
+def apply_sales_order_transformation(file_path:str, top_row:int) -> pd.DataFrame:
+    try:
+        df =  pd.read_excel(file_path,skiprows= top_row, skipfooter= 2)
+    except FileNotFoundError as e:
+        logger.warning(f"Excel File not found in the given {file_path}: {e}")
     if df.empty:
+        logger.warning(f"Empty Excel File of {get_compname(file_path)} and report {get_filename(file_path)}")
         return None
     
     columns_ffill = ["Date", "Vch/Bill No", "Particulars", "Material Centre"]
@@ -74,9 +82,13 @@ def apply_sales_order_transformation(file_path:str, top_row, bottom_row):
 
 
 
-def apply_sales_return_transformation(file_path:str, top_row, bottom_row):
-    df =  pd.read_excel(file_path,skiprows= top_row, skipfooter= bottom_row)
+def apply_sales_return_transformation(file_path:str, top_row:int) -> pd.DataFrame:
+    try:
+        df =  pd.read_excel(file_path,skiprows= top_row, skipfooter= 2)
+    except FileNotFoundError as e:
+        logger.warning(f"Excel File not found in the given {file_path}: {e}")
     if df.empty:
+        logger.warning(f"Empty Excel File of {get_compname(file_path)} and report {get_filename(file_path)}")
         return None
     
     columns_ffill = ["Date", "Vch/Bill No", "Party Type", "State", "Material Centre", "Particulars", ]
@@ -112,10 +124,15 @@ def apply_sales_return_transformation(file_path:str, top_row, bottom_row):
 
 
 
-def apply_material_issued_to_party_transformation(file_path:str, top_row, bottom_row):
-    df =  pd.read_excel(file_path,skiprows= top_row, skipfooter= bottom_row)
+def apply_material_issued_to_party_transformation(file_path:str, top_row:int) -> pd.DataFrame:
+    try:
+        df =  pd.read_excel(file_path, skiprows= top_row, skipfooter= 2)
+    except FileNotFoundError as e:
+        logger.warning(f"Excel File not found in the given {file_path}: {e}")
     if df.empty:
+        logger.warning(f"Empty Excel File of {get_compname(file_path)} and report {get_filename(file_path)}")
         return None
+    
     columns_ffill = ["Date", "Vch/Bill No", "Account Group", "Particulars", "Material Centre"]
     df.loc[:, columns_ffill] = df[columns_ffill].ffill()
     
@@ -143,10 +160,15 @@ def apply_material_issued_to_party_transformation(file_path:str, top_row, bottom
 
 
 
-def apply_material_received_from_party_transformation(file_path:str, top_row, bottom_row):
-    df =  pd.read_excel(file_path, skiprows= top_row, skipfooter= bottom_row)
+def apply_material_received_from_party_transformation(file_path:str, top_row:int) -> pd.DataFrame:
+    try:
+        df =  pd.read_excel(file_path,skiprows= top_row, skipfooter= 2)
+    except FileNotFoundError as e:
+        logger.warning(f"Excel File not found in the given {file_path}: {e}")
     if df.empty:
+        logger.warning(f"Empty Excel File of {get_compname(file_path)} and report {get_filename(file_path)}")
         return None
+    
     columns_ffill = ["Date", "Vch/Bill No", "Particulars", "Material Centre"]
     df.loc[:, columns_ffill] = df[columns_ffill].ffill()
 
@@ -180,34 +202,34 @@ class ExcelProcessor:
 
     def clean_and_transform(self): 
         if get_filename(self.excel_file_path) == "sales" and get_compname(self.excel_file_path) != "comp0014" :
-            df = apply_sales_transformation(self.excel_file_path, top_row=3, bottom_row= 2)
+            df = apply_sales_transformation(self.excel_file_path, top_row=3)
 
         if get_filename(self.excel_file_path) == "sales" and get_compname(self.excel_file_path) == "comp0014" :
-            df = apply_sales_transformation(self.excel_file_path, top_row=5, bottom_row= 2)
+            df = apply_sales_transformation(self.excel_file_path, top_row=5)
 
         if get_filename(self.excel_file_path) == "sales_return" and get_compname(self.excel_file_path) != "comp0014" :
-            df = apply_sales_return_transformation(self.excel_file_path, top_row= 3, bottom_row=2)
+            df = apply_sales_return_transformation(self.excel_file_path, top_row= 3)
 
         if get_filename(self.excel_file_path) == "sales_return" and get_compname(self.excel_file_path) == "comp0014" :
-            df = apply_sales_return_transformation(self.excel_file_path, top_row= 5, bottom_row=2)
+            df = apply_sales_return_transformation(self.excel_file_path, top_row= 5)
 
         if get_filename(self.excel_file_path) == "sales_order" and get_compname(self.excel_file_path) != "comp0014" :
-            df = apply_sales_order_transformation(self.excel_file_path, top_row= 3, bottom_row=2)
+            df = apply_sales_order_transformation(self.excel_file_path, top_row= 3)
 
         if get_filename(self.excel_file_path) == "sales_order" and get_compname(self.excel_file_path) == "comp0014" :
-            df = apply_sales_order_transformation(self.excel_file_path, top_row= 5, bottom_row=2)
+            df = apply_sales_order_transformation(self.excel_file_path, top_row= 5)
 
         if get_filename(self.excel_file_path) == "material_issued_to_party" and get_compname(self.excel_file_path) != "comp0014" :
-            df = apply_material_issued_to_party_transformation(self.excel_file_path, top_row= 3, bottom_row=2)
+            df = apply_material_issued_to_party_transformation(self.excel_file_path, top_row= 3)
 
         if get_filename(self.excel_file_path) == "material_issued_to_party" and get_compname(self.excel_file_path) == "comp0014" :
-            df = apply_material_issued_to_party_transformation(self.excel_file_path, top_row= 5, bottom_row=2)
+            df = apply_material_issued_to_party_transformation(self.excel_file_path, top_row= 5)
 
         if get_filename(self.excel_file_path) == "material_received_from_party" and get_compname(self.excel_file_path) != "comp0014" :
-            df = apply_material_received_from_party_transformation(self.excel_file_path, top_row=3, bottom_row= 2)
+            df = apply_material_received_from_party_transformation(self.excel_file_path, top_row=3)
 
         if get_filename(self.excel_file_path) == "material_received_from_party" and get_compname(self.excel_file_path) == "comp0014" :
-            df = apply_material_received_from_party_transformation(self.excel_file_path, top_row= 5, bottom_row=2)
+            df = apply_material_received_from_party_transformation(self.excel_file_path, top_row= 5)
 
         return df
     

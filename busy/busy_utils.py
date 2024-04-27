@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 import logging
 from logging_config import logger
 
-load_dotenv()
+load_dotenv('.env')
 
 
 def find_img(img:str, timeout:int = 10, conf: Union[float, int] = 0.9, gs:bool=False ) -> None:
