@@ -12,11 +12,10 @@ def data_busy_to_sql_async():
     main_db.delete_then_import_to_sql()
 
 if __name__ == "__main__":
-    main_busy.exporting_and_emailing()
-    # schedule.every().day.at("21:00").do(data_busy_to_sql_async)
-    # schedule.every().day.at("23:10").do(send_daily_logs)
+    schedule.every().day.at("21:00").do(data_busy_to_sql_async)
+    schedule.every().day.at("23:10").do(send_daily_logs)
     
-    # while True:
-    #     schedule.run_pending()
-    #     time.sleep(1)
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
 
