@@ -1,30 +1,26 @@
 import pyautogui as pg
 import time
 import os
+import glob
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from busy import busy_utils
+from utils import email
 from logging_config import logger
-from busy import email_busy_reports
-from busy.export_busy_reports import (
-    select_mitp_list,
-    select_mrfp_list,
-    select_sales_list,
-    select_salesorder_list,
-    select_salesreturn_list,
-    transaction_report_selection,
-    list_format
-)
+from busy import export_busy_reports
 
 load_dotenv('.env')
 
 
 companies = ['comp0005', 'comp0010', 'comp0011', 'comp0014', 'comp0015']
-companies = ['comp0014', 'comp0015']
+#companies = ['comp0014', 'comp0015']
 
-transaction_dict = {'trans_list': [select_sales_list, select_salesreturn_list, 
-                                       select_mrfp_list, select_mitp_list, 
-                                       select_salesorder_list], 
+#Dictionary of 
+transaction_dict = {'trans_list': [export_busy_reports.select_sales_list, 
+                                   export_busy_reports.select_salesreturn_list, 
+                                   export_busy_reports.select_mrfp_list, 
+                                   export_busy_reports.select_mitp_list, 
+                                   export_busy_reports.select_salesorder_list], 
                         'reports': ['sales', 'sales_return', 
                                     "material_received_from_party", "material_issued_to_party", 
                                     "sales_order"] }
@@ -46,21 +42,21 @@ def exporting_and_emailing():
         except Exception as e:
             logger.critical(f"Logging into Busy of {comp} Failed! : {e}")
         
-
+        
         for rep_func, report in zip(transaction_dict['trans_list'], transaction_dict['reports']):
-            if comp != "comp0005" and report == "sales_order" and rep_func == select_salesorder_list:
+            if comp != "comp0005" and report == "sales_order" and rep_func == export_busy_reports.select_salesorder_list:
                 continue
             else:
-                transaction_report_selection(report= rep_func)
+                export_busy_reports.transaction_report_selection(report= rep_func)
 
                 endate = datetime.today()
-                startdate = endate - timedelta(days=2)
+                startdate = endate - timedelta(days=1)
 
                 endate_str = endate.strftime("%d-%m-%Y")
                 startdate_str = startdate.strftime("%d-%m-%Y")
                 
                 try:
-                    list_format(report_type= report, 
+                    export_busy_reports.list_format(report_type= report, 
                                     start_date= startdate_str, 
                                     end_date= endate_str)
                     logger.info(f"Generated data for {comp} and {report} to export successfully...")
@@ -83,6 +79,20 @@ def exporting_and_emailing():
                 except Exception as e:
                     logger.critical(f"Failed to go back busy home! : {e}")
 
+    
+        try:
+            export_busy_reports.select_masters()
+            export_busy_reports.select_accounts()
+            busy_utils.export_format(report_type= "master_accounts", 
+                                     company= comp, 
+                                     filename=f"{comp}_{report}_{curr_date}")
+            
+            busy_utils.return_to_busy_home(esc=6)
+            time.sleep(5)
+            logger.info(f"Report Generated for {comp} and {report} successfully and back to busy home...")
+        except:
+            logger.critical(f"Failed to go back busy home! : {e}")
+
         try:    
             busy_utils.change_company()
             time.sleep(5)
@@ -100,5 +110,72 @@ def exporting_and_emailing():
     pg.press('enter')
     logger.info("Quit Busy Successfully!")
 
-    email_busy_reports.mitp_mrfp_email()
-    email_busy_reports.sales_email()
+    today_date = datetime.today().strftime("%d-%b-%Y")
+    receivers = ['shivprasad@kaybeebio.com', 'danish@kaybeeexports.com']
+    #receivers = ['s.gaurav@kaybeeexports.com']
+    body_material = f"Kindly find the attached MITP & MRFP data of {companies} from {startdate_str} to {endate_str}"
+    attachment_path = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*{today_date}.xlsx", recursive=True)
+
+    subj_material = f"KB Companies ['MITP & MRFP'] data of {endate_str}"
+    attachment_path_material = []
+    for file in attachment_path:
+        if 'material' in file:
+            attachment_path_material.append(file) 
+    if len(attachment_path_material) != 0:
+        try:
+            email.email_send(reciever=receivers, cc = "s.gaurav@kaybeeexports.com", 
+                            subject= subj_material, 
+                            contents= body_material, 
+                            attachemnts= attachment_path_material)
+            logger.info("Attachments of MITP & MRFP emailed successfully... ")
+        except Exception as e:
+            logger.critical(f"Failed to email the attachment for (MITP & MRFP)! : {e}")
+    else:
+        logger.critical("No data for MITP & MRFP exported today")
+
+
+    subj_sales = f"KB Companies ['Sales, Sales Voucher and Sales Order'] data of {endate_str}"
+    body_sales = f"Kindly find the attached 'Sales, Sales Voucher and Sales Order' data of {companies} from {startdate_str} to {endate_str}" 
+    attachment_path_sales = []
+    for file in attachment_path:
+        if 'sale' in file:
+            attachment_path_sales.append(file) 
+    if len(attachment_path_sales) != 0:
+        try:
+            email.email_send(reciever=receivers, cc = "s.gaurav@kaybeeexports.com", 
+                            subject= subj_sales, 
+                            contents= body_sales, 
+                            attachemnts= attachment_path_sales)
+            logger.info("Attachments (All Sales) emailed successfully... ")
+        except Exception as e:
+            logger.critical(f"Failed to email the attachment for (All Sales)! : {e}")
+    else:
+        logger.critical("No data for (All Sales) exported today")
+
+
+    subj_sales_order = f"KBBIO Sales Order of {endate_str}"
+    attachment_path_sales_order = fr"D:\automated_busy_downloads\comp0005\sales_order\comp0005_sales_order_{today_date}.xlsx"
+    body_sales_order = f"Kinldy find the Sales Order of {endate_str}"
+    if attachment_path_sales_order:
+        try:
+            email.email_send(reciever="rajani@kaybeebio.com", cc = "s.gaurav@kaybeeexports.com", 
+                            subject= subj_sales_order, 
+                            contents= body_sales_order, 
+                            attachemnts= attachment_path_sales_order)
+            logger.info("Sales Order emailed successfully... ")
+        except Exception as e:
+            logger.critical(f"Failed to email the attachment for Sales Order! : {e}")
+    else:
+        logger.critical("No data for Sales_Order exported today")
+
+
+
+# def test():
+#     pg.hotkey('alt', 'tab')
+#     export_busy_reports.select_masters()
+#     export_busy_reports.select_accounts()
+#     busy_utils.export_format(report_type= "master_accounts", 
+#                                      company= 'comp0005', 
+#                                      filename=f"comp0005_master_accounts_30-Apr-2024")
+            
+#     busy_utils.return_to_busy_home(esc=6)

@@ -10,6 +10,7 @@ def get_compname(path:str):
     return path.split("\\")[-1].split("_")[0]
 
 
+
 def apply_sales_transformation(file_path:str, top_row:int) -> pd.DataFrame:
     try:
         df =  pd.read_excel(file_path,skiprows= top_row, skipfooter= 2)
@@ -196,6 +197,31 @@ def apply_material_received_from_party_transformation(file_path:str, top_row:int
 
 
 
+def apply_accounts_transformation(file_path:str, top_row:int) -> pd.DataFrame:
+    try:
+        df =  pd.read_excel(file_path,skiprows= top_row, skipfooter= 2)
+    except FileNotFoundError as e:
+        logger.error(f"Excel File not found in the given {file_path}: {e}")
+    if df.empty:
+        logger.warning(f"Empty Excel File of {get_compname(file_path)} and report {get_filename(file_path)}")
+        return None
+    df = df.drop(columns= "Created Date")
+
+    columns_fillna_with_0 = ["Op. Bal.(Dr)", "Op. Bal.(Cr)", "Credit Limit"]
+    df.loc[:,columns_fillna_with_0] = df[columns_fillna_with_0].fillna(0)
+
+    df.columns = df.columns.str.lower().str.replace(" ", "_").str.replace(".", "")
+    df = df.rename(columns= {"op_bal(cr)": "opening_balance_debit", 
+                             "op_bal(dr)": "opening_balance_credit", 
+                             "type_of_dealer": "dealer_type", "gstin": "gst_no",
+                             "addline1": "address1", "addline2": "address2",
+                            })
+    
+    return df
+
+
+
+
 class ExcelProcessor:
     def __init__(self, excel_file_path) -> None:
         self.excel_file_path = excel_file_path
@@ -231,5 +257,7 @@ class ExcelProcessor:
         if get_filename(self.excel_file_path) == "material_received_from_party" and get_compname(self.excel_file_path) == "comp0014" :
             df = apply_material_received_from_party_transformation(self.excel_file_path, top_row= 5)
 
+        if get_filename(self.excel_file_path) == "master_accounts":
+            df = apply_accounts_transformation(self.excel_file_path, top_row=2)
         return df
     

@@ -1,52 +1,53 @@
 import pytest
-from sqlalchemy import inspect
+import os
 from database.sql_connector import DatabaseConnector
 
-# Define test data
-USERNAME = 'test_username'
-PASSWORD = 'test_password'
-HOST = 'localhost'
-PORT = '3306'
-DATABASE = 'test_database'
+# Sample environment variables for testing
+os.environ['DB_USERNAME'] = 'test_user'
+os.environ['DB_PASSWORD'] = 'test_password'
+os.environ['DB_HOST'] = 'localhost'
+os.environ['DB_PORT'] = '3306'
+os.environ['DATABASE'] = 'test_db'
 
-def test_db_connector_init():
-    # Initialize DatabaseConnector with test data
-    db_connector = DatabaseConnector(USERNAME, PASSWORD, HOST, PORT, DATABASE)
 
-    # Assert that the engine is created
+@pytest.fixture
+def db_connector():
+    # Initialize DatabaseConnector with test environment variables
+    return DatabaseConnector(
+        os.getenv('DB_USERNAME'),
+        os.getenv('DB_PASSWORD'),
+        os.getenv('DB_HOST'),
+        os.getenv('DB_PORT'),
+        os.getenv('DATABASE')
+    )
+
+
+def test_db_connector_instance(db_connector):
+    assert isinstance(db_connector, DatabaseConnector)
+
+
+def test_db_connector_attributes(db_connector):
+    assert db_connector.username == 'test_user'
+    assert db_connector.password == 'test_password'
+    assert db_connector.host == 'localhost'
+    assert db_connector.port == '3306'
+    assert db_connector.database == 'test_db'
+
+
+def test_db_engine(db_connector):
+    # Check if the engine exists
     assert db_connector.engine is not None
 
-def test_db_connector_attributes():
-    # Initialize DatabaseConnector with test data
-    db_connector = DatabaseConnector(USERNAME, PASSWORD, HOST, PORT, DATABASE)
+    # Get the SQLAlchemy URL object from the engine
+    url = db_connector.engine.url
 
-    # Check that the attributes are set correctly
-    assert db_connector.username == USERNAME
-    assert db_connector.password == PASSWORD
-    assert db_connector.host == HOST
-    assert db_connector.port == PORT
-    assert db_connector.database == DATABASE
+    # Check individual components of the URL
+    assert url.drivername == 'mysql+pymysql'
+    assert url.username == 'test_user'
+    assert url.password == 'test_password'  # Confirm password if needed
+    assert url.host == 'localhost'
+    assert url.port == 3306
+    assert url.database == 'test_db'
 
-def test_db_string():
-    # Initialize DatabaseConnector with test data
-    db_connector = DatabaseConnector(USERNAME, PASSWORD, HOST, PORT, DATABASE)
 
-    # Get the database connection string
-    db_string = db_connector.get_db_string()
-
-    # Assert that the database connection string is correctly formatted
-    assert db_string == f'mysql+pymysql://{USERNAME}:{PASSWORD}@{HOST}:{PORT}/{DATABASE}'
-
-def test_db_engine():
-    # Initialize DatabaseConnector with test data
-    db_connector = DatabaseConnector(USERNAME, PASSWORD, HOST, PORT, DATABASE)
-
-    # Get the database engine
-    db_engine = db_connector.engine
-
-    # Assert that the engine is created and connected
-    assert db_engine is not None
-    assert inspect(db_engine).is_connected()
-
-# Optionally, you can include more tests as needed
 

@@ -175,7 +175,7 @@ def export_format(report_type:str, company:str, filename):
     time.sleep(1)
     pg.hotkey('alt', 'e')
     
-    find_img('busy/images/busy_export_format.png', timeout=600)
+    find_img('busy/images/busy_export_format.png', timeout=1500)
 
     pg.typewrite('micros')           #data format 
     pg.press('enter')
@@ -192,7 +192,7 @@ def export_format(report_type:str, company:str, filename):
     pg.press('enter')    
     pg.press('enter')
 
-    find_img('busy/images/busy_download_prompt.png', timeout= 300)
+    find_img('busy/images/busy_download_prompt.png', timeout= 3000)
     time.sleep(0.5)
     pg.click()
 

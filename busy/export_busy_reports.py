@@ -1,20 +1,16 @@
 import pyautogui as pg
 import time
 from busy import busy_utils
-import logging
-import os
-from logging_config import logger
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
-from utils import email
-import glob
+
 
 
 load_dotenv()
 
 
 
-pg.PAUSE = 0.8
+pg.PAUSE = 1.0
 
 
 def select_transaction():
@@ -28,6 +24,61 @@ def select_transaction():
                 location = pg.locateOnScreen('busy/images/busy_sel_transactions.png', confidence= 0.9)
             except Exception:
                 pass
+
+
+
+def select_masters():
+    location = None
+    while location == None:
+        try:
+            location = pg.locateOnScreen('busy/images/busy_administration.png', confidence= 0.9)
+            pg.click(location)    
+        except Exception:
+            try:
+                location = pg.locateOnScreen('busy/images/busy_sel_administration.png', confidence= 0.9)
+            except Exception:
+                pass
+
+
+def select_accounts():
+    try:
+        pg.locateOnScreen('busy/images/busy_sel_masters.png', confidence=0.9)
+        pg.press('enter')   #enter to go in open masters
+        time.sleep(0.4) 
+        pg.press("enter")   #enter to go in accounts
+        time.sleep(0.4)
+        pg.press("down")   #down for list
+        time.sleep(0.4)
+        pg.press("enter")  #enter to select list 
+        time.sleep(0.4)
+    except:
+        master = pg.locateOnScreen('busy/images/busy_masters.png', confidence=0.9)
+        pg.click(master)
+        time.sleep(0.4)
+        pg.press("down") #down for accounts
+        time.sleep(0.4)
+        pg.press("down")   #down for list
+        time.sleep(0.4)
+        pg.press("enter")  #enter to select list 
+        time.sleep(0.4)
+        
+    busy_utils.find_img('busy/images/standard_format.png', timeout= 30)
+    pg.click()
+    pg.click()
+    time.sleep(5)
+
+    pg.typewrite('new')
+    pg.press('enter')
+
+    pg.typewrite("a")
+    pg.press("backspace")               #select branch
+    time.sleep(0.3)
+    pg.press('enter')
+
+    pg.press('y')
+    pg.press('enter')
+
+    pg.press('enter')
 
 
 
@@ -239,15 +290,6 @@ def transaction_report_selection(report):
 
 
 
-
-
-#def test():
-#     try:
-#         1/1
-#         logger.info("Testing_Info")
-#         print('test..')
-#     except:
-#         logger.critical("Testing_critical")
 
 
 

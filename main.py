@@ -1,24 +1,20 @@
 import time
-from busy import main_busy
 import schedule
-import pyautogui as pg
-from utils.email import  send_daily_logs
-from datetime import datetime
-from database import main_sql
-from busy import email_busy_reports
+from utils.email import send_daily_logs
+from database import main_db
+from busy import main_busy
 
-
-def data_busy_to_sql():
-    main_busy.exporting_and_emailing()  #Exports data and emails it from busy
+def data_busy_to_sql_async():
+    main_busy.exporting_and_emailing()
     time.sleep(5)
-    main_sql.delete_then_import_to_sql()  #Imports data into Database
-
+    main_db.delete_then_import_to_sql()
 
 if __name__ == "__main__":
+    main_busy.exporting_and_emailing()
+    # schedule.every().day.at("21:00").do(data_busy_to_sql_async)
+    # schedule.every().day.at("23:10").do(send_daily_logs)
+    
+    # while True:
+    #     schedule.run_pending()
+    #     time.sleep(1)
 
-    schedule.every().day.at("23:00").do(send_daily_logs)
-    schedule.every().day.at("21:00").do(data_busy_to_sql)
-
-    while True:
-        schedule.run_pending()
-        time.sleep(1)  

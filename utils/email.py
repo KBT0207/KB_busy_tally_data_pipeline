@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 import yagmail
 
 
-load_dotenv()
+load_dotenv(".env")
 
 
 yag = yagmail.SMTP("Jovo@kaybeebio.com", 
@@ -36,7 +36,9 @@ class YagmailHandler(logging.Handler):
 
 
 today_date = datetime.now().strftime('%d-%b-%Y')
-email_recipients = ['s.gaurav@kaybeeexports.com', 'danish@kaybeeexports.com']
+email_recipients = ['s.gaurav@kaybeeexports.com', 
+                    'danish@kaybeeexports.com',
+]
 
 
 def send_daily_logs():

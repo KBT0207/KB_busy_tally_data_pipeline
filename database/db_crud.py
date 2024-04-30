@@ -1,17 +1,25 @@
 import pandas as pd
 from sqlalchemy.orm import scoped_session, sessionmaker
-from sqlalchemy import delete 
-from database.models import SalesKBBIO, SalesReturnKBBIO, SalesOrderKBBIO, MITPKBBIO, MRFPKBBIO
+from sqlalchemy import delete
 from logging_config import logger
+from database.models.busy_models import (SalesKBBIO, SalesReturnKBBIO, 
+                                         SalesOrderKBBIO, MITPKBBIO, MRFPKBBIO,
+                                         BusyAccountsKBBIO, BusyAccounts100x, BusyAccountsAgri,
+                                         BusyAccountsGreenEra, BusyAccountsNewAge,
+                                         )
+
 
 
 tables = {'busy_sales': SalesKBBIO, 'busy_sales_order': SalesOrderKBBIO,
           'busy_sales_return': SalesReturnKBBIO, "busy_mitp": MITPKBBIO,
-          "busy_mrfp": MRFPKBBIO,
+          "busy_mrfp": MRFPKBBIO, 
+         "busy_acc_kbbio": BusyAccountsKBBIO,
+          "busy_acc_100x": BusyAccounts100x, "busy_acc_agri": BusyAccountsAgri,
+          "busy_acc_greenera": BusyAccountsGreenEra, "busy_acc_newage": BusyAccountsNewAge,
         }
 
 
-class ImportExcel:
+class DatabaseCrud:
     def __init__(self, db_connector) -> None:
         self.db_connector = db_connector
         self.Session = scoped_session(sessionmaker(bind=self.db_connector.engine))
@@ -32,7 +40,7 @@ class ImportExcel:
                 result = session.execute(delete_query)
                 deleted_count = result.rowcount
                 session.commit()
-                logger.info(f"Deleted {deleted_count} rows with date in {dates}.")
+                logger.info(f"Deleted {deleted_count} rows in {table_name} with date in {dates}.")
         else:
             logger.info(f"Table {table_name} not found in table_mapping. Delete query Failed to execute")
 
@@ -67,3 +75,14 @@ class ImportExcel:
         else:
             logger.error(f"Empty Dataframe hence 0 rows imported in {table_name}")
 
+
+    def truncate_table(self, table_name):
+        table_class = tables.get(table_name)
+        if table_class:
+            truncate_query = delete(table_class)
+            with self.Session() as session:
+                session.execute(truncate_query)
+                session.commit()
+                logger.info(f"Table '{table_name}' truncated successfully.")
+        else:
+            logger.error(f"Table '{table_name}' not found in table_mapping.")
