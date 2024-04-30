@@ -50,7 +50,7 @@ def exporting_and_emailing():
                 export_busy_reports.transaction_report_selection(report= rep_func)
 
                 endate = datetime.today()
-                startdate = endate - timedelta(days=1)
+                startdate = endate - timedelta(days=2)
 
                 endate_str = endate.strftime("%d-%m-%Y")
                 startdate_str = startdate.strftime("%d-%m-%Y")
