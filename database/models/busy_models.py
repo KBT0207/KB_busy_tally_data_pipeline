@@ -1,4 +1,4 @@
-from sqlalchemy import MetaData, Column, Integer, String, Date, BigInteger, Float
+from sqlalchemy import MetaData, Column, Integer, String, Date, BigInteger, Float, DateTime, func
 from sqlalchemy.ext.declarative import declarative_base
 
 
@@ -45,7 +45,7 @@ class SalesKBBIO(Base):
     e_way_bill = Column(BigInteger, nullable= True)
     transporter_name = Column(String(255), nullable= True)
     narration = Column(String(255), nullable= True)
-
+    created_at = Column(DateTime, nullable= False, default=func.now())
 
 
 class SalesReturnKBBIO(Base):
@@ -86,6 +86,7 @@ class SalesReturnKBBIO(Base):
     sales_order_date = Column(String(255), nullable= True)
     e_way_bill = Column(BigInteger, nullable= True)
     narration = Column(String(255), nullable= True)
+    created_at = Column(DateTime, nullable= False, default=func.now())
 
 
 
@@ -109,6 +110,7 @@ class SalesOrderKBBIO(Base):
     order_amt = Column(Float, nullable=False, default= 0)
     salesman = Column(String(255), nullable= True)
     salesman_id = Column(String(255), nullable= True)
+    created_at = Column(DateTime, nullable= False, default=func.now())
 
 
 
@@ -143,6 +145,7 @@ class MITPKBBIO(Base):
     salesman = Column(String(255), nullable= True)
     territory = Column(String(255), nullable= True)
     transporter = Column(String(255), nullable= True)
+    created_at = Column(DateTime, nullable= False, default=func.now())
 
 
 
@@ -171,6 +174,7 @@ class MRFPKBBIO(Base):
     sgst_amt = Column(Float, nullable=False, default=0)
     igst_amt = Column(Float, nullable=False, default= 0)
     narration = Column(String(255), nullable= True)
+    created_at = Column(DateTime, nullable= False, default=func.now())
 
 
 
@@ -195,6 +199,7 @@ class BusyAccountsKBBIO(Base):
     territory = Column(String(50), nullable= True)
     mobile_no = Column(String(50), nullable= True)
     contact_person = Column(String(100), nullable=True)
+    created_at = Column(DateTime, nullable= False, default=func.now())
 
 
 
@@ -219,6 +224,7 @@ class BusyAccounts100x(Base):
     territory = Column(String(50), nullable= True)
     mobile_no = Column(String(50), nullable= True)
     contact_person = Column(String(100), nullable=True)
+    created_at = Column(DateTime, nullable= False, default=func.now())
 
 
 
@@ -243,6 +249,7 @@ class BusyAccountsGreenEra(Base):
     territory = Column(String(50), nullable= True)
     mobile_no = Column(String(50), nullable= True)
     contact_person = Column(String(100), nullable=True)
+    created_at = Column(DateTime, nullable= False, default=func.now())
 
 
 
@@ -267,6 +274,7 @@ class BusyAccountsAgri(Base):
     territory = Column(String(50), nullable= True)
     mobile_no = Column(String(50), nullable= True)
     contact_person = Column(String(100), nullable=True)
+    created_at = Column(DateTime, nullable= False, default=func.now())
 
 
 
@@ -291,3 +299,4 @@ class BusyAccountsNewAge(Base):
     territory = Column(String(50), nullable= True)
     mobile_no = Column(String(50), nullable= True)
     contact_person = Column(String(100), nullable=True)
+    created_at = Column(DateTime, nullable= False, default=func.now())

@@ -85,11 +85,11 @@ def exporting_and_emailing():
             export_busy_reports.select_accounts()
             busy_utils.export_format(report_type= "master_accounts", 
                                      company= comp, 
-                                     filename=f"{comp}_{report}_{curr_date}")
+                                     filename=f"{comp}_master_accounts_{curr_date}")
             
             busy_utils.return_to_busy_home(esc=6)
             time.sleep(5)
-            logger.info(f"Report Generated for {comp} and {report} successfully and back to busy home...")
+            logger.info(f"Master Accounts for {comp} generated successfully and back to busy home...")
         except:
             logger.critical(f"Failed to go back busy home! : {e}")
 

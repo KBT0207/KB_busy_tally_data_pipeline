@@ -239,11 +239,8 @@ class ExcelProcessor:
         if get_filename(self.excel_file_path) == "sales_return" and get_compname(self.excel_file_path) == "comp0014" :
             df = apply_sales_return_transformation(self.excel_file_path, top_row= 5)
 
-        if get_filename(self.excel_file_path) == "sales_order" and get_compname(self.excel_file_path) != "comp0014" :
+        if get_filename(self.excel_file_path) == "sales_order" :
             df = apply_sales_order_transformation(self.excel_file_path, top_row= 3)
-
-        if get_filename(self.excel_file_path) == "sales_order" and get_compname(self.excel_file_path) == "comp0014" :
-            df = apply_sales_order_transformation(self.excel_file_path, top_row= 5)
 
         if get_filename(self.excel_file_path) == "material_issued_to_party" and get_compname(self.excel_file_path) != "comp0014" :
             df = apply_material_issued_to_party_transformation(self.excel_file_path, top_row= 3)

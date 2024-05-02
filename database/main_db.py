@@ -8,7 +8,7 @@ from logging_config import logger
 
 
 
-def delete_then_import_to_sql():    
+def delete_busy_data():    
     Base.metadata.create_all(db_engine)
     
     # file = r"D:\automated_busy_downloads\comp0014\material_received_from_party\comp0014_material_received_from_party_25-Apr-2024.xlsx"
@@ -22,11 +22,26 @@ def delete_then_import_to_sql():
     tables_list = list(tables.keys())
     importer = DatabaseCrud(db_connector)
     for table in tables_list:
-        importer.delete_date_query(table, date1, date2)
-        importer.truncate_table(table_name=table)
+        if "acc" in table:
+            importer.truncate_table(table_name=table)
+        else:
+            importer.delete_date_query(table, date1, date2)
+
+
+
+
+def import_busy_data():    
+    Base.metadata.create_all(db_engine)
+    
+    # file = r"D:\automated_busy_downloads\comp0014\material_received_from_party\comp0014_material_received_from_party_25-Apr-2024.xlsx"
+    # excel_data = ExcelProcessor(file)
+    # print(get_compname(file))
+    # print(excel_data.clean_and_transform())
+
+    importer = DatabaseCrud(db_connector)
     # importer.import_data('busy_mitp', excel_data.clean_and_transform(top_rows=5))
-    #todays_date = "26-Apr-2024"
-    todays_date = datetime.today().strftime("%d-%b-%Y")
+    todays_date = "30-Apr-2024"
+#    todays_date = datetime.today().strftime("%d-%b-%Y")
     busy_files = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*{todays_date}.xlsx", recursive=True)
     if len(busy_files) != 0:
         for file in busy_files:
@@ -66,7 +81,10 @@ def delete_then_import_to_sql():
 
 
 
-# def acc_import():
-
-#     importer = DatabaseCrud(db_connector)
-#     importer.truncate_table('busy_acc_kbbio')
+# def test():
+#     tables_list = list(tables.keys())
+#     for table in tables_list:
+#         if "acc" not in table:
+#             print(table)
+        # else:
+        #     importer.delete_date_query(table, date1, date2)
