@@ -93,6 +93,20 @@ def exporting_and_emailing():
         except:
             logger.critical(f"Failed to go back busy home! : {e}")
 
+        
+        try:
+            export_busy_reports.select_masters()
+            export_busy_reports.select_items()
+            busy_utils.export_format(report_type= "items", 
+                                            company= comp, 
+                                            filename=f"{comp}_items_{curr_date}")
+                    
+            logger.info(f"Items Data for {comp} generated successfully and back to busy home...")
+            busy_utils.return_to_busy_home(esc=6)
+        except:
+            logger.critical(f"Failed to go back busy home! : {e}")
+
+
         try:    
             busy_utils.change_company()
             time.sleep(5)

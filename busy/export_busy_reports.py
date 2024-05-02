@@ -82,6 +82,48 @@ def select_accounts():
 
 
 
+def select_items():
+    try:
+        pg.locateOnScreen('busy/images/busy_sel_masters.png', confidence=0.9)
+        pg.press('enter')   #enter to go in open masters
+        time.sleep(0.4)    
+    except:
+        master = pg.locateOnScreen('busy/images/busy_masters.png', confidence=0.9)
+        pg.click(master)
+        time.sleep(0.4)
+    try:
+        item = pg.locateOnScreen('busy/images/busy_item.png', confidence=0.9)
+        pg.click(item, duration=0.4)
+    except:
+        item_sel = pg.locateOnScreen('busy/images/busy_sel_item.png', confidence=0.9)
+        pg.doubleClick(item_sel, duration=0.4)
+    pg.press('down')
+    pg.press('down')
+    pg.press('enter')
+
+    busy_utils.find_img('busy/images/standard_format.png', timeout= 30)
+    pg.click()
+    pg.click()
+    time.sleep(5)
+
+    pg.typewrite('standard')
+    pg.press('enter')
+
+    pg.typewrite("a")
+    pg.press("backspace")               #select branch
+    time.sleep(0.3)
+    pg.press('enter')
+
+    pg.press('n')
+    pg.press('enter')
+
+    pg.press('y')
+    pg.press('enter')
+
+    pg.press('f2')
+
+
+
 def select_sales_list():
     try:
         sales = pg.locateOnScreen('busy/images/busy_sales.PNG', confidence=0.95)
@@ -282,12 +324,22 @@ def list_format(report_type, start_date, end_date):
 
 
 def transaction_report_selection(report):
-    time.sleep(15)
+    time.sleep(10)
     select_transaction()
     report()
     
 
 
+# def main_items():
+#     pg.hotkey('alt', 'tab')
+#     select_masters()
+#     select_items()
+#     busy_utils.export_format(report_type= "items", 
+#                                      company= 'comp0005', 
+#                                      filename=f"comp_master_accounts_curr_date")
+            
+#     busy_utils.return_to_busy_home(esc=6)
+#     time.sleep(5)
 
 
 

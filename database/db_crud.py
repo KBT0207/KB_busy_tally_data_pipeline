@@ -2,20 +2,25 @@ import pandas as pd
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy import delete
 from logging_config import logger
-from database.models.busy_models import (SalesKBBIO, SalesReturnKBBIO, 
-                                         SalesOrderKBBIO, MITPKBBIO, MRFPKBBIO,
-                                         BusyAccountsKBBIO, BusyAccounts100x, BusyAccountsAgri,
-                                         BusyAccountsGreenEra, BusyAccountsNewAge,
-                                         )
-
+from database.models.busy_models.busy_reports_models import (SalesKBBIO, SalesReturnKBBIO, 
+                                        SalesOrderKBBIO, MITPKBBIO, MRFPKBBIO)
+from database.models.busy_models.busy_accounts_models import (BusyAccountsKBBIO, 
+                                        BusyAccounts100x, BusyAccountsAgri,
+                                        BusyAccountsGreenEra, BusyAccountsNewAge)
+from database.models.busy_models.busy_items_models import (BusyItemsKBBIO, 
+                                        BusyItems100x, BusyItemsGreenEra,
+                                        BusyItemsAgri, BusyItemsNewAge)
 
 
 tables = {'busy_sales': SalesKBBIO, 'busy_sales_order': SalesOrderKBBIO,
           'busy_sales_return': SalesReturnKBBIO, "busy_mitp": MITPKBBIO,
           "busy_mrfp": MRFPKBBIO, 
-         "busy_acc_kbbio": BusyAccountsKBBIO,
+          "busy_acc_kbbio": BusyAccountsKBBIO,
           "busy_acc_100x": BusyAccounts100x, "busy_acc_agri": BusyAccountsAgri,
           "busy_acc_greenera": BusyAccountsGreenEra, "busy_acc_newage": BusyAccountsNewAge,
+          "busy_items_kbbio": BusyItemsKBBIO, "busy_items_100x": BusyItems100x, 
+          "busy_items_agri": BusyItemsAgri, "busy_items_greenera": BusyItemsGreenEra, 
+          "busy_items_newage": BusyItemsNewAge,
         }
 
 

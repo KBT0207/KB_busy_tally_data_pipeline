@@ -221,6 +221,24 @@ def apply_accounts_transformation(file_path:str, top_row:int) -> pd.DataFrame:
 
 
 
+def apply_items_transformation(file_path:str, top_row:int) -> pd.DataFrame:
+    try:
+        df =  pd.read_excel(file_path,skiprows= top_row, skipfooter= 2)
+    except FileNotFoundError as e:
+        logger.error(f"Excel File not found in the given {file_path}: {e}")
+    if df.empty:
+        logger.warning(f"Empty Excel File of {get_compname(file_path)} and report {get_filename(file_path)}")
+        return None
+
+    df.loc[:,"Op. Stock"] = df["Op. Stock"].fillna(0)
+
+    df.columns = df.columns.str.lower().str.replace(" ", "_").str.replace(".", "")
+    df = df.rename(columns= {"op_stock": "opening_stock"})
+    
+    df["tax_category"] = df["tax_category"].replace("<<---None--->>", "None")
+
+    return df
+
 
 class ExcelProcessor:
     def __init__(self, excel_file_path) -> None:
@@ -256,5 +274,9 @@ class ExcelProcessor:
 
         if get_filename(self.excel_file_path) == "master_accounts":
             df = apply_accounts_transformation(self.excel_file_path, top_row=2)
+
+        if get_filename(self.excel_file_path) == "items":
+            df = apply_items_transformation(self.excel_file_path, top_row=2)
+
         return df
     

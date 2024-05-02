@@ -2,7 +2,7 @@ import glob
 from datetime import datetime, timedelta
 from database.sql_connector import db_engine, db_connector
 from database.busy_data_processor import ExcelProcessor, get_filename, get_compname
-from database.models.busy_models import Base
+from database.models.base import Base
 from database.db_crud import DatabaseCrud, tables
 from logging_config import logger
 
@@ -22,7 +22,7 @@ def delete_busy_data():
     tables_list = list(tables.keys())
     importer = DatabaseCrud(db_connector)
     for table in tables_list:
-        if "acc" in table:
+        if "acc" in table or "items" in table:
             importer.truncate_table(table_name=table)
         else:
             importer.delete_date_query(table, date1, date2)
@@ -76,15 +76,34 @@ def import_busy_data():
             
             if get_filename(file) == "master_accounts" and get_compname(file) == "comp0015":
                 importer.import_data('busy_acc_100x', excel_data.clean_and_transform())
+
+            if get_filename(file) == "items" and get_compname(file) == "comp0005":
+                importer.import_data('busy_items_kbbio', excel_data.clean_and_transform())
+
+            if get_filename(file) == "items" and get_compname(file) == "comp0015":
+                importer.import_data('busy_items_100x', excel_data.clean_and_transform())
+
+            if get_filename(file) == "items" and get_compname(file) == "comp0011":
+                importer.import_data('busy_items_greenera', excel_data.clean_and_transform())
+
+            if get_filename(file) == "items" and get_compname(file) == "comp0014":
+                importer.import_data('busy_items_newage', excel_data.clean_and_transform())
+            
+            if get_filename(file) == "items" and get_compname(file) == "comp0010":
+                importer.import_data('busy_items_agri', excel_data.clean_and_transform())
+
+        else:
+            logger.error(f"File or/and Company name didn't match the criteria")    
+
     else:
         logger.critical("No File for today's date found to import in database")            
 
 
 
 # def test():
-#     tables_list = list(tables.keys())
-#     for table in tables_list:
-#         if "acc" not in table:
-#             print(table)
-        # else:
-        #     importer.delete_date_query(table, date1, date2)
+#     Base.metadata.create_all(db_engine)
+#     file = r"D:\automated_busy_downloads\comp0005\items\comp_items_date.xlsx"
+#     excel_data = ExcelProcessor(file)
+#     #print(get_filename(file))
+#     importer = DatabaseCrud(db_connector)
+#     importer.import_data("busy_items_kbbio", excel_data.clean_and_transform())

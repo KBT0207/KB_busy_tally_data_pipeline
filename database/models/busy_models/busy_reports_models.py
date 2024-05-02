@@ -1,9 +1,8 @@
 from sqlalchemy import MetaData, Column, Integer, String, Date, BigInteger, Float, DateTime, func
-from sqlalchemy.ext.declarative import declarative_base
+from database.models.base import Base
 
 
 metadata = MetaData()
-Base = declarative_base()
 
 
 class SalesKBBIO(Base):
@@ -45,7 +44,7 @@ class SalesKBBIO(Base):
     e_way_bill = Column(BigInteger, nullable= True)
     transporter_name = Column(String(255), nullable= True)
     narration = Column(String(255), nullable= True)
-    created_at = Column(DateTime, nullable= False, default=func.now())
+    created_at = Column(DateTime, server_default=func.now())
 
 
 class SalesReturnKBBIO(Base):
@@ -86,7 +85,7 @@ class SalesReturnKBBIO(Base):
     sales_order_date = Column(String(255), nullable= True)
     e_way_bill = Column(BigInteger, nullable= True)
     narration = Column(String(255), nullable= True)
-    created_at = Column(DateTime, nullable= False, default=func.now())
+    created_at = Column(DateTime, server_default=func.now())
 
 
 
@@ -110,7 +109,7 @@ class SalesOrderKBBIO(Base):
     order_amt = Column(Float, nullable=False, default= 0)
     salesman = Column(String(255), nullable= True)
     salesman_id = Column(String(255), nullable= True)
-    created_at = Column(DateTime, nullable= False, default=func.now())
+    created_at = Column(DateTime, server_default=func.now())
 
 
 
@@ -145,7 +144,7 @@ class MITPKBBIO(Base):
     salesman = Column(String(255), nullable= True)
     territory = Column(String(255), nullable= True)
     transporter = Column(String(255), nullable= True)
-    created_at = Column(DateTime, nullable= False, default=func.now())
+    created_at = Column(DateTime, server_default=func.now())
 
 
 
@@ -174,129 +173,4 @@ class MRFPKBBIO(Base):
     sgst_amt = Column(Float, nullable=False, default=0)
     igst_amt = Column(Float, nullable=False, default= 0)
     narration = Column(String(255), nullable= True)
-    created_at = Column(DateTime, nullable= False, default=func.now())
-
-
-
-class BusyAccountsKBBIO(Base):
-    __tablename__ = 'busy_acc_kbbio'
-
-    id = Column(Integer, index= True, autoincrement=True)
-    name = Column(String(255), primary_key= True, index= True)
-    alias = Column(String(100), nullable= True)
-    parent_group = Column(String(255), nullable= True)
-    opening_balance_credit = Column(Float, nullable= False, default=0)
-    opening_balance_debit = Column(Float, nullable= False, default=0)
-    dealer_type = Column(String(255), nullable= True)
-    gst_no = Column(String(15), nullable= True)
-    pan =  Column(String(10), nullable= True)
-    filing_frequency =  Column(String(20), nullable= True)
-    credit_limit = Column(Float, nullable= False, default=0)
-    state = Column(String(50), nullable= True)
-    address1 = Column(String(255), nullable= True)
-    address2 = Column(String(255), nullable= True)
-    pincode = Column(BigInteger, nullable= True)
-    territory = Column(String(50), nullable= True)
-    mobile_no = Column(String(50), nullable= True)
-    contact_person = Column(String(100), nullable=True)
-    created_at = Column(DateTime, nullable= False, default=func.now())
-
-
-
-class BusyAccounts100x(Base):
-    __tablename__ = 'busy_acc_100x'
-
-    id = Column(Integer, index= True)
-    name = Column(String(255), primary_key= True, index= True)
-    alias = Column(String(100), nullable= True)
-    parent_group = Column(String(255), nullable= True)
-    opening_balance_credit = Column(Float, nullable= False, default=0)
-    opening_balance_debit = Column(Float, nullable= False, default=0)
-    dealer_type = Column(String(255), nullable= True)
-    gst_no = Column(String(15), nullable= True)
-    pan =  Column(String(10), nullable= True)
-    filing_frequency =  Column(String(20), nullable= True)
-    credit_limit = Column(Float, nullable= False, default=0)
-    state = Column(String(50), nullable= True)
-    address1 = Column(String(255), nullable= True)
-    address2 = Column(String(255), nullable= True)
-    pincode = Column(BigInteger, nullable= True)
-    territory = Column(String(50), nullable= True)
-    mobile_no = Column(String(50), nullable= True)
-    contact_person = Column(String(100), nullable=True)
-    created_at = Column(DateTime, nullable= False, default=func.now())
-
-
-
-class BusyAccountsGreenEra(Base):
-    __tablename__ = 'busy_acc_greenera'
-
-    id = Column(Integer, index= True)
-    name = Column(String(255), primary_key= True, index= True)
-    alias = Column(String(100), nullable= True)
-    parent_group = Column(String(255), nullable= True)
-    opening_balance_credit = Column(Float, nullable= False, default=0)
-    opening_balance_debit = Column(Float, nullable= False, default=0)
-    dealer_type = Column(String(255), nullable= True)
-    gst_no = Column(String(15), nullable= True)
-    pan =  Column(String(10), nullable= True)
-    filing_frequency =  Column(String(20), nullable= True)
-    credit_limit = Column(Float, nullable= False, default=0)
-    state = Column(String(50), nullable= True)
-    address1 = Column(String(255), nullable= True)
-    address2 = Column(String(255), nullable= True)
-    pincode = Column(BigInteger, nullable= True)
-    territory = Column(String(50), nullable= True)
-    mobile_no = Column(String(50), nullable= True)
-    contact_person = Column(String(100), nullable=True)
-    created_at = Column(DateTime, nullable= False, default=func.now())
-
-
-
-class BusyAccountsAgri(Base):
-    __tablename__ = 'busy_acc_agri'
-
-    id = Column(Integer, index= True)
-    name = Column(String(255), primary_key= True, index= True)
-    alias = Column(String(100), nullable= True)
-    parent_group = Column(String(255), nullable= True)
-    opening_balance_credit = Column(Float, nullable= False, default=0)
-    opening_balance_debit = Column(Float, nullable= False, default=0)
-    dealer_type = Column(String(255), nullable= True)
-    gst_no = Column(String(15), nullable= True)
-    pan =  Column(String(10), nullable= True)
-    filing_frequency =  Column(String(20), nullable= True)
-    credit_limit = Column(Float, nullable= False, default=0)
-    state = Column(String(50), nullable= True)
-    address1 = Column(String(255), nullable= True)
-    address2 = Column(String(255), nullable= True)
-    pincode = Column(BigInteger, nullable= True)
-    territory = Column(String(50), nullable= True)
-    mobile_no = Column(String(50), nullable= True)
-    contact_person = Column(String(100), nullable=True)
-    created_at = Column(DateTime, nullable= False, default=func.now())
-
-
-
-class BusyAccountsNewAge(Base):
-    __tablename__ = 'busy_acc_newage'
-
-    id = Column(Integer, index= True)
-    name = Column(String(255), primary_key= True, index= True)
-    alias = Column(String(100), nullable= True)
-    parent_group = Column(String(255), nullable= True)
-    opening_balance_credit = Column(Float, nullable= False, default=0)
-    opening_balance_debit = Column(Float, nullable= False, default=0)
-    dealer_type = Column(String(255), nullable= True)
-    gst_no = Column(String(15), nullable= True)
-    pan =  Column(String(10), nullable= True)
-    filing_frequency =  Column(String(20), nullable= True)
-    credit_limit = Column(Float, nullable= False, default=0)
-    state = Column(String(50), nullable= True)
-    address1 = Column(String(255), nullable= True)
-    address2 = Column(String(255), nullable= True)
-    pincode = Column(BigInteger, nullable= True)
-    territory = Column(String(50), nullable= True)
-    mobile_no = Column(String(50), nullable= True)
-    contact_person = Column(String(100), nullable=True)
-    created_at = Column(DateTime, nullable= False, default=func.now())
+    created_at = Column(DateTime, server_default=func.now())
