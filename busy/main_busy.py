@@ -49,11 +49,14 @@ def exporting_and_emailing():
             else:
                 export_busy_reports.transaction_report_selection(report= rep_func)
 
-                endate = datetime.today()
-                startdate = endate - timedelta(days=2)
+                #endate = datetime.today().date()
+                #endate = "2024-05-03"
+                #startdate = endate - timedelta(days=2)
 
-                endate_str = endate.strftime("%d-%m-%Y")
-                startdate_str = startdate.strftime("%d-%m-%Y")
+                #endate_str = endate.strftime("%d-%m-%Y")
+                endate_str = "03-05-2024"
+                startdate_str = "01-05-2024"
+                #startdate_str = startdate.strftime("%d-%m-%Y")
                 
                 try:
                     export_busy_reports.list_format(report_type= report, 
@@ -102,7 +105,7 @@ def exporting_and_emailing():
                                             filename=f"{comp}_items_{curr_date}")
                     
             logger.info(f"Items Data for {comp} generated successfully and back to busy home...")
-            busy_utils.return_to_busy_home(esc=6)
+            busy_utils.return_to_busy_home(esc=5)
         except:
             logger.critical(f"Failed to go back busy home! : {e}")
 
@@ -117,14 +120,15 @@ def exporting_and_emailing():
 
     time.sleep(2)
 
-    busy_utils.find_img(img='busy/images/quit_at_login.png', timeout= 300)
+    busy_utils.find_img(img='busy/images/quit_at_login.png')
     pg.click()
     time.sleep(5)
     pg.press('e')
     pg.press('enter')
     logger.info("Quit Busy Successfully!")
 
-    today_date = datetime.today().strftime("%d-%b-%Y")
+    #today_date = datetime.today().strftime("%d-%b-%Y")
+    today_date = "03-May-2024"
     receivers = ['shivprasad@kaybeebio.com', 'danish@kaybeeexports.com']
     #receivers = ['s.gaurav@kaybeeexports.com']
     body_material = f"Kindly find the attached MITP & MRFP data of {companies} from {startdate_str} to {endate_str}"

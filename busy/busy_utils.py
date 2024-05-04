@@ -10,14 +10,15 @@ from logging_config import logger
 load_dotenv('.env')
 
 
-def find_img(img:str, timeout:int = 10, conf: Union[float, int] = 0.9, gs:bool=False ) -> None:
+def find_img(img:str, timeout:int = None, conf: Union[float, int] = 0.9, gs:bool=False ) -> None:
     """Function will continue to look for the image for the time given as timeout parameter seconds (default is 10 secs).
 
     Args:
         img (str): The image you want to find.
         timeout(int): Amount of seconds it should take to find the image the image 
-                    if None is given then it waits indefinetly. Defaults to 10 seconds
-        conf (float, optional): Confidence parameter same as found in             location methods in Pyautogui. Defaults to 0.9.
+                    if None is given then it waits indefinetly. Defaults to None
+        conf (float, optional): Confidence parameter same as found in 
+                    location methods in Pyautogui. Defaults to 0.9.
         gs(bool, optional): Grayscale property applied to image or not. Defaults to False 
     """
     location = None
@@ -104,7 +105,7 @@ def company_selection(comp_code:str):
     Args:
         comp_code (str): Busy Company Code
     """
-    find_img('busy/images/select_company.png', timeout= 200)
+    find_img('busy/images/select_company.png')
     time.sleep(0.5)
     pg.typewrite(comp_code)
     pg.press('tab')
@@ -123,7 +124,7 @@ def busy_login(username:str, password:str):    #implement logging and end script
         username (str): Username for the Busy
         password (str): Password for the Busy
     """
-    find_img('busy/images/busy_username.png', timeout= 300)
+    find_img('busy/images/busy_username.png')
     pg.write(username, interval= 0.3)
     pg.press("enter")
     time.sleep(0.3)
@@ -158,19 +159,19 @@ def busy_login(username:str, password:str):    #implement logging and end script
             close_rdc()
         except:
             pg.press("enter")
-            find_img('busy/images/busy_loggedin.png', timeout= 25)
+            find_img('busy/images/busy_loggedin.png')
             
 
 
 def export_format(report_type:str, company:str, filename):
     save_location = f"D:\\automated_busy_downloads\{company}\{report_type}\{filename}"
-    find_img('busy/images/busy_report_list.png', timeout=3000)
+    find_img('busy/images/busy_report_list.png')
     time.sleep(0.3)
     pg.moveTo(150, 150,duration=0.3)
     time.sleep(1)
     pg.hotkey('alt', 'e')
     
-    find_img('busy/images/busy_export_format.png', timeout=1500)
+    find_img('busy/images/busy_export_format.png')
 
     pg.typewrite('micros')           #data format 
     pg.press('enter')
@@ -187,7 +188,7 @@ def export_format(report_type:str, company:str, filename):
     pg.press('enter')    
     pg.press('enter')
 
-    find_img('busy/images/busy_download_prompt.png', timeout= 3000)
+    find_img('busy/images/busy_download_prompt.png')
     time.sleep(0.5)
     pg.click()
 
@@ -204,7 +205,7 @@ def preparing_envs(rdc_password:str , company:str ,username:str, password:str) -
 
 
 def change_company():
-    find_img('busy/images/busy_home.png', timeout= 60)
+    find_img('busy/images/busy_home.png')
     time.sleep(0.5)
     location = None
     while location == None:

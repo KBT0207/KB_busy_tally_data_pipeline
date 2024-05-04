@@ -62,7 +62,7 @@ def select_accounts():
         pg.press("enter")  #enter to select list 
         time.sleep(0.4)
         
-    busy_utils.find_img('busy/images/standard_format.png', timeout= 30)
+    busy_utils.find_img('busy/images/standard_format.png')
     pg.click()
     pg.click()
     time.sleep(5)
@@ -101,7 +101,7 @@ def select_items():
     pg.press('down')
     pg.press('enter')
 
-    busy_utils.find_img('busy/images/standard_format.png', timeout= 30)
+    busy_utils.find_img('busy/images/standard_format.png')
     pg.click()
     pg.click()
     time.sleep(5)
@@ -256,7 +256,7 @@ def select_salesorder_list():
 
 
 def list_format(report_type, start_date, end_date):
-    busy_utils.find_img('busy/images/busy_list.png', timeout=20)
+    busy_utils.find_img('busy/images/busy_list.png')
     time.sleep(1)
     
     #format name

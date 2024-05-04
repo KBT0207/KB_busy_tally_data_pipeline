@@ -12,7 +12,7 @@ class BusyItemsKBBIO(Base):
     parent_group = Column(String(255), nullable= True)
     opening_stock = Column(Float, nullable= False, default=0)
     unit = Column(String(30), nullable= False)
-    tax_category = Column(String(30), nullable= False)
+    tax_category = Column(String(50), nullable= False)
     created_at = Column(DateTime, server_default=func.now())
 
 
@@ -26,7 +26,7 @@ class BusyItems100x(Base):
     parent_group = Column(String(255), nullable= True)
     opening_stock = Column(Float, nullable= False, default=0)
     unit = Column(String(30), nullable= False)
-    tax_category = Column(String(30), nullable= False)
+    tax_category = Column(String(50), nullable= False)
     created_at = Column(DateTime, server_default=func.now())
 
 
@@ -40,7 +40,7 @@ class BusyItemsNewAge(Base):
     parent_group = Column(String(255), nullable= True)
     opening_stock = Column(Float, nullable= False, default=0)
     unit = Column(String(30), nullable= False)
-    tax_category = Column(String(30), nullable= False)
+    tax_category = Column(String(50), nullable= False)
     created_at = Column(DateTime, server_default=func.now())
 
 
@@ -54,7 +54,7 @@ class BusyItemsAgri(Base):
     parent_group = Column(String(255), nullable= True)
     opening_stock = Column(Float, nullable= False, default=0)
     unit = Column(String(30), nullable= False)
-    tax_category = Column(String(30), nullable= False)
+    tax_category = Column(String(50), nullable= False)
     created_at = Column(DateTime, server_default=func.now())
 
 
@@ -68,5 +68,5 @@ class BusyItemsGreenEra(Base):
     parent_group = Column(String(255), nullable= True)
     opening_stock = Column(Float, nullable= False, default=0)
     unit = Column(String(30), nullable= False)
-    tax_category = Column(String(30), nullable= False)
+    tax_category = Column(String(50), nullable= False)
     created_at = Column(DateTime, server_default=func.now())

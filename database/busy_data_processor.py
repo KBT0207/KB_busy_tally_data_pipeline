@@ -230,12 +230,11 @@ def apply_items_transformation(file_path:str, top_row:int) -> pd.DataFrame:
         logger.warning(f"Empty Excel File of {get_compname(file_path)} and report {get_filename(file_path)}")
         return None
 
-    df.loc[:,"Op. Stock"] = df["Op. Stock"].fillna(0)
-
     df.columns = df.columns.str.lower().str.replace(" ", "_").str.replace(".", "")
     df = df.rename(columns= {"op_stock": "opening_stock"})
     
-    df["tax_category"] = df["tax_category"].replace("<<---None--->>", "None")
+    if "<<---None--->>" in df["tax_category"].values:
+        df["tax_category"] = df["tax_category"].replace("<<---None--->>", "None")
 
     return df
 
@@ -272,11 +271,22 @@ class ExcelProcessor:
         if get_filename(self.excel_file_path) == "material_received_from_party" and get_compname(self.excel_file_path) == "comp0014" :
             df = apply_material_received_from_party_transformation(self.excel_file_path, top_row= 5)
 
-        if get_filename(self.excel_file_path) == "master_accounts":
+        if get_filename(self.excel_file_path) == "master_accounts" and get_compname(self.excel_file_path) != "comp0014":
             df = apply_accounts_transformation(self.excel_file_path, top_row=2)
 
-        if get_filename(self.excel_file_path) == "items":
+        if get_filename(self.excel_file_path) == "master_accounts" and get_compname(self.excel_file_path) == "comp0014":
+            df = apply_accounts_transformation(self.excel_file_path, top_row=4)
+
+        if get_filename(self.excel_file_path) == "items" and get_compname(self.excel_file_path) != "comp0014":
             df = apply_items_transformation(self.excel_file_path, top_row=2)
 
+        if get_filename(self.excel_file_path) == "items" and get_compname(self.excel_file_path) == "comp0014":
+            df = apply_items_transformation(self.excel_file_path, top_row=4)
+
         return df
-    
+
+
+# def test():
+#     file = r"D:\automated_busy_downloads\comp0005\items\comp0005_items_02-May-2024.xlsx"
+#     df = apply_items_transformation(file_path=file, top_row=2)
+#     return df  

@@ -15,7 +15,8 @@ def delete_busy_data():
     # excel_data = ExcelProcessor(file)
     # print(get_compname(file))
     # print(excel_data.clean_and_transform())
-    current_date = datetime.today().date()
+    #current_date = datetime.today().date()
+    current_date = "2024-05-03"
     date1 = current_date - timedelta(days=1)
     date2 = current_date - timedelta(days=2)
 
@@ -33,15 +34,8 @@ def delete_busy_data():
 def import_busy_data():    
     Base.metadata.create_all(db_engine)
     
-    # file = r"D:\automated_busy_downloads\comp0014\material_received_from_party\comp0014_material_received_from_party_25-Apr-2024.xlsx"
-    # excel_data = ExcelProcessor(file)
-    # print(get_compname(file))
-    # print(excel_data.clean_and_transform())
-
-    importer = DatabaseCrud(db_connector)
-    # importer.import_data('busy_mitp', excel_data.clean_and_transform(top_rows=5))
-    todays_date = "30-Apr-2024"
-#    todays_date = datetime.today().strftime("%d-%b-%Y")
+    todays_date = "03-May-2024"
+    #todays_date = datetime.today().strftime("%d-%b-%Y")
     busy_files = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*{todays_date}.xlsx", recursive=True)
     if len(busy_files) != 0:
         for file in busy_files:
@@ -93,7 +87,7 @@ def import_busy_data():
                 importer.import_data('busy_items_agri', excel_data.clean_and_transform())
 
         else:
-            logger.error(f"File or/and Company name didn't match the criteria")    
+            logger.error(f"{get_filename(file)} and {get_compname(file)} of {file} didn't match the criteria")    
 
     else:
         logger.critical("No File for today's date found to import in database")            
@@ -102,8 +96,11 @@ def import_busy_data():
 
 # def test():
 #     Base.metadata.create_all(db_engine)
-#     file = r"D:\automated_busy_downloads\comp0005\items\comp_items_date.xlsx"
+#     file = r"D:\automated_busy_downloads\comp0005\master_accounts\comp0005_master_accounts_02-May-2024.xlsx"
 #     excel_data = ExcelProcessor(file)
 #     #print(get_filename(file))
 #     importer = DatabaseCrud(db_connector)
-#     importer.import_data("busy_items_kbbio", excel_data.clean_and_transform())
+#     #importer.import_data("busy_items_kbbio", excel_data.clean_and_transform())
+#     if get_filename(file) == "master_accounts" and get_compname(file) == "comp0005":
+#         #print(get_filename(file), get_compname(file))
+#         importer.import_data('busy_acc_kbbio', excel_data.clean_and_transform())
