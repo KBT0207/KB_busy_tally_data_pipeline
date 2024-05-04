@@ -239,7 +239,7 @@ def apply_items_transformation(file_path:str, top_row:int) -> pd.DataFrame:
     return df
 
 
-class ExcelProcessor:
+class BusyDataProcessor:
     def __init__(self, excel_file_path) -> None:
         self.excel_file_path = excel_file_path
 

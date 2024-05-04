@@ -17,3 +17,11 @@ def is_process_running(process_name:str) -> bool:
         if process.name().lower() == process_name.lower():
             return True
     return False
+
+
+
+
+tally_reports = {'s': 'sales', 'p': "purchase" , 'e': 'sales_return', 
+                 'd': 'purchase_return'}
+        
+

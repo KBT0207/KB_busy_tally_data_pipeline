@@ -4,7 +4,7 @@ import pyautogui as pg
 from utils.email import send_daily_logs
 from database import main_db
 from busy import main_busy
-from tally import tally_utils
+from tally import tally_utils, main_tally
 
 
 def data_busy_to_sql_async():
@@ -15,10 +15,8 @@ def data_busy_to_sql_async():
 
 
 if __name__ == "__main__":
-    tally_utils.start()
-    # pg.hotkey("alt", "tab")
-    # tally_utils.export_data(path= r"D:\automatic_tally_downloads\10009\sales", 
-    #                         filename= "sales.xlsx")
+    companies = ["10009"]
+    # main_tally.exporting_data(company=companies)
     # main_busy.exporting_and_emailing()
     # main_db.delete_busy_data()
     # main_db.import_busy_data()
@@ -30,3 +28,4 @@ if __name__ == "__main__":
     #     schedule.run_pending()
     #     time.sleep(1)
 
+    
