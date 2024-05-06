@@ -1,7 +1,7 @@
 import glob
 from datetime import datetime, timedelta
 from database.sql_connector import db_engine, db_connector
-from database.busy_data_processor import ExcelProcessor, get_filename, get_compname
+from database.busy_data_processor import BusyDataProcessor, get_filename, get_compname
 from database.models.base import Base
 from database.db_crud import DatabaseCrud, tables
 from logging_config import logger
@@ -10,15 +10,12 @@ from logging_config import logger
 
 def delete_busy_data():    
     Base.metadata.create_all(db_engine)
-    
-    # file = r"D:\automated_busy_downloads\comp0014\material_received_from_party\comp0014_material_received_from_party_25-Apr-2024.xlsx"
-    # excel_data = ExcelProcessor(file)
-    # print(get_compname(file))
-    # print(excel_data.clean_and_transform())
-    #current_date = datetime.today().date()
-    current_date = "2024-05-03"
+
+    current_date = datetime.today().date()
     date1 = current_date - timedelta(days=1)
+    #date1= "2024-05-03"
     date2 = current_date - timedelta(days=2)
+    #date2= "2024-05-02"
 
     tables_list = list(tables.keys())
     importer = DatabaseCrud(db_connector)
@@ -34,12 +31,12 @@ def delete_busy_data():
 def import_busy_data():    
     Base.metadata.create_all(db_engine)
     
-    todays_date = "03-May-2024"
-    #todays_date = datetime.today().strftime("%d-%b-%Y")
+    #todays_date = "04-May-2024"
+    todays_date = datetime.today().strftime("%d-%b-%Y")
     busy_files = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*{todays_date}.xlsx", recursive=True)
     if len(busy_files) != 0:
         for file in busy_files:
-            excel_data = ExcelProcessor(file)
+            excel_data = BusyDataProcessor(file)
             importer = DatabaseCrud(db_connector)
             if get_filename(file) == 'sales':
                 importer.import_data('busy_sales', excel_data.clean_and_transform())

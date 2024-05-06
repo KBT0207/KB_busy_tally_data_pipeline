@@ -1,6 +1,6 @@
 import logging
 import logging.config
-from logging.handlers import TimedRotatingFileHandler
+from logging.handlers import RotatingFileHandler
 from utils.email import  YagmailHandler
 import yagmail
 import os
@@ -25,11 +25,10 @@ LOGGING_CONFIG = {
     },
     'handlers': {
         'file_handler': {
-            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'class': 'logging.handlers.RotatingFileHandler',
             'filename': f'logs/main_{today_date}.log',
-            'atTime': 'midnight', 
-            'interval':1,
-            'backupCount': 0,
+            'maxBytes': 10485760,  # 10 mb
+            'backupCount': 30,
             'formatter': 'standard'
         },
         'critical_email_handler': {

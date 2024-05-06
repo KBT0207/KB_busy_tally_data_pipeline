@@ -49,14 +49,14 @@ def exporting_and_emailing():
             else:
                 export_busy_reports.transaction_report_selection(report= rep_func)
 
-                #endate = datetime.today().date()
+                endate = datetime.today().date()
                 #endate = "2024-05-03"
-                #startdate = endate - timedelta(days=2)
+                startdate = endate - timedelta(days=2)
 
-                #endate_str = endate.strftime("%d-%m-%Y")
-                endate_str = "03-05-2024"
-                startdate_str = "01-05-2024"
-                #startdate_str = startdate.strftime("%d-%m-%Y")
+                endate_str = endate.strftime("%d-%m-%Y")
+                #endate_str = "03-05-2024"
+                #startdate_str = "01-05-2024"
+                startdate_str = startdate.strftime("%d-%m-%Y")
                 
                 try:
                     export_busy_reports.list_format(report_type= report, 
@@ -127,8 +127,8 @@ def exporting_and_emailing():
     pg.press('enter')
     logger.info("Quit Busy Successfully!")
 
-    #today_date = datetime.today().strftime("%d-%b-%Y")
-    today_date = "03-May-2024"
+    today_date = datetime.today().strftime("%d-%b-%Y")
+    #today_date = "03-May-2024"
     receivers = ['shivprasad@kaybeebio.com', 'danish@kaybeeexports.com']
     #receivers = ['s.gaurav@kaybeeexports.com']
     body_material = f"Kindly find the attached MITP & MRFP data of {companies} from {startdate_str} to {endate_str}"
