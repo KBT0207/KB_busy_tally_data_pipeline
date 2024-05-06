@@ -1,31 +1,36 @@
 import pyautogui as pg
 from tally import tally_utils
-from utils.common_utils import tally_reports
-from datetime import datetime
-
-def test():
-    for r in list(tally_reports.keys()):
-        print(r, tally_reports[r])
+from utils.common_utils import tally_reports, tally_comp_codes
+from datetime import datetime, timedelta
+from logging_config import logger
 
 
-companies = ["10009"]
 
-def exporting_data(company=companies):
-    todays_date = datetime.today().strftime("%d-%b-%Y")
-    date1 = '01-5-2024'
-    date2 = '04-5-2024'
+
+def exporting_data(company):
     pg.hotkey("win", "d")
-    tally_utils.start_tally()
-    
+    todays_date = datetime.today().strftime("%d-%b-%Y")
+    from_date = (datetime.today() - timedelta(days=2)).strftime("%d-%m-%Y")
+    to_date = datetime.today().strftime("%d-%m-%Y")
+
+    try:
+        tally_utils.start_tally()
+        logger.info("Tally started...")
+    except Exception as e:
+        logger.critical(f"Failed to start tally!: {e}")
+
     for comp in company:
         tally_utils.select_company(company_code= comp)
+        logger.info(f"{comp} selected...")
         for rep in list(tally_reports.keys()):
+
             tally_utils.exporting_reports(report= rep, 
-                        from_date= date1, to_date= date2,
+                        from_date= from_date, to_date= to_date,
                         path= fr"D:\automatic_tally_downloads\{comp}\{tally_reports[rep]}",
                         filename= f"{comp}_{tally_reports[rep]}_{todays_date}.xlsx", 
                         esc= 4)
-        
+            logger.info(f"Exported {rep} of {comp} of {todays_date}")
         tally_utils.change_company()
+
 
 

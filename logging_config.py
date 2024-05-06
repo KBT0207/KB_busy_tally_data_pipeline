@@ -5,6 +5,8 @@ from utils.email import  YagmailHandler
 import yagmail
 import os
 from datetime import datetime
+from logtail import LogtailHandler
+
 
 
 yag = yagmail.SMTP('Jovo@kaybeebio.com', os.getenv('SENDER_EMAIL_PASSWORD'))
@@ -43,11 +45,18 @@ LOGGING_CONFIG = {
             'to': email_recipients,
             'subject': 'Critical Log',
             'formatter': 'standard'
+        },
+        'better_stack_handler':{
+            'class': 'logtail.LogtailHandler',
+            'formatter': 'standard',
+            'level': 'INFO',
+            'source_token': os.getenv('SOURCE_TOKEN')
         }
+
     },
     'loggers': {
         '': {
-            'handlers': ['file_handler',  'critical_email_handler'],
+            'handlers': ['file_handler',  'critical_email_handler', 'better_stack_handler'],
             'level': 'INFO',
             'propagate': False
         }

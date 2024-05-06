@@ -13,9 +13,8 @@ load_dotenv('.env')
 
 
 companies = ['comp0005', 'comp0010', 'comp0011', 'comp0014', 'comp0015']
-#companies = ['comp0014', 'comp0015']
 
-#Dictionary of 
+
 transaction_dict = {'trans_list': [export_busy_reports.select_sales_list, 
                                    export_busy_reports.select_salesreturn_list, 
                                    export_busy_reports.select_mrfp_list, 
@@ -185,15 +184,3 @@ def exporting_and_emailing():
             logger.critical(f"Failed to email the attachment for Sales Order! : {e}")
     else:
         logger.critical("No data for Sales_Order exported today")
-
-
-
-# def test():
-#     pg.hotkey('alt', 'tab')
-#     export_busy_reports.select_masters()
-#     export_busy_reports.select_accounts()
-#     busy_utils.export_format(report_type= "master_accounts", 
-#                                      company= 'comp0005', 
-#                                      filename=f"comp0005_master_accounts_30-Apr-2024")
-            
-#     busy_utils.return_to_busy_home(esc=6)

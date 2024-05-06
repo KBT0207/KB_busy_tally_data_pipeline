@@ -2,9 +2,11 @@ import glob
 from datetime import datetime, timedelta
 from database.sql_connector import db_engine, db_connector
 from database.busy_data_processor import BusyDataProcessor, get_filename, get_compname
+from database.tally_data_processor import TallyDataProcessor
 from database.models.base import Base
-from database.db_crud import DatabaseCrud, tables
+from database.db_crud import DatabaseCrud
 from logging_config import logger
+from utils.common_utils import busy_tables, tally_tables
 
 
 
@@ -17,13 +19,30 @@ def delete_busy_data():
     date2 = current_date - timedelta(days=2)
     #date2= "2024-05-02"
 
-    tables_list = list(tables.keys())
+    tables_list = list(busy_tables.keys())
     importer = DatabaseCrud(db_connector)
     for table in tables_list:
         if "acc" in table or "items" in table:
             importer.truncate_table(table_name=table)
         else:
             importer.delete_date_query(table, date1, date2)
+
+
+
+def delete_tally_data():    
+    Base.metadata.create_all(db_engine)
+
+    current_date = datetime.today().date()
+    date1 = current_date - timedelta(days=1)
+    #date1= "2024-05-03"
+    date2 = current_date - timedelta(days=2)
+    #date2= "2024-05-02"
+
+    tables_list = list(tally_tables.keys())
+    importer = DatabaseCrud(db_connector)
+    
+    for table in tables_list:
+        importer.delete_date_query(table, date1, date2)
 
 
 
@@ -89,6 +108,36 @@ def import_busy_data():
     else:
         logger.critical("No File for today's date found to import in database")            
 
+
+
+
+def import_tally_data():    
+    Base.metadata.create_all(db_engine)
+    
+    #todays_date = "04-May-2024"
+    todays_date = datetime.today().strftime("%d-%b-%Y")
+    tally_files = glob.glob("D:\\automated_tally_downloads\\" + f"**\\*{todays_date}.xlsx", recursive=True)
+    if len(tally_files) != 0:
+        for file in tally_files:
+            excel_data = TallyDataProcessor(file)
+            importer = DatabaseCrud(db_connector)
+            if get_filename(file) == 'sales':
+                importer.import_data('tally_sales', excel_data.clean_and_transform())
+    
+            if get_filename(file) == 'sales_return':
+                importer.import_data('tally_sales_return', excel_data.clean_and_transform())
+
+            if get_filename(file) == 'purchase':
+                importer.import_data('tally_sales', excel_data.clean_and_transform())
+    
+            if get_filename(file) == 'purchase_return':
+                importer.import_data('tally_sales_return', excel_data.clean_and_transform())
+
+        else:
+            logger.error(f"{get_filename(file)} and {get_compname(file)} of {file} didn't match the criteria")    
+
+    else:
+        logger.critical("No File for today's date found to import in database")
 
 
 # def test():

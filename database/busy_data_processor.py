@@ -284,9 +284,3 @@ class BusyDataProcessor:
             df = apply_items_transformation(self.excel_file_path, top_row=4)
 
         return df
-
-
-# def test():
-#     file = r"D:\automated_busy_downloads\comp0005\items\comp0005_items_02-May-2024.xlsx"
-#     df = apply_items_transformation(file_path=file, top_row=2)
-#     return df  
