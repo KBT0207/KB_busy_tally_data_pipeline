@@ -114,7 +114,7 @@ def import_busy_data():
 def import_tally_data():    
     Base.metadata.create_all(db_engine)
     
-    #todays_date = "04-May-2024"
+    #todays_date = "Apr-23-May-24"
     todays_date = datetime.today().strftime("%d-%b-%Y")
     tally_files = glob.glob("D:\\automated_tally_downloads\\" + f"**\\*{todays_date}.xlsx", recursive=True)
     if len(tally_files) != 0:
@@ -128,11 +128,12 @@ def import_tally_data():
                 importer.import_data('tally_sales_return', excel_data.clean_and_transform())
 
             if get_filename(file) == 'purchase':
-                importer.import_data('tally_sales', excel_data.clean_and_transform())
+                importer.import_data('tally_purchase', excel_data.clean_and_transform())
     
             if get_filename(file) == 'purchase_return':
-                importer.import_data('tally_sales_return', excel_data.clean_and_transform())
+                importer.import_data('tally_purchase_return', excel_data.clean_and_transform())
 
+            logger.info(f"{get_filename(file)} and {get_compname(file)} imported into database.. ")
         else:
             logger.error(f"{get_filename(file)} and {get_compname(file)} of {file} didn't match the criteria")    
 
@@ -140,13 +141,13 @@ def import_tally_data():
         logger.critical("No File for today's date found to import in database")
 
 
-# def test():
-#     Base.metadata.create_all(db_engine)
-#     file = r"D:\automated_busy_downloads\comp0005\master_accounts\comp0005_master_accounts_02-May-2024.xlsx"
-#     excel_data = ExcelProcessor(file)
-#     #print(get_filename(file))
-#     importer = DatabaseCrud(db_connector)
-#     #importer.import_data("busy_items_kbbio", excel_data.clean_and_transform())
-#     if get_filename(file) == "master_accounts" and get_compname(file) == "comp0005":
-#         #print(get_filename(file), get_compname(file))
-#         importer.import_data('busy_acc_kbbio', excel_data.clean_and_transform())
+def test():
+    Base.metadata.create_all(db_engine)
+    file = r"D:\automated_tally_downloads\10022\purchase\10022_purchase_Apr-23-May-24.xlsx"
+    excel_data = TallyDataProcessor(file)
+    #print(get_filename(file))
+    importer = DatabaseCrud(db_connector)
+    importer.import_data("tally_purchase", excel_data.clean_and_transform())
+    print(excel_data.clean_and_transform())
+    # if get_filename(file) == "sales" and get_compname(file) == "10017":
+    #     importer.import_data('tally_sales', excel_data.clean_and_transform())

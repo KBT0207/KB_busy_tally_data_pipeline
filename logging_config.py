@@ -56,7 +56,10 @@ LOGGING_CONFIG = {
     },
     'loggers': {
         '': {
-            'handlers': ['file_handler',  'critical_email_handler', 'better_stack_handler'],
+            'handlers': ['file_handler', 
+                        'critical_email_handler', 
+                         'better_stack_handler',
+                         ],
             'level': 'INFO',
             'propagate': False
         }
@@ -66,4 +69,4 @@ LOGGING_CONFIG = {
 logging.config.dictConfig(LOGGING_CONFIG)
 
 logger = logging.getLogger("main")
-#logger_db = logging.getLogger("db")
+

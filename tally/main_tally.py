@@ -1,6 +1,6 @@
 import pyautogui as pg
 from tally import tally_utils
-from utils.common_utils import tally_reports, tally_comp_codes
+from utils.common_utils import tally_reports
 from datetime import datetime, timedelta
 from logging_config import logger
 
@@ -10,8 +10,11 @@ from logging_config import logger
 def exporting_data(company):
     pg.hotkey("win", "d")
     todays_date = datetime.today().strftime("%d-%b-%Y")
+    #todays_date = "Apr-23-May-24"
     from_date = (datetime.today() - timedelta(days=2)).strftime("%d-%m-%Y")
+    #from_date = "1-4-2023"
     to_date = datetime.today().strftime("%d-%m-%Y")
+    #to_date = "5-5-2024"
 
     try:
         tally_utils.start_tally()
@@ -26,10 +29,10 @@ def exporting_data(company):
 
             tally_utils.exporting_reports(report= rep, 
                         from_date= from_date, to_date= to_date,
-                        path= fr"D:\automatic_tally_downloads\{comp}\{tally_reports[rep]}",
+                        path= fr"D:\automated_tally_downloads\{comp}\{tally_reports[rep]}",
                         filename= f"{comp}_{tally_reports[rep]}_{todays_date}.xlsx", 
                         esc= 4)
-            logger.info(f"Exported {rep} of {comp} of {todays_date}")
+            logger.info(f"Exported {tally_reports[rep]} of {comp} of {todays_date}")
         tally_utils.change_company()
 
 

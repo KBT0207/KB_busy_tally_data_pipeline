@@ -59,15 +59,28 @@ tally_tables = {"tally_sales": TallySales, "tally_sales_return": TallySalesRetur
 tables = {**busy_tables, **tally_tables}
 
 
-tally_reports = {'s': 'sales', 'p': "purchase" , 'e': 'sales_return', 
-                 'd': 'purchase_return'}
+tally_reports = {
+    # 's': 'sales', 'e': 'sales_return',
+                 'p': "purchase" ,
+                 'd': 'purchase_return',
+                }
         
 
-tally_comp_codes = {10009: "Vijaywada", 10002: "Pune" , 10008: "Raipur", 
+tally_comp_codes = {
+    10009: "Vijaywada", 
+    10002: "Pune" , 
+                    10008: "Raipur", 
                     10010: "Ahmedabad", 10016: "Karnal", 10004: "Jejuri", 
-                    10007: "Hubli", 10003: "Indore", 10005: "Nashik", 
-                    10020: "Khorda", 91820: "Phaltan", 10001: "Pune", 
-                    10022: "Bhatinda", 10019: "Jaipur", 10011: "Hyderabad", 
-                    10012: "Lucknow", 10018: "Phaltan", 10017: "Phaltan",
-                    10023: "Hubli", 10014: "Phaltan", 10021: "AS Phaltan",
+                    10007: "Hubli", 10003: "Indore", 10020: "Khorda", 
+                    91820: "Phaltan", 
+                    10001: "Pune", 
+                    10022: "Bhatinda",
+                    10019: "Jaipur", 10011: "Hyderabad", 10012: "Lucknow", 
+                    10018: "Phaltan", 10017: "Phaltan", 
+                    10005: "Nashik", 
+                    10023: "Hubli", 10014: "Phaltan", 10021: "AS Phaltan",                 
                     }
+
+
+# tally_comp_codes = {10005: "Nashik", 
+#                     10023: "Hubli", 10014: "Phaltan", 10021: "AS Phaltan",}

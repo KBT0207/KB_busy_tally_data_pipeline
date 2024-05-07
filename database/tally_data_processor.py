@@ -12,6 +12,8 @@ def apply_transformation(dataframe:pd.DataFrame, material_centre_name) -> pd.Dat
 
     dataframe["material_centre"] = mc_name
 
+    dataframe["voucher_no"] = dataframe["voucher_no"].fillna(dataframe["particulars"])
+
     return dataframe
 
 
@@ -24,8 +26,12 @@ class TallyDataProcessor:
     
     def clean_and_transform(self):
         try:
-            excel_df =  pd.read_excel(self.excel_file_path,skiprows= 3, skipfooter= 1)
-            excel_df = excel_df.drop(index=0)
+            excel_df =  pd.read_excel(self.excel_file_path, skipfooter= 1, header=None)
+            date_row = excel_df[excel_df.iloc[:, 0] == 'Date'].index[0]
+            excel_df = excel_df.iloc[date_row:].reset_index(drop=True)
+            excel_df.columns = excel_df.iloc[0]
+            excel_df = excel_df.iloc[1:]
+            excel_df = excel_df.drop(index=1)
         except FileNotFoundError as e:
             print(e)
             logger.warning(f"Excel File not found in the given {self.excel_file_path}: {e}")
