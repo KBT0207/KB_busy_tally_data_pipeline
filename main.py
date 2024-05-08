@@ -33,11 +33,11 @@ def main():
 
 if __name__ == "__main__":
     #main_db.test()
-    companies = sorted(list(tally_comp_codes.keys()))
+    #companies = sorted(list(tally_comp_codes.keys()))
 
     schedule.every().day.at("20:30").do(busy_to_sql)
 
-    schedule.every().day.at("07:10").do(tally_to_sql)
+    schedule.every().day.at("07:21").do(tally_to_sql)
 
     schedule.every().day.at("23:55").do(send_daily_logs)
     

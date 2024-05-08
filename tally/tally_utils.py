@@ -34,7 +34,7 @@ def start_tally() -> None:
     find_img('tally/images/tally_start.png')
     pg.press('down', presses=3, interval=0.5)
     pg.press('enter')
-    pg.typewrite(r"\\honas\SERVER DATA\IT & MIS\Jovo Tally\Data\Data", interval=0.3)
+    pg.typewrite(r"\\honas\SERVER DATA\IT & MIS\Jovo Tally\Data", interval=0.3)
     pg.press('enter')
 
 
