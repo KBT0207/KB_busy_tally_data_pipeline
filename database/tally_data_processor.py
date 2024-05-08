@@ -11,7 +11,7 @@ def apply_transformation(dataframe:pd.DataFrame, material_centre_name) -> pd.Dat
     dataframe.loc[:, ["credit", "debit"]] = dataframe.loc[:, ["credit", "debit"]].fillna(0)
 
     dataframe["material_centre"] = mc_name
-
+    dataframe["particulars"] = dataframe["particulars"].str.rstrip().str.rstrip("_x000D_")
     dataframe["voucher_no"] = dataframe["voucher_no"].fillna(dataframe["particulars"])
 
     return dataframe

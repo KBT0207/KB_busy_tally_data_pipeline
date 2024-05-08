@@ -1,6 +1,6 @@
 import pandas as pd
 from sqlalchemy.orm import scoped_session, sessionmaker
-from sqlalchemy import delete
+from sqlalchemy import delete, and_
 from logging_config import logger
 from utils.common_utils import tables
 
@@ -10,13 +10,13 @@ class DatabaseCrud:
         self.Session = scoped_session(sessionmaker(bind=self.db_connector.engine))
 
     
-    def delete_date_query(self, table_name, *dates):
+    def delete_date_range_query(self, table_name, start_date, end_date):
         table_class = tables.get(table_name)
         if table_class:
-            if dates:
-                date_condition = table_class.date.in_(dates)
+            if start_date and end_date:
+                date_condition = and_(table_class.date.between(start_date, end_date))
             else:
-                logger.critical("No dates provided for deletion.")
+                logger.critical("Start date or end date not provided for deletion.")
                 return
             
             delete_query = delete(table_class).where(date_condition)
@@ -25,7 +25,7 @@ class DatabaseCrud:
                 result = session.execute(delete_query)
                 deleted_count = result.rowcount
                 session.commit()
-                logger.info(f"Deleted {deleted_count} rows in {table_name} with date in {dates}.")
+                logger.info(f"Deleted {deleted_count} rows in {table_name} between {start_date} and {end_date}.")
         else:
             logger.info(f"Table {table_name} not found in table_mapping. Delete query Failed to execute")
 

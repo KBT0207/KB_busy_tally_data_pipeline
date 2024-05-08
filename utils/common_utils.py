@@ -81,6 +81,3 @@ tally_comp_codes = {
                     10023: "Hubli", 10014: "Phaltan", 10021: "AS Phaltan",                 
                     }
 
-
-# tally_comp_codes = {10005: "Nashik", 
-#                     10023: "Hubli", 10014: "Phaltan", 10021: "AS Phaltan",}

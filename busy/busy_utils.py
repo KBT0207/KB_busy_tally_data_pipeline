@@ -221,10 +221,10 @@ def change_company():
 
 
 def return_to_busy_home(esc=3):
-    time.sleep(0.5)
+    time.sleep(1)
     for _ in range(1, esc+1):
         pg.press('esc')
-        time.sleep(2)
+        time.sleep(2.5)
     
 
 
