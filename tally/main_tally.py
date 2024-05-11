@@ -1,4 +1,5 @@
 import pyautogui as pg
+import time
 from tally import tally_utils
 from utils.common_utils import tally_reports
 from datetime import datetime, timedelta
@@ -16,11 +17,8 @@ def exporting_data(company):
     to_date = datetime.today().strftime("%d-%m-%Y")
     # to_date = "31-3-2023"
 
-    try:
-        tally_utils.start_tally()
-        logger.info("Tally started...")
-    except Exception as e:
-        logger.critical(f"Failed to start tally!: {e}")
+    tally_utils.start_tally()
+    logger.info("Tally started...")
 
     for comp in company:
         tally_utils.select_company(company_code= comp)
@@ -34,6 +32,10 @@ def exporting_data(company):
                         esc= 4)
             logger.info(f"Exported {tally_reports[rep]} of {comp} of {todays_date}")
         tally_utils.change_company()
-
-
+    
+    time.sleep(3)
+    pg.press('esc')
+    time.sleep(3)
+    pg.press('y')
+    logger.info("Tally closed ...")
 

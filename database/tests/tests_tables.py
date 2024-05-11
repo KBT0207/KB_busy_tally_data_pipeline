@@ -1,7 +1,8 @@
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from database.models.busy_reports_models import SalesKBBIO, base
+from database.models.busy_models.busy_reports_models import SalesKBBIO
+from database.models.base import Base
 
 # Create an in-memory SQLite engine for testing
 engine = create_engine('sqlite:///:memory:')
@@ -11,10 +12,10 @@ session = Session()
 @pytest.fixture(scope='module')
 def setup_database():
     # Create all tables defined in the declarative base
-    base.metadata.create_all(engine)
+    Base.metadata.create_all(engine)
     yield  # Run tests
     # Drop all tables after tests are completed
-    base.metadata.drop_all(engine)
+    Base.metadata.drop_all(engine)
 
 def test_sales_kbbio_table(setup_database):
     # Create a new SalesKBBIO instance

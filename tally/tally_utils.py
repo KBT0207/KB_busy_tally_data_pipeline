@@ -31,12 +31,7 @@ def close_rdc() -> None:
 def start_tally() -> None:
     find_img('tally/images/tally_desktop.png', conf=0.9)
     pg.doubleClick()    
-    find_img('tally/images/tally_start.png')
-    pg.press('down', presses=3, interval=0.5)
-    pg.press('enter')
-    pg.typewrite(r"\\honas\SERVER DATA\IT & MIS\Jovo Tally\Data", interval=0.3)
-    pg.press('enter')
-
+    
 
 
 def select_company(company_code):
@@ -104,7 +99,7 @@ def export_data(path, filename):
     pg.typewrite(filename, interval=0.2)
     pg.press('enter')
 
-    pg.hotkey("ctrl", "a")  #uncomment later very important
+    pg.hotkey("ctrl", "a")
     time.sleep(1)
     pg.press('e')
 

@@ -1,7 +1,5 @@
 import time
 import schedule
-from datetime import datetime
-from utils.email import send_daily_logs
 from database import main_db
 from busy import main_busy
 from tally import main_tally
@@ -27,25 +25,25 @@ def busy_material_masters():
     main_busy.exporting_master_and_material()
     time.sleep(1)
     main_db.delete_busy_material()
-    main_db.truncate_busy_masters
+    main_db.truncate_busy_masters()
     main_db.import_busy_masters_material()
 
 
+    sheets_imported = ["May", "Jun"]
 
 
 if __name__ == "__main__":
-    #main_db.test()
     
-    #main_tally.exporting_data(company=companies)
-#    main_db.import_tally_data()
+    #sheets_to_import = ["Apr", 'Jun', "Jul", "Sept", "Nov"]
+    #main_db.test()
+    # main_db.validation()       
 
-    schedule.every().day.at("20:45").do(busy_sales)
+
+    schedule.every().day.at("21:00").do(busy_sales)
 
     schedule.every().day.at("01:00").do(busy_material_masters)
 
-    schedule.every().day.at("07:20").do(tally_to_sql)
-
-    schedule.every().day.at("23:55").do(send_daily_logs)
+    schedule.every().day.at("07:00").do(tally_to_sql)
     
     while True:
         schedule.run_pending()

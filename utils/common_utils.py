@@ -34,6 +34,8 @@ from database.models.busy_models.busy_items_models import (BusyItemsKBBIO,
 from database.models.tally_models.tally_report_models import (TallySales, TallyPurchase,
                                         TallyPurchaseReturn, TallySalesReturn,
                                         )
+from database.models.busy_models.busy_pricing_models import (BusyPricingKBBIO,
+                                        )
 
 
 busy_tables = {'busy_sales': SalesKBBIO, 'busy_sales_order': SalesOrderKBBIO,
@@ -45,8 +47,6 @@ busy_tables = {'busy_sales': SalesKBBIO, 'busy_sales_order': SalesOrderKBBIO,
           "busy_items_kbbio": BusyItemsKBBIO, "busy_items_100x": BusyItems100x, 
           "busy_items_agri": BusyItemsAgri, "busy_items_greenera": BusyItemsGreenEra, 
           "busy_items_newage": BusyItemsNewAge,
-          "tally_sales": TallySales, "tally_sales_return": TallySalesReturn, 
-          "tally_purchase": TallyPurchase, "tally_purchase_return": TallyPurchaseReturn, 
         }
 
 
@@ -56,7 +56,12 @@ tally_tables = {"tally_sales": TallySales, "tally_sales_return": TallySalesRetur
         }
 
 
-tables = {**busy_tables, **tally_tables}
+other_tables = {"busy_pricing_kbbio": BusyPricingKBBIO
+
+}
+
+
+tables = {**busy_tables, **tally_tables, **other_tables}
 
 
 tally_reports = {

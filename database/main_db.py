@@ -25,10 +25,10 @@ def delete_busy_sales():
     Base.metadata.create_all(db_engine)
 
     current_date = datetime.today().date()
-    date1 = current_date - timedelta(days=1)
-    #date1= "2024-05-03"
-    date2 = current_date - timedelta(days=2)
-    #date2= "2024-05-02"
+    date1 = current_date - timedelta(days=2)
+    # date1= "2024-05-06"
+    date2 = current_date - timedelta(days=1)
+    # date2= "2024-05-07"
 
     tables_list = list(busy_tables.keys())
     importer = DatabaseCrud(db_connector)
@@ -41,9 +41,9 @@ def delete_busy_sales():
 def delete_busy_material():    
     Base.metadata.create_all(db_engine)
 
-    startdate = datetime.now().replace(day=1).strftime("%d-%m-%Y")
+    startdate = datetime.now().replace(day=1).strftime("%Y-%m-%d")
 
-    endate = datetime.today().strftime("%d-%m-%Y")
+    endate = datetime.today().strftime("%Y-%m-%d")
     
     tables_list = list(busy_tables.keys())
     importer = DatabaseCrud(db_connector)
@@ -57,9 +57,9 @@ def delete_tally_data():
     Base.metadata.create_all(db_engine)
 
     current_date = datetime.today().date()
-    startdate = current_date - timedelta(days=1)
+    startdate = current_date - timedelta(days=2)
     #date1= "2024-05-03"
-    endate = current_date - timedelta(days=2)
+    endate = current_date - timedelta(days=1)
     #date2= "2024-05-02"
 
     tables_list = list(tally_tables.keys())
@@ -73,7 +73,7 @@ def delete_tally_data():
 def import_busy_sales():    
     Base.metadata.create_all(db_engine)
     
-    #todays_date = "04-May-2024"
+    # todays_date = "08-May-2024"
     todays_date = datetime.today().strftime("%d-%b-%Y")
     busy_files = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*sales*{todays_date}.xlsx", recursive=True)
     if len(busy_files) != 0:
@@ -157,7 +157,6 @@ def import_busy_masters_material():
 
         else:
             logger.error(f"{get_filename(file)} and {get_compname(file)} of {file} didn't match the criteria")    
-
     else:
         logger.critical("No File for today's date found to import in database")
 
@@ -193,13 +192,40 @@ def import_tally_data():
         logger.critical("No File for today's date found to import in database")
 
 
-# def test():
-#     Base.metadata.create_all(db_engine)
-#     file = r"D:\automated_tally_downloads\10022\purchase\10022_purchase_Apr-23-May-24.xlsx"
-#     excel_data = TallyDataProcessor(file)
-#     #print(get_filename(file))
-#     importer = DatabaseCrud(db_connector)
-#     importer.import_data("tally_purchase", excel_data.clean_and_transform())
-#     print(excel_data.clean_and_transform())
-#     # if get_filename(file) == "sales" and get_compname(file) == "10017":
-#     #     importer.import_data('tally_sales', excel_data.clean_and_transform())
+def test(sheet):
+    import pandas as pd
+    from xlwings import view
+    file_path = r"D:\automated_scripts\busy\Old Busy data.xlsx"
+    
+    df =  pd.read_excel(file_path, sheet_name= sheet)
+    
+    columns_ffill = ["Date", "Vch/Bill No", "Party Type", "Material Centre", "Particulars", "State"]
+    df.loc[:, columns_ffill] = df[columns_ffill].ffill()
+
+    columns_fillna_with_0 = ["MRP", "Disc %", "Discount Amt", "Tax Amt", "Bill Amount"]
+    df.loc[:,columns_fillna_with_0] = df[columns_fillna_with_0].fillna(0)
+
+    columns_conditional_ffill = ["Dealer Code", "TIN/GSTIN No.", "DC No",
+                                    "DC Date", "E Invoice", "Salesman",
+                                    "SALES ORDER NO", "SALES ORDER DATE", 
+                                    "E WAY BILL", "Transporter Name", 
+                                    "Narration"]
+    
+    for column in columns_conditional_ffill:
+        vch_to_dc = df[["Vch/Bill No", column]].dropna().set_index('Vch/Bill No')[column].to_dict()
+        df.loc[:, column] = df['Vch/Bill No'].map(vch_to_dc)
+    
+    df.columns = df.columns.str.lower().str.replace(" ", "_").str.replace(".", "")
+    df = df.rename(columns= {"vch/bill_no": "voucher_no", "tin/gstin_no": "gst_no",
+                             "qty": "main_qty", "unit": "main_unit", "price": "main_price",
+                             "qty1": "alt_qty", "unit1": "alt_unit", "price1": "alt_price", 
+                             "disc_%": "discount_perc", "bill_amount": "bill_amt",
+                             })
+
+    df["mfg_date"] = pd.to_datetime(df["mfg_date"]).dt.strftime("%b-%Y")
+    df["exp_date"] = pd.to_datetime(df["exp_date"]).dt.strftime("%b-%Y")
+
+    #view(df)
+    importer = DatabaseCrud(db_connector)
+    importer.import_data("busy_sales", df=df)
+
