@@ -62,3 +62,11 @@
 11-05-2024  6:00:03.22 - Backup completed: sys 
 ---------------------------------------- 
 11-05-2024  6:00:03.94 - Backup process completed 
+12-05-2024  6:00:03.49 - Starting backup process 
+---------------------------------------- 
+12-05-2024  6:00:03.52 - Backing up database: kbbio 
+12-05-2024  6:00:03.52 - Backup completed: kbbio 
+12-05-2024  6:00:03.52 - Backing up database: sys 
+12-05-2024  6:00:03.52 - Backup completed: sys 
+---------------------------------------- 
+12-05-2024  6:00:03.88 - Backup process completed 

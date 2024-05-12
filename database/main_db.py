@@ -17,7 +17,7 @@ def truncate_busy_masters():
     importer = DatabaseCrud(db_connector)
     for table in tables_list:
         if "acc" in table or "items" in table:
-            importer.truncate_table(table_name=table)
+            importer.truncate_table(table_name=table, commit=True)
     
 
 
@@ -34,7 +34,7 @@ def delete_busy_sales():
     importer = DatabaseCrud(db_connector)
     for table in tables_list:
         if "sales" in table:
-            importer.delete_date_range_query(table, start_date= date1, end_date=date2)
+            importer.delete_date_range_query(table, start_date= date1, end_date=date2, commit=True)
 
 
 
@@ -49,7 +49,7 @@ def delete_busy_material():
     importer = DatabaseCrud(db_connector)
     for table in tables_list:
         if "mitp" in table or "mrfp" in table:
-            importer.delete_date_range_query(table, start_date=startdate, end_date=endate)
+            importer.delete_date_range_query(table, start_date=startdate, end_date=endate, commit=True)
 
 
 
@@ -66,7 +66,7 @@ def delete_tally_data():
     importer = DatabaseCrud(db_connector)
     
     for table in tables_list:
-        importer.delete_date_range_query(table, start_date= startdate, end_date=endate)
+        importer.delete_date_range_query(table, start_date= startdate, end_date=endate, commit=True)
 
 
 
@@ -81,13 +81,13 @@ def import_busy_sales():
             excel_data = BusyDataProcessor(file)
             importer = DatabaseCrud(db_connector)
             if get_filename(file) == 'sales':
-                importer.import_data('busy_sales', excel_data.clean_and_transform())
+                importer.import_data('busy_sales', excel_data.clean_and_transform(), commit=True)
     
             if get_filename(file) == 'sales_return':
-                importer.import_data('busy_sales_return', excel_data.clean_and_transform())
+                importer.import_data('busy_sales_return', excel_data.clean_and_transform(), commit=True)
 
             if get_filename(file) == 'sales_order':
-                importer.import_data('busy_sales_order', excel_data.clean_and_transform())
+                importer.import_data('busy_sales_order', excel_data.clean_and_transform(), commit=True)
 
         else:
             logger.error(f"{get_filename(file)} and {get_compname(file)} of {file} didn't match the criteria")    
@@ -120,40 +120,40 @@ def import_busy_masters_material():
             importer = DatabaseCrud(db_connector)
 
             if get_filename(file) == 'material_issued_to_party':
-                importer.import_data('busy_mitp', excel_data.clean_and_transform())
+                importer.import_data('busy_mitp', excel_data.clean_and_transform(), commit=True)
                 
             if get_filename(file) == 'material_received_from_party':
-                importer.import_data('busy_mrfp', excel_data.clean_and_transform())
+                importer.import_data('busy_mrfp', excel_data.clean_and_transform(), commit=True)
 
             if get_filename(file) == "master_accounts" and get_compname(file) == "comp0005":
-                importer.import_data('busy_acc_kbbio', excel_data.clean_and_transform())
+                importer.import_data('busy_acc_kbbio', excel_data.clean_and_transform(), commit=True)
 
             if get_filename(file) == "master_accounts" and get_compname(file) == "comp0010":
-                importer.import_data('busy_acc_agri', excel_data.clean_and_transform())
+                importer.import_data('busy_acc_agri', excel_data.clean_and_transform(), commit=True)
 
             if get_filename(file) == "master_accounts" and get_compname(file) == "comp0011":
-                importer.import_data('busy_acc_greenera', excel_data.clean_and_transform())
+                importer.import_data('busy_acc_greenera', excel_data.clean_and_transform(), commit=True)
 
             if get_filename(file) == "master_accounts" and get_compname(file) == "comp0014":
-                importer.import_data('busy_acc_newage', excel_data.clean_and_transform())
+                importer.import_data('busy_acc_newage', excel_data.clean_and_transform(), commit=True)
             
             if get_filename(file) == "master_accounts" and get_compname(file) == "comp0015":
-                importer.import_data('busy_acc_100x', excel_data.clean_and_transform())
+                importer.import_data('busy_acc_100x', excel_data.clean_and_transform(), commit=True)
 
             if get_filename(file) == "items" and get_compname(file) == "comp0005":
-                importer.import_data('busy_items_kbbio', excel_data.clean_and_transform())
+                importer.import_data('busy_items_kbbio', excel_data.clean_and_transform(), commit=True)
 
             if get_filename(file) == "items" and get_compname(file) == "comp0015":
-                importer.import_data('busy_items_100x', excel_data.clean_and_transform())
+                importer.import_data('busy_items_100x', excel_data.clean_and_transform(), commit=True)
 
             if get_filename(file) == "items" and get_compname(file) == "comp0011":
-                importer.import_data('busy_items_greenera', excel_data.clean_and_transform())
+                importer.import_data('busy_items_greenera', excel_data.clean_and_transform(), commit=True)
 
             if get_filename(file) == "items" and get_compname(file) == "comp0014":
-                importer.import_data('busy_items_newage', excel_data.clean_and_transform())
+                importer.import_data('busy_items_newage', excel_data.clean_and_transform(), commit=True)
             
             if get_filename(file) == "items" and get_compname(file) == "comp0010":
-                importer.import_data('busy_items_agri', excel_data.clean_and_transform())
+                importer.import_data('busy_items_agri', excel_data.clean_and_transform(), commit=True)
 
         else:
             logger.error(f"{get_filename(file)} and {get_compname(file)} of {file} didn't match the criteria")    
@@ -173,16 +173,16 @@ def import_tally_data():
             excel_data = TallyDataProcessor(file)
             importer = DatabaseCrud(db_connector)
             if get_filename(file) == 'sales':
-                importer.import_data('tally_sales', excel_data.clean_and_transform())
+                importer.import_data('tally_sales', excel_data.clean_and_transform(), commit=True)
     
             if get_filename(file) == 'sales_return':
-                importer.import_data('tally_sales_return', excel_data.clean_and_transform())
+                importer.import_data('tally_sales_return', excel_data.clean_and_transform(), commit=True)
 
             if get_filename(file) == 'purchase':
-                importer.import_data('tally_purchase', excel_data.clean_and_transform())
+                importer.import_data('tally_purchase', excel_data.clean_and_transform(), commit=True)
     
             if get_filename(file) == 'purchase_return':
-                importer.import_data('tally_purchase_return', excel_data.clean_and_transform())
+                importer.import_data('tally_purchase_return', excel_data.clean_and_transform(), commit=True)
 
             logger.info(f"{get_filename(file)} and {get_compname(file)} imported into database.. ")
         else:
@@ -227,5 +227,5 @@ def test(sheet):
 
     #view(df)
     importer = DatabaseCrud(db_connector)
-    importer.import_data("busy_sales", df=df)
+    importer.import_data("busy_sales", df=df, commit=True)
 

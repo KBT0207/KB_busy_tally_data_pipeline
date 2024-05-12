@@ -39,7 +39,7 @@ if __name__ == "__main__":
     # main_db.validation()       
 
 
-    schedule.every().day.at("21:00").do(busy_sales)
+    schedule.every().day.at("22:00").do(busy_sales)
 
     schedule.every().day.at("01:00").do(busy_material_masters)
 

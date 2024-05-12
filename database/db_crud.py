@@ -14,10 +14,10 @@ class DatabaseCrud:
         self.Session = scoped_session(sessionmaker(bind=self.db_connector.engine))
 
     
-    def delete_date_range_query(self, table_name, start_date, end_date):
+    def delete_date_range_query(self, table_name, start_date, end_date, commit):
         table_class = tables.get(table_name)
         if table_class:
-            if start_date and end_date:
+            if start_date <= end_date:
                 date_condition = and_(table_class.date.between(start_date, end_date))
             else:
                 logger.critical("Start date or end date not provided for deletion.")
@@ -29,15 +29,15 @@ class DatabaseCrud:
                 try:
                     result = session.execute(delete_query)
                     deleted_count = result.rowcount
-                    session.commit()
+                    if commit:
+                        session.commit()
                     logger.info(f"Deleted {deleted_count} rows in {table_name} between {start_date} and {end_date}.")
                 except SQLAlchemyError as e:
                     session.rollback()
                     logger.error(f"Error occurred during deletion: {e}")
         else:
             logger.info(f"Table {table_name} not found in table_mapping. Delete query Failed to execute")
-
-    
+        
     def get_row_count(self, table_name):
         with self.Session() as session:
             table_class = tables.get(table_name)
@@ -49,7 +49,7 @@ class DatabaseCrud:
                 return None
     
     
-    def import_data(self, table_name, df: pd.DataFrame):
+    def import_data(self, table_name, df: pd.DataFrame, commit):
         if df is not None:
             row_count_before = self.get_row_count(table_name)
             row_count_after = None
@@ -58,7 +58,8 @@ class DatabaseCrud:
                 with self.Session() as session:
                     df.to_sql(table_name, self.db_connector.engine, if_exists='append', index=False, method='multi', chunksize=500)
                     row_count_after = self.get_row_count(table_name)
-                    session.commit()
+                    if commit:
+                        session.commit()
             except SQLAlchemyError as e:
                 logger.critical(f"Error inserting data into {table_name}: {e}")
                 if row_count_after is not None:
@@ -76,14 +77,15 @@ class DatabaseCrud:
             logger.error(f"Empty Dataframe hence 0 rows imported in {table_name}")
 
 
-    def truncate_table(self, table_name):
+    def truncate_table(self, table_name, commit):
         table_class = tables.get(table_name)
         if table_class:
             truncate_query = delete(table_class)
             try:
                 with self.Session() as session:
                     session.execute(truncate_query)
-                    session.commit()
+                    if commit:
+                        session.commit()
                     logger.info(f"Table '{table_name}' truncated successfully.")
             except SQLAlchemyError as e:
                 logger.critical(f"Error truncating table '{table_name}': {e}")
