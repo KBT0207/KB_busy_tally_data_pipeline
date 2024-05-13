@@ -37,16 +37,21 @@ if __name__ == "__main__":
     #sheets_to_import = ["Apr", 'Jun', "Jul", "Sept", "Nov"]
     #main_db.test()
     # main_db.validation()       
-
-
-    schedule.every().day.at("22:00").do(busy_sales)
-
-    schedule.every().day.at("01:00").do(busy_material_masters)
-
-    schedule.every().day.at("07:00").do(tally_to_sql)
     
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
+    from database.tally_data_processor import TallyDataProcessor
+    file = r"C:\Users\HP\Desktop\10001_payment_register_01-May-2024.xlsx"
+    tranform = TallyDataProcessor(file)
+    df = tranform.clean_and_transform()
+    print(df)
+
+    # schedule.every().day.at("21:00").do(busy_sales)
+
+    # schedule.every().day.at("01:00").do(busy_material_masters)
+
+    # schedule.every().day.at("07:00").do(tally_to_sql)
+    
+    # while True:
+    #     schedule.run_pending()
+    #     time.sleep(1)
 
     

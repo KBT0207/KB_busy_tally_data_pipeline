@@ -192,6 +192,7 @@ def import_tally_data():
         logger.critical("No File for today's date found to import in database")
 
 
+
 def test(sheet):
     import pandas as pd
     from xlwings import view

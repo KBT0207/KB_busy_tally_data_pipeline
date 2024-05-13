@@ -24,7 +24,7 @@ def exporting_data(company):
         tally_utils.select_company(company_code= comp)
         logger.info(f"{comp} selected...")
         for rep in list(tally_reports.keys()):
-
+            
             tally_utils.exporting_reports(report= rep, 
                         from_date= from_date, to_date= to_date,
                         path= fr"D:\automated_tally_downloads\{comp}\{tally_reports[rep]}",

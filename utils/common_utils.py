@@ -65,9 +65,8 @@ tables = {**busy_tables, **tally_tables, **other_tables}
 
 
 tally_reports = {
-     's': 'sales', 'e': 'sales_return',
-                 'p': "purchase" ,
-                 'd': 'purchase_return',
+    # 's': 'sales', 'e': 'sales_return', 'p': "purchase" , 'd': 'purchase_return',
+                 'y': "payment_register", "r": "receipt_register", 'j': "journal_register",
                 }
         
 

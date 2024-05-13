@@ -44,7 +44,7 @@ def select_company(company_code):
     pg.press('enter')
     pg.typewrite(os.getenv('TALLY_PASSWORD'), interval=0.2)
     pg.press('enter')
-   
+
 
 
 def select_report(report_type):
@@ -55,7 +55,10 @@ def select_report(report_type):
     time.sleep(3)
     pg.press(report_type)
     find_img('tally/images/report_particulars.png')
-    pg.press('enter')    
+    pg.press('enter')
+    if report_type in ['y', 'r', 'j']:
+        pg.hotkey('alt','f5')
+        time.sleep(3)
   
 
 
