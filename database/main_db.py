@@ -193,40 +193,23 @@ def import_tally_data():
 
 
 
-def test(sheet):
-    import pandas as pd
-    from xlwings import view
-    file_path = r"D:\automated_scripts\busy\Old Busy data.xlsx"
-    
-    df =  pd.read_excel(file_path, sheet_name= sheet)
-    
-    columns_ffill = ["Date", "Vch/Bill No", "Party Type", "Material Centre", "Particulars", "State"]
-    df.loc[:, columns_ffill] = df[columns_ffill].ffill()
-
-    columns_fillna_with_0 = ["MRP", "Disc %", "Discount Amt", "Tax Amt", "Bill Amount"]
-    df.loc[:,columns_fillna_with_0] = df[columns_fillna_with_0].fillna(0)
-
-    columns_conditional_ffill = ["Dealer Code", "TIN/GSTIN No.", "DC No",
-                                    "DC Date", "E Invoice", "Salesman",
-                                    "SALES ORDER NO", "SALES ORDER DATE", 
-                                    "E WAY BILL", "Transporter Name", 
-                                    "Narration"]
-    
-    for column in columns_conditional_ffill:
-        vch_to_dc = df[["Vch/Bill No", column]].dropna().set_index('Vch/Bill No')[column].to_dict()
-        df.loc[:, column] = df['Vch/Bill No'].map(vch_to_dc)
-    
-    df.columns = df.columns.str.lower().str.replace(" ", "_").str.replace(".", "")
-    df = df.rename(columns= {"vch/bill_no": "voucher_no", "tin/gstin_no": "gst_no",
-                             "qty": "main_qty", "unit": "main_unit", "price": "main_price",
-                             "qty1": "alt_qty", "unit1": "alt_unit", "price1": "alt_price", 
-                             "disc_%": "discount_perc", "bill_amount": "bill_amt",
-                             })
-
-    df["mfg_date"] = pd.to_datetime(df["mfg_date"]).dt.strftime("%b-%Y")
-    df["exp_date"] = pd.to_datetime(df["exp_date"]).dt.strftime("%b-%Y")
-
-    #view(df)
+def test():
+    Base.metadata.create_all(db_engine)
+    file_path = r"D:\automated_tally_downloads\10022\accounts\10022_accounts_13-May-2024.xlsx"
+    xl = TallyDataProcessor(excel_file_path=file_path)
+    df = xl.clean_and_transform()
+    # print(df.head(10))
     importer = DatabaseCrud(db_connector)
-    importer.import_data("busy_sales", df=df, commit=True)
+    importer.import_data("busy_sales_return", df=df, commit=True)
 
+
+
+
+# def test_import():
+#     Base.metadata.create_all(db_engine)
+#     imp = DatabaseCrud(db_connector)
+#     file = r"C:\Users\HP\Desktop\10001_payment_register_01-May-2024.xlsx"
+#     tranform = TallyDataProcessor(file)
+#     df = tranform.clean_and_transform()
+#     imp.import_data(table_name= "tally_payment", df=df, commit=0)
+#     # print(df)

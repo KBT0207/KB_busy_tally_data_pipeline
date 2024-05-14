@@ -20,21 +20,23 @@ def is_process_running(process_name:str) -> bool:
 
 
 
-from database.models.busy_models.busy_reports_models import (SalesKBBIO, SalesReturnKBBIO, 
+from database.models.busy_models.busy_reports import (SalesKBBIO, SalesReturnKBBIO, 
                                         SalesOrderKBBIO, MITPKBBIO, MRFPKBBIO,
                                         )
-from database.models.busy_models.busy_accounts_models import (BusyAccountsKBBIO, 
+from database.models.busy_models.busy_accounts import (BusyAccountsKBBIO, 
                                         BusyAccounts100x, BusyAccountsAgri,
                                         BusyAccountsGreenEra, BusyAccountsNewAge,
                                         )
-from database.models.busy_models.busy_items_models import (BusyItemsKBBIO, 
+from database.models.busy_models.busy_items import (BusyItemsKBBIO, 
                                         BusyItems100x, BusyItemsGreenEra,
                                         BusyItemsAgri, BusyItemsNewAge,
                                         )
 from database.models.tally_models.tally_report_models import (TallySales, TallyPurchase,
                                         TallyPurchaseReturn, TallySalesReturn,
+                                        TallyPayment, TallyReceipts , TallyJournal, 
+                                        TallyAccounts,
                                         )
-from database.models.busy_models.busy_pricing_models import (BusyPricingKBBIO,
+from database.models.busy_models.busy_pricing import (BusyPricingKBBIO,
                                         )
 
 
@@ -52,36 +54,31 @@ busy_tables = {'busy_sales': SalesKBBIO, 'busy_sales_order': SalesOrderKBBIO,
 
 
 tally_tables = {"tally_sales": TallySales, "tally_sales_return": TallySalesReturn, 
-          "tally_purchase": TallyPurchase, "tally_purchase_return": TallyPurchaseReturn, 
-        }
+                "tally_purchase": TallyPurchase, "tally_purchase_return": TallyPurchaseReturn, 
+                "tally_payment": TallyPayment, "tally_receipts": TallyReceipts, "tally_journal": TallyJournal, 
+                "tally_accounts": TallyAccounts,    
+               }
 
 
-other_tables = {"busy_pricing_kbbio": BusyPricingKBBIO
-
-}
+other_tables = {"busy_pricing_kbbio": BusyPricingKBBIO,
+               }
 
 
 tables = {**busy_tables, **tally_tables, **other_tables}
 
 
 tally_reports = {
-    # 's': 'sales', 'e': 'sales_return', 'p': "purchase" , 'd': 'purchase_return',
-                 'y': "payment_register", "r": "receipt_register", 'j': "journal_register",
+                's': 'sales', 'e': 'sales_return', 'p': "purchase" , 'd': 'purchase_return',
+                'y': "payment_register", "r": "receipt_register", 'j': "journal_register",
                 }
         
 
-tally_comp_codes = {
-    10009: "Vijaywada", 
-    10002: "Pune" , 
-                    10008: "Raipur", 
+tally_comp_codes = {10009: "Vijaywada", 10002: "Pune" , 10008: "Raipur", 
                     10010: "Ahmedabad", 10016: "Karnal", 10004: "Jejuri", 
                     10007: "Hubli", 10003: "Indore", 10020: "Khorda", 
-                    91820: "Phaltan", 
-                    10001: "Pune", 
-                    10022: "Bhatinda",
+                    91820: "Phaltan", 10001: "Pune", 10022: "Bhatinda",
                     10019: "Jaipur", 10011: "Hyderabad", 10012: "Lucknow", 
-                    10018: "Phaltan", 10017: "Phaltan", 
-                    10005: "Nashik", 
+                    10018: "Phaltan", 10017: "Phaltan", 10005: "Nashik", 
                     10023: "Hubli", 10014: "Phaltan", 10021: "AS Phaltan",                 
                     }
 

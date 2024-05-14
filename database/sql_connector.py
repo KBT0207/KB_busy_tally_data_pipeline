@@ -55,11 +55,18 @@ class DatabaseConnector:
 
         Returns:
         - str: Database connection string in the format 
-        'mysql+pymysql://username:password@host:port/database'.
+        'mysql+pymysql://username:password@host:port/database?autocommit=false'.
         """
-        return f'mysql+pymysql://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}'
+        return f'mysql+pymysql://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}?autocommit=false'
+
+    # def get_autocommit_status(self):
+    #     """Return the autocommit status of the SQLAlchemy engine."""
+    #     return self.engine.raw_connection().autocommit
 
 
+    # def get_isolation_level(self):
+    #     """Return the isolation level of the SQLAlchemy engine."""
+    #     return self.engine.raw_connection().isolation_level
 
 USERNAME = os.getenv('DB_USERNAME')
 PASSWORD = os.getenv('DB_PASSWORD')
@@ -67,5 +74,14 @@ HOST = os.getenv('DB_HOST')
 PORT = os.getenv('DB_PORT')
 DATABASE = os.getenv('DATABASE')
 
+
 db_connector = DatabaseConnector(USERNAME, PASSWORD, HOST, PORT, DATABASE)
 db_engine = db_connector.engine
+
+db_connection = db_engine.connect()
+
+# Check autocommit status using the connection
+
+
+
+

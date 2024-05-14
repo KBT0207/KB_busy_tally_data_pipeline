@@ -26,6 +26,12 @@ LOGGING_CONFIG = {
         }
     },
     'handlers': {
+        'console_handler': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'standard',
+            'level': 'INFO'
+        },
+
         'file_handler': {
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': f'logs/main_{today_date}.log',
@@ -56,9 +62,11 @@ LOGGING_CONFIG = {
     },
     'loggers': {
         '': {
-            'handlers': ['file_handler', 
-                        'critical_email_handler', 
-                        'better_stack_handler',
+            'handlers': [
+                        'console_handler',
+                        # 'file_handler', 
+                        # 'critical_email_handler', 
+                        # 'better_stack_handler',
                         ],
             'level': 'INFO',
             'propagate': False

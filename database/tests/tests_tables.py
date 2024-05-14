@@ -1,7 +1,7 @@
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from database.models.busy_models.busy_reports_models import SalesKBBIO
+from database.models.busy_models.busy_reports import SalesKBBIO
 from database.models.base import Base
 
 # Create an in-memory SQLite engine for testing

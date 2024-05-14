@@ -1,10 +1,10 @@
 import pandas as pd
 from sqlalchemy.orm import scoped_session, sessionmaker
-from sqlalchemy import delete, and_, func, cast, Numeric
+from sqlalchemy import insert, delete, and_, func, cast, Numeric
 from logging_config import logger
 from utils.common_utils import tables
-from database.models.busy_models.busy_pricing_models import BusyPricingKBBIO
-from database.models.busy_models.busy_reports_models import SalesKBBIO
+from database.models.busy_models.busy_pricing import BusyPricingKBBIO
+from database.models.busy_models.busy_reports import SalesKBBIO
 from sqlalchemy.exc import SQLAlchemyError
 
 
@@ -38,6 +38,8 @@ class DatabaseCrud:
         else:
             logger.info(f"Table {table_name} not found in table_mapping. Delete query Failed to execute")
         
+
+
     def get_row_count(self, table_name):
         with self.Session() as session:
             table_class = tables.get(table_name)
@@ -47,6 +49,7 @@ class DatabaseCrud:
             else:
                 logger.error(f"Table '{table_name}' not found in table_mapping.")
                 return None
+    
     
     
     def import_data(self, table_name, df: pd.DataFrame, commit):
@@ -75,6 +78,7 @@ class DatabaseCrud:
                 logger.error("Failed to determine rows inserted.")
         else:
             logger.error(f"Empty Dataframe hence 0 rows imported in {table_name}")
+
 
 
     def truncate_table(self, table_name, commit):

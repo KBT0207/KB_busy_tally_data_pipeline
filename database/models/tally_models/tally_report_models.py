@@ -63,15 +63,63 @@ class TallyPurchaseReturn(Base):
 
 
 
-# class TallyPayment(Base):
-#     __tablename__ = 'tally_payment'
+class TallyPayment(Base):
+    __tablename__ = 'tally_payment'
 
-#     id = Column(Integer, primary_key= True, autoincrement= True, index= True)
-#     date = Column(Date, nullable= False)
-#     particulars = Column(String(255), nullable= False)
-#     voucher_no = Column(String(100), nullable= False)
-#     material_centre = Column(String(50), nullable=False)
-#     amount = Column(DECIMAL(10,2), nullable=False)
-#     amount_type = Column(String(10), nullable=True)
-#     material_centre = Column(String(50), nullable=False)
-#     created_at = Column(DateTime, server_default=func.now())
+    id = Column(Integer, primary_key= True, autoincrement= True, index= True)
+    date = Column(Date, nullable= False)
+    particulars = Column(String(255), nullable= False)
+    voucher_no = Column(String(100), nullable= False)
+    material_centre = Column(String(50), nullable=False)
+    amount = Column(DECIMAL(10,2), nullable=False)
+    amount_type = Column(String(10), nullable=True)
+    material_centre = Column(String(50), nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+
+
+
+class TallyReceipts(Base):
+    __tablename__ = 'tally_receipts'
+
+    id = Column(Integer, primary_key= True, autoincrement= True, index= True)
+    date = Column(Date, nullable= False)
+    particulars = Column(String(255), nullable= False)
+    voucher_no = Column(String(100), nullable= False)
+    material_centre = Column(String(50), nullable=False)
+    amount = Column(DECIMAL(10,2), nullable=False)
+    amount_type = Column(String(10), nullable=True)
+    material_centre = Column(String(50), nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+
+
+
+class TallyJournal(Base):
+    __tablename__ = 'tally_journal'
+
+    id = Column(Integer, primary_key= True, autoincrement= True, index= True)
+    date = Column(Date, nullable= False)
+    particulars = Column(String(255), nullable= False)
+    voucher_no = Column(String(100), nullable= False)
+    material_centre = Column(String(50), nullable=False)
+    amount = Column(DECIMAL(10,2), nullable=False)
+    amount_type = Column(String(10), nullable=True)
+    material_centre = Column(String(50), nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+
+
+
+class TallyAccounts(Base):
+    __tablename__ = 'tally_accounts'
+
+    id = Column(Integer, primary_key= True, autoincrement= True, index= True)
+    ledger_name = Column(String(250), nullable= False)
+    alias_code = Column(String(100), nullable= True)
+    under = Column(String(100), nullable= False)
+    state = Column(String(50), nullable=True)
+    gst_registration_type = Column(String(100), nullable= True)
+    gst_no = Column(String(15), nullable=True)
+    opening_balance = Column(DECIMAL(10,2), nullable=True)
+    busy_name = Column(String(250), nullable= True)
+    dealer_code = Column(String(100), nullable= False)
+    material_centre = Column(String(50), nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
