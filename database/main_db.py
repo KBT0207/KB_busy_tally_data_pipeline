@@ -66,7 +66,8 @@ def delete_tally_data():
     importer = DatabaseCrud(db_connector)
     
     for table in tables_list:
-        importer.delete_date_range_query(table, start_date= startdate, end_date=endate, commit=True)
+        if 'accounts' not in table:
+            importer.delete_date_range_query(table, start_date= startdate, end_date=endate, commit=True)
 
 
 
@@ -165,7 +166,7 @@ def import_busy_masters_material():
 def import_tally_data():    
     Base.metadata.create_all(db_engine)
     
-    # todays_date = "Apr-17-Mar-23"
+    # todays_date = "Apr-17-May-24"
     todays_date = datetime.today().strftime("%d-%b-%Y")
     tally_files = glob.glob("D:\\automated_tally_downloads\\" + f"**\\*{todays_date}.xlsx", recursive=True)
     if len(tally_files) != 0:
@@ -183,6 +184,15 @@ def import_tally_data():
     
             if get_filename(file) == 'purchase_return':
                 importer.import_data('tally_purchase_return', excel_data.clean_and_transform(), commit=True)
+            
+            if get_filename(file) == 'payments':
+                importer.import_data('tally_payments', excel_data.clean_and_transform(), commit=True)
+
+            if get_filename(file) == 'receipts':
+                importer.import_data('tally_receipts', excel_data.clean_and_transform(), commit=True)
+
+            if get_filename(file) == 'journal':
+                importer.import_data('tally_journal', excel_data.clean_and_transform(), commit=True)
 
             logger.info(f"{get_filename(file)} and {get_compname(file)} imported into database.. ")
         else:
@@ -193,23 +203,28 @@ def import_tally_data():
 
 
 
-def test():
-    Base.metadata.create_all(db_engine)
-    file_path = r"D:\automated_tally_downloads\10022\accounts\10022_accounts_13-May-2024.xlsx"
-    xl = TallyDataProcessor(excel_file_path=file_path)
-    df = xl.clean_and_transform()
-    # print(df.head(10))
-    importer = DatabaseCrud(db_connector)
-    importer.import_data("busy_sales_return", df=df, commit=True)
-
-
-
-
-# def test_import():
+# def test():
 #     Base.metadata.create_all(db_engine)
-#     imp = DatabaseCrud(db_connector)
-#     file = r"C:\Users\HP\Desktop\10001_payment_register_01-May-2024.xlsx"
-#     tranform = TallyDataProcessor(file)
-#     df = tranform.clean_and_transform()
-#     imp.import_data(table_name= "tally_payment", df=df, commit=0)
-#     # print(df)
+#     # todays_date = "Apr-17-May-24"
+#     # tally_files = glob.glob("D:\\automated_tally_downloads\\" + f"**\\*payments_{todays_date}.xlsx", recursive=True)
+#     file = r"D:\automated_tally_downloads\20001\journal\20001_journal_Apr-17-May-24.xlsx"
+#     xl = TallyDataProcessor(excel_file_path=file)
+#     df = xl.clean_and_transform()
+#     importer = DatabaseCrud(db_connector)
+#     importer.import_data("tally_journal", df=df, commit=True)
+
+
+
+def one():
+    Base.metadata.create_all(db_engine)
+    todays_date = "Apr-17-May-24"
+    tally_files = glob.glob("D:\\automated_tally_downloads\\" + f"**\\*payments_{todays_date}.xlsx", recursive=True)
+    for f in tally_files:
+        print(f)
+        # xl = TallyDataProcessor(excel_file_path=f)
+        # df = xl.clean_and_transform()
+        # # print(df.head(10))
+        # importer = DatabaseCrud(db_connector)
+        # importer.import_data("", df=df, commit=True)
+
+

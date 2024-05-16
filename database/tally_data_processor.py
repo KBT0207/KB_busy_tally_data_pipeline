@@ -30,6 +30,7 @@ def apply_transformation(file_path, material_centre_name) -> pd.DataFrame:
     df["material_centre"] = mc_name
     df["particulars"] = df["particulars"].str.rstrip().str.rstrip("_x000D_")
     df["voucher_no"] = df["voucher_no"].fillna(df["particulars"])
+    df = df.loc[~df["particulars"].isna()]
 
     return df
 
@@ -53,7 +54,7 @@ def apply_register_transformation(file_path, material_centre_name) -> pd.DataFra
     mc_name = tally_comp_codes[int(material_centre_name)]
     
     df = df.rename(columns= {"vch_no": "voucher_no"})
-    df = df.dropna(axis=1, how='all')
+    
     df["material_centre"] = mc_name
     df["particulars"] = df["particulars"].str.rstrip().str.rstrip("_x000D_")
     df.loc[:,["date",'voucher_no']] = df.loc[:,["date",'voucher_no']].ffill()
@@ -66,7 +67,9 @@ def apply_register_transformation(file_path, material_centre_name) -> pd.DataFra
     df["amount_type"] = np.where(df['credit'] != 0, 'credit', 'debit')
     df = df.drop(columns= ["vch_type", "debit", "credit"])
     df['particulars'] = np.where(df['particulars'] == "(cancelled)", "Cancelled", df['particulars'])
-    
+    df = df[['date', 'particulars', 'voucher_no','material_centre', 'amount', 'amount_type', ]]
+    df = df.loc[~df["particulars"].isna()]
+
     return df
 
 
@@ -96,16 +99,6 @@ def apply_accounts_transformation(file_path, material_centre_name) -> pd.DataFra
     df["material_centre"] = mc_name
     df["ledger_name"] = df["ledger_name"].str.rstrip().str.rstrip("_x000D_")
     df["alias_code"] = np.where(df["alias_code"] == '-', np.nan, df["alias_code"])
-    # dataframe.loc[:,["date",'voucher_no']] = dataframe.loc[:,["date",'voucher_no']].ffill()
-    # dataframe['date'] = pd.to_datetime(dataframe["date"])
-    # dataframe.loc[:,['credit', 'debit']] = dataframe.loc[:,['credit', 'debit']].fillna(0)
-    
-    # dataframe['amount'] = np.where((dataframe['credit'] != 0), dataframe['credit'], dataframe['debit'])
-    # dataframe['amount'] = np.where((dataframe['debit'] != 0), dataframe['debit'], dataframe['amount'])
-
-    # dataframe["amount_type"] = np.where(dataframe['credit'] != 0, 'credit', 'debit')
-    # dataframe = dataframe.drop(columns= ["vch_type", "debit", "credit"])
-    # dataframe['particulars'] = np.where(dataframe['particulars'] == "(cancelled)", "Cancelled", dataframe['particulars'])
     
     return df
 
@@ -118,15 +111,20 @@ class TallyDataProcessor:
 
     
     def clean_and_transform(self):
-        
+        df = None
+
         company_code = get_compname(self.excel_file_path)
         report_type = get_filename(self.excel_file_path)
-        if report_type in ['s', 'e', 'p', 'd']:
+        if report_type in ['sales', 'sales_return', 'purchase', 'purchase_return']:
             df = apply_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
-        elif report_type in ['r', 'y', 'j']:
+        elif report_type in ['receipts', 'payments', 'journal']:
             df = apply_register_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
-        else:
+        elif report_type == "accounts":
             df = apply_accounts_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
+
+        if df is None:
+            logger.error("Dataframe is None.. Check path variable/value!")
+            return None
 
         return df
 

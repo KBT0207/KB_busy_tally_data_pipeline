@@ -55,9 +55,10 @@ busy_tables = {'busy_sales': SalesKBBIO, 'busy_sales_order': SalesOrderKBBIO,
 
 tally_tables = {"tally_sales": TallySales, "tally_sales_return": TallySalesReturn, 
                 "tally_purchase": TallyPurchase, "tally_purchase_return": TallyPurchaseReturn, 
-                "tally_payment": TallyPayment, "tally_receipts": TallyReceipts, "tally_journal": TallyJournal, 
-                "tally_accounts": TallyAccounts,    
+                "tally_payments": TallyPayment, "tally_receipts": TallyReceipts, "tally_journal": TallyJournal, 
+                "tally_accounts": TallyAccounts,
                }
+
 
 
 other_tables = {"busy_pricing_kbbio": BusyPricingKBBIO,
@@ -69,16 +70,32 @@ tables = {**busy_tables, **tally_tables, **other_tables}
 
 tally_reports = {
                 's': 'sales', 'e': 'sales_return', 'p': "purchase" , 'd': 'purchase_return',
-                'y': "payment_register", "r": "receipt_register", 'j': "journal_register",
+                'y': "payments", 'r': 'receipts', 'j': 'journal',
                 }
         
 
-tally_comp_codes = {10009: "Vijaywada", 10002: "Pune" , 10008: "Raipur", 
-                    10010: "Ahmedabad", 10016: "Karnal", 10004: "Jejuri", 
-                    10007: "Hubli", 10003: "Indore", 10020: "Khorda", 
-                    91820: "Phaltan", 10001: "Pune", 10022: "Bhatinda",
-                    10019: "Jaipur", 10011: "Hyderabad", 10012: "Lucknow", 
-                    10018: "Phaltan", 10017: "Phaltan", 10005: "Nashik", 
-                    10023: "Hubli", 10014: "Phaltan", 10021: "AS Phaltan",                 
+tally_comp_codes = {
+                    10001: "Pune",
+                    10002: "Pune" , 
+                    10003: "Indore", 
+                    10004: "Jejuri", 
+                    10005: "Nashik", 
+                    10007: "Hubli",                     
+                    10008: "Raipur", 
+                    10009: "Vijaywada", 
+                    10010: "Ahmedabad", 
+                    10011: "Hyderabad", 
+                    10012: "Lucknow", 
+                    10014: "NA Phaltan", 
+                    10016: "Karnal", 
+                    10017: "GE Phaltan", 
+                    10018: "100x Phaltan", 
+                    10019: "Jaipur", 
+                    10020: "Khorda", 
+                    10021: "AS Phaltan", 
+                    10022: "Bhatinda",
+                    10023: "NA Hubli", 
+                    20000: "Phaltan",        
+                    20001: "Phaltan", 
                     }
 

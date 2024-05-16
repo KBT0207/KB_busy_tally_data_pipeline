@@ -64,7 +64,7 @@ class TallyPurchaseReturn(Base):
 
 
 class TallyPayment(Base):
-    __tablename__ = 'tally_payment'
+    __tablename__ = 'tally_payments'
 
     id = Column(Integer, primary_key= True, autoincrement= True, index= True)
     date = Column(Date, nullable= False)

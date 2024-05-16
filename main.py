@@ -34,19 +34,16 @@ def busy_material_masters():
 if __name__ == "__main__":
     
     # sheets_to_import = ["Nov"]
-    main_db.test()
+    # main_db.importing()
     # main_db.validation()       
 
     # from database.sql_connector import db_connection
-    # autocommit_status = db_connection.get_isolation_level()
-    # print(f"Autocommit status: {autocommit_status}")
-    # print(autocommit_status)
-   
+    main_db.test()
     # schedule.every().day.at("21:00").do(busy_sales)
 
     # schedule.every().day.at("01:00").do(busy_material_masters)
 
-    # schedule.every().day.at("07:00").do(tally_to_sql)
+    # schedule.every().day.at("07:03").do(tally_to_sql)
     
 
     # while True:
