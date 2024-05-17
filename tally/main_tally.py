@@ -7,7 +7,6 @@ from logging_config import logger
 
 
 
-
 def exporting_data(company):
     pg.hotkey("win", "d")
     todays_date = datetime.today().strftime("%d-%b-%Y")
@@ -31,11 +30,42 @@ def exporting_data(company):
                         filename= f"{comp}_{tally_reports[rep]}_{todays_date}.xlsx", 
                         esc= 4)
             logger.info(f"Exported {tally_reports[rep]} of {comp} of {todays_date}")
+
+        tally_utils.accounts()
+        tally_utils.export_accounts_data(path= fr"D:\automated_tally_downloads\{comp}\accounts",
+                        filename= f"{comp}_accounts_{todays_date}.xlsx")
+        logger.info(f"Exported accounts of {comp} of {todays_date}")
+
         tally_utils.change_company()
     
-    time.sleep(3)
+    time.sleep(2)
     pg.press('esc')
-    time.sleep(3)
+    time.sleep(2)
+    pg.press('y')
+    logger.info("Tally closed ...")
+
+
+
+def exporting_tally_items():
+    pg.hotkey("win", "d")
+    todays_date = datetime.today().strftime("%d-%b-%Y")
+
+    tally_utils.start_tally()
+    logger.info("Tally started...")
+
+    tally_utils.select_company(company_code= 20001)
+    tally_utils.items()
+    tally_utils.export_accounts_data(path= fr"D:\automated_tally_downloads\items",
+                    filename= f"tally_items_{todays_date}.xlsx")   
+    
+    logger.info(f"Exported items data of {todays_date}")
+    
+    time.sleep(1)
+    pg.press('esc')
+    time.sleep(1)
+    pg.press('esc')
+    time.sleep(1)
+    pg.press('esc')
     pg.press('y')
     logger.info("Tally closed ...")
 

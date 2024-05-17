@@ -117,9 +117,40 @@ class TallyAccounts(Base):
     under = Column(String(100), nullable= False)
     state = Column(String(50), nullable=True)
     gst_registration_type = Column(String(100), nullable= True)
-    gst_no = Column(String(15), nullable=True)
+    gst_no = Column(String(100), nullable=True)
     opening_balance = Column(DECIMAL(10,2), nullable=True)
     busy_name = Column(String(250), nullable= True)
-    dealer_code = Column(String(100), nullable= False)
+    dealer_code = Column(String(100), nullable= True)
     material_centre = Column(String(50), nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+
+
+
+class TallyItems(Base):
+    __tablename__ = 'tally_items'
+
+    id = Column(Integer, primary_key= True, autoincrement= True, index= True)
+    item_name = Column(String(250), nullable= False)
+    under = Column(String(100), nullable= False)
+    units = Column(String(50), nullable= False)
+    opening_qty = Column(DECIMAL(10,2), nullable= False)
+    rate = Column(DECIMAL(10,2), nullable= False)
+    per = Column(String(50), nullable= False)
+    opening_balance = Column(DECIMAL(10,2), nullable=False, default=0)
+    created_at = Column(DateTime, server_default=func.now())
+
+
+class TestTable(Base):
+    __tablename__ = 'test_table'
+
+    id = Column(Integer, primary_key= True, autoincrement= True, index= True)
+    ledger_name = Column(String(250), nullable= False)
+    alias_code = Column(String(100), nullable= True)
+    under = Column(String(100), nullable= False)
+    state = Column(String(50), nullable=True)
+    gst_registration_type = Column(String(100), nullable= True)
+    gst_no = Column(String(100), nullable=True)
+    opening_balance = Column(DECIMAL(10,2), nullable=True)
+    busy_name = Column(String(250), nullable= True)
+    dealer_code = Column(String(100), nullable= True)
     created_at = Column(DateTime, server_default=func.now())

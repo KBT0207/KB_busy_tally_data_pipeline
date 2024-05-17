@@ -73,9 +73,9 @@ def change_period(from_date, to_date):
 
 
 
-def export_data(path, filename):
+def export_report_data(path, filename):
     find_img('tally/images/report_list.png')
-    time.sleep(2)
+    time.sleep(1)
     pg.hotkey('ctrl', 'e')
     time.sleep(1.5)
     pg.press('c')
@@ -110,6 +110,44 @@ def export_data(path, filename):
 
 
 
+def export_accounts_data(path, filename):
+    find_img('tally/images/accounts.png')
+    time.sleep(1)
+    pg.hotkey('ctrl', 'e')
+    time.sleep(1.5)
+    pg.press('c')
+    time.sleep(2)
+    pg.press('down')
+    time.sleep(1)
+    find_img('tally/images/export_settings.png', conf=0.95 )
+    time.sleep(1)
+    pg.click()
+    time.sleep(0.5)
+    pg.press('down')
+    pg.press('enter')
+    pg.typewrite('excel', interval=0.3)
+    pg.press('enter')
+
+    find_img("tally/images/folder_path.png")
+    pg.click()
+    pg.press('enter')
+    pg.typewrite(path, interval=0.2)
+    pg.press('enter', presses=2, interval=0.4)
+    
+    pg.press('down')
+    pg.press('enter')
+    pg.typewrite(filename, interval=0.2)
+    pg.press('enter')
+
+    pg.hotkey("ctrl", "a")
+    time.sleep(1)
+    pg.press('e')
+
+    find_img(img='tally/images/accounts.png', conf=0.95)
+
+
+
+
 def back_to_tally_home(times):
     for _ in range(1, times+1):
         pg.press('esc')
@@ -128,12 +166,35 @@ def change_company():
 
 
 
+def accounts():
+    find_img('tally/images/tally_gateway.png')
+    pg.press('h')
+    time.sleep(1.5)
+    pg.typewrite('ledgers', interval=0.1)
+    pg.press('enter')
+    find_img(img='tally/images/ledgers_list.png')
+    pg.press('f5')
+    time.sleep(2.5)
+    
+
+def items():
+    find_img('tally/images/tally_gateway.png')
+    pg.press('h')
+    time.sleep(1.5)
+    pg.typewrite('stock items', interval=0.1)
+    pg.press('enter')
+    find_img(img='tally/images/accounts.png')
+    pg.press('f5')
+    time.sleep(2.5)
+
+
+
 def exporting_reports(report:str, from_date:str, to_date:str,  path:str, filename:str, esc:int):
     time.sleep(1)
     select_report(report_type= report)
     time.sleep(1)
     change_period(from_date= from_date , to_date= to_date) 
     time.sleep(1)
-    export_data(path= path, filename= filename)
+    export_report_data(path= path, filename= filename)
     time.sleep(1.5)
     back_to_tally_home(times=esc)

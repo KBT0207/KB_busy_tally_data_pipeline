@@ -41,7 +41,7 @@ class SalesKBBIO(Base):
     salesman = Column(String(255), nullable= True)
     sales_order_no = Column(String(255), nullable= True)
     sales_order_date = Column(String(255), nullable= True)
-    e_way_bill = Column(BigInteger, nullable= True)
+    e_way_bill = Column(String(255), nullable= True)
     transporter_name = Column(String(255), nullable= True)
     narration = Column(String(255), nullable= True)
     created_at = Column(DateTime, server_default=func.now())
@@ -83,7 +83,7 @@ class SalesReturnKBBIO(Base):
     salesman = Column(String(255), nullable= True)
     sales_order_no = Column(String(255), nullable= True)
     sales_order_date = Column(String(255), nullable= True)
-    e_way_bill = Column(BigInteger, nullable= True)
+    e_way_bill = Column(String(255), nullable= True)
     narration = Column(String(255), nullable= True)
     created_at = Column(DateTime, server_default=func.now())
 

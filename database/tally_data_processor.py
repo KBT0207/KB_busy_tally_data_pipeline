@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from logging_config import logger
 from database.busy_data_processor import get_compname, get_filename
-from utils.common_utils import tally_comp_codes
+from utils.common_utils import tally_comp_codes, acc_comp_codes
 
 pd.set_option('future.no_silent_downcasting', True)
 
@@ -29,6 +29,8 @@ def apply_transformation(file_path, material_centre_name) -> pd.DataFrame:
 
     df["material_centre"] = mc_name
     df["particulars"] = df["particulars"].str.rstrip().str.rstrip("_x000D_")
+    df["voucher_no"] = df["voucher_no"].replace("_x000D_\\n", "", regex=True)
+
     df["voucher_no"] = df["voucher_no"].fillna(df["particulars"])
     df = df.loc[~df["particulars"].isna()]
 
@@ -57,6 +59,7 @@ def apply_register_transformation(file_path, material_centre_name) -> pd.DataFra
     
     df["material_centre"] = mc_name
     df["particulars"] = df["particulars"].str.rstrip().str.rstrip("_x000D_")
+    df["voucher_no"] = df["voucher_no"].replace("_x000D_\\n", "", regex=True)
     df.loc[:,["date",'voucher_no']] = df.loc[:,["date",'voucher_no']].ffill()
     df['date'] = pd.to_datetime(df["date"])
     df.loc[:,['credit', 'debit']] = df.loc[:,['credit', 'debit']].fillna(0)
@@ -81,7 +84,6 @@ def apply_accounts_transformation(file_path, material_centre_name) -> pd.DataFra
         df = df.iloc[header_row:].reset_index(drop=True)
         df.columns = df.iloc[0]
         df = df.iloc[1:]
-        df = df.drop(index=1)
     except FileNotFoundError as e:
         print(e)
         logger.warning(f"Excel File not found in the given {file_path}: {e}")
@@ -89,7 +91,7 @@ def apply_accounts_transformation(file_path, material_centre_name) -> pd.DataFra
         logger.warning(f"Empty Excel File of {get_compname(file_path)} and report {get_filename(file_path)}")
         return None
     df.columns = df.columns.str.lower().str.replace(" ", "_").str.replace(".", "")
-    mc_name = tally_comp_codes[int(material_centre_name)]
+    mc_name = acc_comp_codes[int(material_centre_name)]
     df = df.drop(columns="sl_no", axis='columns')
     
     df = df.rename(columns= {"name_of_ledger": "ledger_name", "state_name": "state", 
@@ -97,8 +99,42 @@ def apply_accounts_transformation(file_path, material_centre_name) -> pd.DataFra
                              })
 
     df["material_centre"] = mc_name
-    df["ledger_name"] = df["ledger_name"].str.rstrip().str.rstrip("_x000D_")
-    df["alias_code"] = np.where(df["alias_code"] == '-', np.nan, df["alias_code"])
+    df["ledger_name"] = df["ledger_name"].replace('_x000D_\\n','', regex=True)
+    df["under"] = df["under"].replace('_x000D_\\n','', regex=True)
+    columns_to_na = ['alias_code', 'busy_name', 'dealer_code']
+    for col in columns_to_na:
+        df[col] = np.where(df[col] == '-', np.nan, df[col])
+    df["gst_no"] = df["gst_no"].str.rstrip()
+    df["opening_balance"] = df["opening_balance"].fillna(0)
+    
+    return df
+
+
+
+def apply_items_transformation(file_path:str) -> pd.DataFrame:
+    try:
+        df = pd.read_excel(file_path, header=None)
+        header_row = df[df.iloc[:, 0] == 'Sl. No.'].index[0]
+        df = df.iloc[header_row:].reset_index(drop=True)
+        df.columns = df.iloc[0]
+        df = df.iloc[1:]
+    except FileNotFoundError as e:
+        print(e)
+        logger.warning(f"Excel File not found in the given {file_path}: {e}")
+    if df.empty:
+        logger.warning(f"Empty Excel File of {get_compname(file_path)} and report {get_filename(file_path)}")
+        return None
+    df.columns = df.columns.str.lower().str.replace(" ", "_").str.replace(".", "")
+
+    df = df.drop(columns="sl_no", axis='columns')
+    
+    df = df.rename(columns= {"name_of_item": "item_name",
+                             })
+
+    df["item_name"] = df["item_name"].replace('_x000D_\\n','', regex=True)
+    df["under"] = df["under"].replace('_x000D_\\n','', regex=True)
+    df["under"] = df["under"].replace('_x0004_','', regex=True)
+    df.loc[:,['opening_qty', 'rate', 'opening_balance']] = df.loc[:,['opening_qty', 'rate', 'opening_balance']].fillna(0)
     
     return df
 
@@ -115,12 +151,18 @@ class TallyDataProcessor:
 
         company_code = get_compname(self.excel_file_path)
         report_type = get_filename(self.excel_file_path)
+        
         if report_type in ['sales', 'sales_return', 'purchase', 'purchase_return']:
             df = apply_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
+        
         elif report_type in ['receipts', 'payments', 'journal']:
             df = apply_register_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
+        
         elif report_type == "accounts":
             df = apply_accounts_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
+
+        elif report_type == "items":
+            df = apply_items_transformation(file_path=self.excel_file_path)
 
         if df is None:
             logger.error("Dataframe is None.. Check path variable/value!")

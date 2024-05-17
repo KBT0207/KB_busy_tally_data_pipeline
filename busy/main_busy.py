@@ -189,7 +189,7 @@ def exporting_master_and_material():
 
             try:    
                 busy_utils.return_to_busy_home(esc=3)
-                time.sleep(5)
+                time.sleep(3)
 
                 logger.info(f"Report Generated for {comp} and {report} successfully and back to busy home...")
             except Exception as e:

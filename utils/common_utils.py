@@ -52,7 +52,6 @@ busy_tables = {'busy_sales': SalesKBBIO, 'busy_sales_order': SalesOrderKBBIO,
         }
 
 
-
 tally_tables = {"tally_sales": TallySales, "tally_sales_return": TallySalesReturn, 
                 "tally_purchase": TallyPurchase, "tally_purchase_return": TallyPurchaseReturn, 
                 "tally_payments": TallyPayment, "tally_receipts": TallyReceipts, "tally_journal": TallyJournal, 
@@ -95,7 +94,31 @@ tally_comp_codes = {
                     10021: "AS Phaltan", 
                     10022: "Bhatinda",
                     10023: "NA Hubli", 
-                    20000: "Phaltan",        
+                    # 20000: "Phaltan",        
                     20001: "Phaltan", 
                     }
 
+acc_comp_codes = {
+                    10001: "Pune",
+                    10002: "Pune" , 
+                    10003: "Indore", 
+                    10004: "Jejuri", 
+                    10005: "Nashik", 
+                    10007: "Hubli",                     
+                    10008: "Raipur", 
+                    10009: "Vijaywada", 
+                    10010: "Ahmedabad", 
+                    10011: "Hyderabad", 
+                    10012: "Lucknow", 
+                    10014: "NA Phaltan", 
+                    10016: "Karnal", 
+                    10017: "GE Phaltan", 
+                    10018: "100x Phaltan", 
+                    10019: "Jaipur", 
+                    10020: "Khorda", 
+                    10021: "AS Phaltan", 
+                    10022: "Bhatinda",
+                    10023: "NA Hubli", 
+                    # 20000: "Phaltan",        
+                    20001: "Phaltan", 
+                    }

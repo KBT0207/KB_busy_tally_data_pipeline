@@ -32,20 +32,17 @@ def busy_material_masters():
 
 
 if __name__ == "__main__":
-    
-    # sheets_to_import = ["Nov"]
-    # main_db.importing()
-    # main_db.validation()       
 
-    # from database.sql_connector import db_connection
-    main_db.test()
+    from database.tally_data_processor import TallyDataProcessor 
+    path = r"D:\automated_tally_downloads\items\tally_items_17-May-2024.xlsx"
+    xl = TallyDataProcessor(path)
+    df = xl.clean_and_transform()
     # schedule.every().day.at("21:00").do(busy_sales)
 
-    # schedule.every().day.at("01:00").do(busy_material_masters)
+    # schedule.every().day.at("00:05").do(busy_material_masters)
 
-    # schedule.every().day.at("07:03").do(tally_to_sql)
+    # schedule.every().day.at("05:00").do(tally_to_sql)
     
-
     # while True:
     #     schedule.run_pending()
     #     time.sleep(1)    

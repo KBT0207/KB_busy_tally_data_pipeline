@@ -74,8 +74,8 @@ def delete_tally_data():
 def import_busy_sales():    
     Base.metadata.create_all(db_engine)
     
-    # todays_date = "08-May-2024"
-    todays_date = datetime.today().strftime("%d-%b-%Y")
+    todays_date = "Apr-2024"
+    # todays_date = datetime.today().strftime("%d-%b-%Y")
     busy_files = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*sales*{todays_date}.xlsx", recursive=True)
     if len(busy_files) != 0:
         for file in busy_files:
@@ -99,14 +99,14 @@ def import_busy_sales():
 
 
 
-def import_busy_masters_material():    
+def import_busy_masters_material():
     Base.metadata.create_all(db_engine)
     
-    #todays_date = "04-May-2024"
-    today_date = datetime.today().strftime("%d-%b-%Y")
+    today_date = "Apr-2024"
+    # today_date = datetime.today().strftime("%d-%b-%Y")
 
-    pattern_master = f"D:\\automated_busy_downloads\\**\\*masters*{today_date}.xlsx"
-    pattern_item = f"D:\\automated_busy_downloads\\**\\*item*{today_date}.xlsx"
+    pattern_master = f"D:\\automated_busy_downloads\\**\\*master*{today_date}.xlsx"
+    pattern_item = f"D:\\automated_busy_downloads\\**\\*items*{today_date}.xlsx"
     pattern_material = f"D:\\automated_busy_downloads\\**\\*material*{today_date}.xlsx"
 
     busy_files_material = glob.glob(pattern_material, recursive=True)
@@ -194,6 +194,12 @@ def import_tally_data():
             if get_filename(file) == 'journal':
                 importer.import_data('tally_journal', excel_data.clean_and_transform(), commit=True)
 
+            if get_filename(file) == 'accounts':
+                importer.import_data('tally_accounts', excel_data.clean_and_transform(), commit=True)
+
+            if get_filename(file) == 'items':
+                importer.import_data('tally_items', excel_data.clean_and_transform(), commit=True)
+
             logger.info(f"{get_filename(file)} and {get_compname(file)} imported into database.. ")
         else:
             logger.error(f"{get_filename(file)} and {get_compname(file)} of {file} didn't match the criteria")    
@@ -203,28 +209,15 @@ def import_tally_data():
 
 
 
-# def test():
+
+
+# def one():
 #     Base.metadata.create_all(db_engine)
-#     # todays_date = "Apr-17-May-24"
-#     # tally_files = glob.glob("D:\\automated_tally_downloads\\" + f"**\\*payments_{todays_date}.xlsx", recursive=True)
-#     file = r"D:\automated_tally_downloads\20001\journal\20001_journal_Apr-17-May-24.xlsx"
-#     xl = TallyDataProcessor(excel_file_path=file)
+#     acc_file = r"D:\automated_busy_downloads\comp0005\master_accounts\comp0005_master_accounts_05-May-2024.xlsx"
+#     xl = BusyDataProcessor(excel_file_path= acc_file)
 #     df = xl.clean_and_transform()
+#     # print(df)
 #     importer = DatabaseCrud(db_connector)
-#     importer.import_data("tally_journal", df=df, commit=True)
-
-
-
-def one():
-    Base.metadata.create_all(db_engine)
-    todays_date = "Apr-17-May-24"
-    tally_files = glob.glob("D:\\automated_tally_downloads\\" + f"**\\*payments_{todays_date}.xlsx", recursive=True)
-    for f in tally_files:
-        print(f)
-        # xl = TallyDataProcessor(excel_file_path=f)
-        # df = xl.clean_and_transform()
-        # # print(df.head(10))
-        # importer = DatabaseCrud(db_connector)
-        # importer.import_data("", df=df, commit=True)
+#     importer.import_data('busy_acc_kbbio', df=df, commit=True)
 
 
