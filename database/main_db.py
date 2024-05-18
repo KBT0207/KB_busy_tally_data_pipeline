@@ -74,8 +74,8 @@ def delete_tally_data():
 def import_busy_sales():    
     Base.metadata.create_all(db_engine)
     
-    todays_date = "Apr-2024"
-    # todays_date = datetime.today().strftime("%d-%b-%Y")
+    # todays_date = "Apr-2024"
+    todays_date = datetime.today().strftime("%d-%b-%Y")
     busy_files = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*sales*{todays_date}.xlsx", recursive=True)
     if len(busy_files) != 0:
         for file in busy_files:
@@ -102,8 +102,8 @@ def import_busy_sales():
 def import_busy_masters_material():
     Base.metadata.create_all(db_engine)
     
-    today_date = "Apr-2024"
-    # today_date = datetime.today().strftime("%d-%b-%Y")
+    # today_date = "17-Apr-2024"
+    today_date = datetime.today().strftime("%d-%b-%Y")
 
     pattern_master = f"D:\\automated_busy_downloads\\**\\*master*{today_date}.xlsx"
     pattern_item = f"D:\\automated_busy_downloads\\**\\*items*{today_date}.xlsx"

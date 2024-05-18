@@ -32,14 +32,14 @@ def busy_material_masters():
 
 
 if __name__ == "__main__":
-
+    ...
    
-    schedule.every().day.at("21:00").do(busy_sales)
+    # schedule.every().day.at("21:00").do(busy_sales)
 
-    schedule.every().day.at("00:05").do(busy_material_masters)
+    # schedule.every().day.at("00:05").do(busy_material_masters)
 
-    schedule.every().day.at("05:00").do(tally_to_sql)
+    # schedule.every().day.at("05:00").do(tally_to_sql)
     
-    while True:
-        schedule.run_pending()
-        time.sleep(1)    
+    # while True:
+    #     schedule.run_pending()
+    #     time.sleep(1)    

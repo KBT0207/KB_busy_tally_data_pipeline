@@ -118,3 +118,7 @@
 17-05-2024 11:16:26.01 - Backup completed: sys 
 ---------------------------------------- 
 17-05-2024 11:16:39.15 - Backup process completed 
+18-05-2024 11:03:35.74 - Starting backup process 
+---------------------------------------- 
+18-05-2024 11:03:35.76 - Backing up database: kbbio 
+An error occurred while dumping database: kbbio 
