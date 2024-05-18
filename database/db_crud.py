@@ -1,6 +1,6 @@
 import pandas as pd
 from sqlalchemy.orm import scoped_session, sessionmaker
-from sqlalchemy import insert, delete, and_, func, cast, Numeric
+from sqlalchemy import insert, delete, and_, func, cast, case, Numeric
 from logging_config import logger
 from utils.common_utils import tables
 from database.models.busy_models.busy_pricing import BusyPricingKBBIO
@@ -99,7 +99,7 @@ class DatabaseCrud:
 
 
 
-    def sales_price_validation(self):
+    def sales_price_validation(self, from_date, to_date):
         join_query = self.Session.query(SalesKBBIO, BusyPricingKBBIO).outerjoin(
             BusyPricingKBBIO, and_(
                 SalesKBBIO.party_type == BusyPricingKBBIO.customer_type,
@@ -108,29 +108,87 @@ class DatabaseCrud:
 
         results = join_query.filter(
             and_(
-                SalesKBBIO.date.between('2024-05-01', '2024-05-07'),
-                cast((SalesKBBIO.main_price + SalesKBBIO.discount_amt), Numeric(10,2)) - cast(BusyPricingKBBIO.selling_price, Numeric(10,2)) > 1
+                SalesKBBIO.date.between(from_date, to_date),
+                func.abs(cast((SalesKBBIO.main_price + SalesKBBIO.discount_amt), Numeric(10,2)) - cast(BusyPricingKBBIO.selling_price, Numeric(10,2))) > 1,
+                SalesKBBIO.party_type == "Dealer", BusyPricingKBBIO.selling_price != 0
             )
-        ).with_entities(
-            SalesKBBIO.voucher_no,
-            SalesKBBIO.party_type,
-            SalesKBBIO.date,
-            (SalesKBBIO.main_price + SalesKBBIO.discount_amt).label('total_price'),
-            SalesKBBIO.item_details,
-            SalesKBBIO.main_price,
-            BusyPricingKBBIO.selling_price,
-            SalesKBBIO.discount_amt,
-            SalesKBBIO.particulars,
-            # SalesKBBIO.batch_no
+        ).with_entities(SalesKBBIO.date, SalesKBBIO.voucher_no, SalesKBBIO.dealer_code, 
+                        SalesKBBIO.particulars, SalesKBBIO.item_details,           
+            cast(SalesKBBIO.main_price + SalesKBBIO.discount_amt, Numeric(10,2)).label('total_price'),
+            SalesKBBIO.main_price, BusyPricingKBBIO.selling_price, SalesKBBIO.discount_amt, 
+            SalesKBBIO.main_qty, SalesKBBIO.main_unit , SalesKBBIO.material_centre,
         ).all()
 
         # Convert results to DataFrame
-        df_results = pd.DataFrame(results, columns=['Invoice_No', 'Sales_Party_Type', 'Sales_Date', 
-                                                    'Total_Price', 'Sales_Item_Name', 
-                                                    'Sales_Price', 'Price_List',
-                                                    'Discount_Amt', 'Particulars', 
-                                                    # 'Batch_No',
+        df_results = pd.DataFrame(results, columns=['Date', 'Invoice No', 'Dealer Code', 'Particulars',
+                                                    'Sales_Item_Name', 'Total Price', 'Sales_Price', 
+                                                    'Price_List', 'Discount_Amt', 'Qty', 'Unit', 
+                                                    'Material Centre', 
                                                     ])
 
         return df_results
 
+
+    # def test_import_data(self, table_name, df: pd.DataFrame, commit):
+  
+    #     if df is not None and not df.empty:
+    #         row_count_before = self.get_row_count(table_name)
+    #         row_count_after = None
+
+    #         try:
+    #             table = tables.get(table_name)
+    #             if table is None:
+    #                 logger.error(f"Table '{table_name}' not found in table_mapping.")
+    #                 return
+
+    #             with self.Session() as session:
+    #                 connection = session.connection()
+    #                 trans = connection.begin()
+
+    #                 try:
+    #                     records = df.to_dict(orient='records')
+    #                     session.execute(insert(table), records)
+    #                     row_count_after = self.get_row_count(table_name)
+
+    #                     # Print session state for debugging (uncomment if needed)
+    #                     print(f"Session state after import: {session.is_active}")
+
+    #                     if commit:
+    #                         trans.commit()
+    #                         session.commit()
+    #                         logger.info("Changes committed to the database.")
+    #                     else:
+    #                         trans.rollback()
+    #                         logger.info("Changes rolled back due to commit=False.")
+
+    #                 except Exception as e:
+    #                     trans.rollback()
+    #                     logger.error(f"Rolling back changes in {table_name} due to import error: {e}")
+    #                     raise
+
+    #         except SQLAlchemyError as e:
+    #             logger.critical(f"Error inserting data into {table_name}: {e}")
+    #             raise
+
+    #         except Exception as e:
+    #             logger.critical(f"Unknown error occurred: {e}")
+    #             raise
+
+    #         finally:
+    #         # Ensure session is closed (already done by context manager, but explicit for clarity)
+    #             session.close()
+
+    #         if row_count_before is not None and row_count_after is not None:
+    #             rows_inserted = row_count_after - row_count_before
+    #             logger.info(f"Data imported into {table_name}. {rows_inserted} rows inserted.")
+    #         else:
+    #             logger.error("Failed to determine rows inserted.")
+
+    #         # Additional check for debugging (uncomment if needed)
+    #         separate_connection = self.engine.connect()
+    #         try:
+    #           result = separate_connection.execute(f"SELECT COUNT(*) FROM {table_name}")
+    #           count = result.fetchone()[0]
+    #           print(f"Data count in table after import (separate connection): {count}")
+    #         finally:
+    #           separate_connection.close()

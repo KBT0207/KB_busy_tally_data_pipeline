@@ -34,7 +34,7 @@ from database.models.busy_models.busy_items import (BusyItemsKBBIO,
 from database.models.tally_models.tally_report_models import (TallySales, TallyPurchase,
                                         TallyPurchaseReturn, TallySalesReturn,
                                         TallyPayment, TallyReceipts , TallyJournal, 
-                                        TallyAccounts,
+                                        TallyAccounts, TestTable
                                         )
 from database.models.busy_models.busy_pricing import (BusyPricingKBBIO,
                                         )
@@ -60,7 +60,7 @@ tally_tables = {"tally_sales": TallySales, "tally_sales_return": TallySalesRetur
 
 
 
-other_tables = {"busy_pricing_kbbio": BusyPricingKBBIO,
+other_tables = {"busy_pricing_kbbio": BusyPricingKBBIO, "test_table": TestTable,
                }
 
 

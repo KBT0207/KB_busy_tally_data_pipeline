@@ -7,6 +7,7 @@ from database.models.base import Base
 from database.db_crud import DatabaseCrud
 from logging_config import logger
 from utils.common_utils import busy_tables, tally_tables
+from utils.email import email_send
 
 
 
@@ -210,14 +211,50 @@ def import_tally_data():
 
 
 
+def dealer_price_validation_report(from_date, to_date):
+    
+    db_crud = DatabaseCrud(db_connector)
+    
+    validation_df = db_crud.sales_price_validation(from_date= from_date, to_date= to_date)  
+    
+    if validation_df is not None:
+        counts = len(validation_df)
+        validation_df.to_excel(fr"D:\Reports\Price Validation from Month to {to_date}.xlsx", index=False)
+        
+        subject = f"Busy Sales Price Validation Report from Month to {to_date} with {counts} rows of descrepancies"
+        body = f"Greetings All,\nKindly find the Busy Sales Price Validation Report attached from Month to {to_date} with {counts} rows of descrepancies.\n"
+        attachment = fr"D:\Reports\Price Validation from Month to {to_date}.xlsx"
+        logger.info(f"Busy Sales Price Validation Report Exported to Excel with Descrepencies")
 
-# def one():
-#     Base.metadata.create_all(db_engine)
-#     acc_file = r"D:\automated_busy_downloads\comp0005\master_accounts\comp0005_master_accounts_05-May-2024.xlsx"
-#     xl = BusyDataProcessor(excel_file_path= acc_file)
-#     df = xl.clean_and_transform()
-#     # print(df)
-#     importer = DatabaseCrud(db_connector)
-#     importer.import_data('busy_acc_kbbio', df=df, commit=True)
+    else:
+        subject = f"Busy Sales Price Validation Report from Month to {to_date} without descrepancy"
+        attachment = None
+        body = f"Greetings All,\nAs per yesterday's data, there were no descrepancy found in busy sales with the price list."
+
+        logger.info(f"Report Produced without discrepancies")
+
+    try:
+        receivers = ['shivprasad@kaybeebio.com', 
+                     'holkar.h@kaybeebio.com'
+                    ]
+        cc = ['danish@kaybeeexports.com', 's.gaurav@kaybeeexports.com', 
+              'mahendra@kaybeeexports.com'
+            ]
+        email_send(reciever= receivers, cc= cc, subject= subject, contents= body, attachemnts= attachment)
+    except Exception as e:
+        logger.critical(f"Failed to email the Busy Sales Price Validation Report : {e}")
+
+
+
+def one():
+    Base.metadata.create_all(db_engine)
+    acc_file = r"D:\tally_accounts\10001_accounts_all.xlsx"
+    xl = TallyDataProcessor(excel_file_path= acc_file)
+    df = xl.clean_and_transform()
+    df = df.fillna("NA")
+    df = df.drop(columns='material_centre', axis=1)
+    # print(df.head(10))
+    importer = DatabaseCrud(db_connector)
+    importer.test_import_data('test_table', df=df, commit=False)
 
 

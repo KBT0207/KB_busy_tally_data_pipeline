@@ -1,5 +1,6 @@
 import time
 import schedule
+from datetime import datetime, timedelta
 from database import main_db
 from busy import main_busy
 from tally import main_tally
@@ -32,8 +33,12 @@ def busy_material_masters():
 
 
 if __name__ == "__main__":
-    ...
-   
+
+    fromdate = datetime.today().date().replace(day=1).strftime('%Y-%m-%d')
+    todate = (datetime.today().date() - timedelta(days=1)).strftime('%Y-%m-%d')
+    
+    main_db.dealer_price_validation_report(from_date= fromdate, to_date= todate)
+
     # schedule.every().day.at("21:00").do(busy_sales)
 
     # schedule.every().day.at("00:05").do(busy_material_masters)
