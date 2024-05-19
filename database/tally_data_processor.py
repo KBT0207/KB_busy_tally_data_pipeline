@@ -158,11 +158,11 @@ class TallyDataProcessor:
         elif report_type in ['receipts', 'payments', 'journal']:
             df = apply_register_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
         
-        elif report_type == "accounts":
-            df = apply_accounts_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
+        # elif report_type == "accounts":
+        #     df = apply_accounts_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
 
-        elif report_type == "items":
-            df = apply_items_transformation(file_path=self.excel_file_path)
+        # elif report_type == "items":
+        #     df = apply_items_transformation(file_path=self.excel_file_path)
 
         if df is None:
             logger.error("Dataframe is None.. Check path variable/value!")

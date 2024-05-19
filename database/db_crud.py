@@ -129,66 +129,41 @@ class DatabaseCrud:
         return df_results
 
 
-    # def test_import_data(self, table_name, df: pd.DataFrame, commit):
-  
-    #     if df is not None and not df.empty:
-    #         row_count_before = self.get_row_count(table_name)
-    #         row_count_after = None
+    def test_import_data(self, table_name, df: pd.DataFrame, commit):
+        if df is not None and not df.empty:
+            try:
+                with self.Session() as session:
+                    # Get the table object from the database metadata
+                    table = tables.get(table_name)
+                    if table is None:
+                        logger.info(f"Table {table_name} not found in metadata.")
+                        return
 
-    #         try:
-    #             table = tables.get(table_name)
-    #             if table is None:
-    #                 logger.error(f"Table '{table_name}' not found in table_mapping.")
-    #                 return
+                    data_to_insert = df.to_dict(orient='records')
+                    if not data_to_insert:
+                        logger.info(f"No data to insert into {table_name}.")
+                        return
 
-    #             with self.Session() as session:
-    #                 connection = session.connection()
-    #                 trans = connection.begin()
+                    logger.info(f"First few records to insert into {table_name}: {data_to_insert[:5]}")
 
-    #                 try:
-    #                     records = df.to_dict(orient='records')
-    #                     session.execute(insert(table), records)
-    #                     row_count_after = self.get_row_count(table_name)
+                    insert_stmt = insert(table).values(data_to_insert)
+                    # df.to_sql(table_name, self.db_connector.engine, if_exists='append', index=False, method='multi', chunksize=500)
 
-    #                     # Print session state for debugging (uncomment if needed)
-    #                     print(f"Session state after import: {session.is_active}")
+                    session.execute(insert_stmt)
+                    logger.info(f"Executed insert statement for {table_name}")
 
-    #                     if commit:
-    #                         trans.commit()
-    #                         session.commit()
-    #                         logger.info("Changes committed to the database.")
-    #                     else:
-    #                         trans.rollback()
-    #                         logger.info("Changes rolled back due to commit=False.")
+                    if commit:
+                        session.commit()
+                        logger.info("Committed changes.")
+                    else:
+                        session.rollback()
+                        logger.info("Changes not committed.")
 
-    #                 except Exception as e:
-    #                     trans.rollback()
-    #                     logger.error(f"Rolling back changes in {table_name} due to import error: {e}")
-    #                     raise
+                    logger.info(f"Transaction state: {session.get_transaction()}")
 
-    #         except SQLAlchemyError as e:
-    #             logger.critical(f"Error inserting data into {table_name}: {e}")
-    #             raise
-
-    #         except Exception as e:
-    #             logger.critical(f"Unknown error occurred: {e}")
-    #             raise
-
-    #         finally:
-    #         # Ensure session is closed (already done by context manager, but explicit for clarity)
-    #             session.close()
-
-    #         if row_count_before is not None and row_count_after is not None:
-    #             rows_inserted = row_count_after - row_count_before
-    #             logger.info(f"Data imported into {table_name}. {rows_inserted} rows inserted.")
-    #         else:
-    #             logger.error("Failed to determine rows inserted.")
-
-    #         # Additional check for debugging (uncomment if needed)
-    #         separate_connection = self.engine.connect()
-    #         try:
-    #           result = separate_connection.execute(f"SELECT COUNT(*) FROM {table_name}")
-    #           count = result.fetchone()[0]
-    #           print(f"Data count in table after import (separate connection): {count}")
-    #         finally:
-    #           separate_connection.close()
+            except SQLAlchemyError as e:
+                logger.error(f"Error inserting data into {table_name}: {e}")
+                session.rollback()
+                logger.error(f"Rolling back changes in {table_name} due to import error.")
+        else:
+            logger.info(f"Empty DataFrame hence 0 rows imported in {table_name}")   

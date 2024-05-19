@@ -34,6 +34,10 @@ def exporting_data(company):
         tally_utils.accounts()
         tally_utils.export_accounts_data(path= fr"D:\automated_tally_downloads\{comp}\accounts",
                         filename= f"{comp}_accounts_{todays_date}.xlsx")
+        time.sleep(2)
+        pg.press('esc')
+        time.sleep(2)
+        pg.press('esc')
         logger.info(f"Exported accounts of {comp} of {todays_date}")
 
         tally_utils.change_company()

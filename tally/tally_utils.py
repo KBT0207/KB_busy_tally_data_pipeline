@@ -176,6 +176,7 @@ def accounts():
     pg.press('f5')
     time.sleep(2.5)
     
+    
 
 def items():
     find_img('tally/images/tally_gateway.png')

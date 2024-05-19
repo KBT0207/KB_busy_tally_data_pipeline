@@ -248,13 +248,13 @@ def dealer_price_validation_report(from_date, to_date):
 
 def one():
     Base.metadata.create_all(db_engine)
-    acc_file = r"D:\tally_accounts\10001_accounts_all.xlsx"
+    acc_file = r"D:\tally_accounts\10001_accounts_testing.xlsx"
     xl = TallyDataProcessor(excel_file_path= acc_file)
     df = xl.clean_and_transform()
     df = df.fillna("NA")
     df = df.drop(columns='material_centre', axis=1)
     # print(df.head(10))
     importer = DatabaseCrud(db_connector)
-    importer.test_import_data('test_table', df=df, commit=False)
+    importer.test_import_data('test_table', df=df, commit=True)
 
 
