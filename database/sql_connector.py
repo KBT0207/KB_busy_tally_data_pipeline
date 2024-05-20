@@ -46,7 +46,7 @@ class DatabaseConnector:
         self.host = host
         self.port = port
         self.database = database
-        self.engine = create_engine(self.get_db_string())
+        self.engine = create_engine(self.get_db_string(),isolation_level='READ COMMITTED', echo=True)
 
 
     def get_db_string(self):
@@ -59,14 +59,6 @@ class DatabaseConnector:
         """
         return f'mysql+pymysql://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}?autocommit=false'
 
-    # def get_autocommit_status(self):
-    #     """Return the autocommit status of the SQLAlchemy engine."""
-    #     return self.engine.raw_connection().autocommit
-
-
-    # def get_isolation_level(self):
-    #     """Return the isolation level of the SQLAlchemy engine."""
-    #     return self.engine.raw_connection().isolation_level
 
 USERNAME = os.getenv('DB_USERNAME')
 PASSWORD = os.getenv('DB_PASSWORD')

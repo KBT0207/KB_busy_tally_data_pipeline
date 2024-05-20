@@ -34,16 +34,15 @@ def busy_material_masters():
 
 if __name__ == "__main__":
 
-    main_db.import_tally_data()
 
     # fromdate = datetime.today().date().replace(day=1).strftime('%Y-%m-%d')
     # todate = (datetime.today().date() - timedelta(days=1)).strftime('%Y-%m-%d')
     
     # main_db.dealer_price_validation_report(from_date= fromdate, to_date= todate)
 
-    # main_db.one()
+    main_db.one()
 
-    # schedule.every().day.at("21:40").do(busy_sales)
+    # schedule.every().day.at("21:21").do(busy_sales)
 
     # schedule.every().day.at("00:05").do(busy_material_masters)
 

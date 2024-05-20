@@ -222,7 +222,7 @@ def dealer_price_validation_report(from_date, to_date):
         validation_df.to_excel(fr"D:\Reports\Price Validation from Month to {to_date}.xlsx", index=False)
         
         subject = f"Busy Sales Price Validation Report from Month to {to_date} with {counts} rows of descrepancies"
-        body = f"Greetings All,\nKindly find the Busy Sales Price Validation Report attached from Month to {to_date} with {counts} rows of descrepancies.\n"
+        body = f"Greetings All,\nKindly find the Busy Sales Price Validation Report attached from Month to {to_date} with {counts} rows of descrepancies.\n In the attached excel, column 'Total Price' is the sum of List Price ('Sales_Price') and 'Discout_Amt' which is the compared with the actual Price List."
         attachment = fr"D:\Reports\Price Validation from Month to {to_date}.xlsx"
         logger.info(f"Busy Sales Price Validation Report Exported to Excel with Descrepencies")
 
@@ -241,20 +241,23 @@ def dealer_price_validation_report(from_date, to_date):
               'mahendra@kaybeeexports.com'
             ]
         email_send(reciever= receivers, cc= cc, subject= subject, contents= body, attachemnts= attachment)
+        logger.info(f"Successfully emailed the Busy Sales Price Validation Report.")
     except Exception as e:
         logger.critical(f"Failed to email the Busy Sales Price Validation Report : {e}")
 
 
 
+from database.test_import import test_importing
+
 def one():
-    Base.metadata.create_all(db_engine)
+    # Base.metadata.create_all(db_engine)
     acc_file = r"D:\tally_accounts\10001_accounts_testing.xlsx"
     xl = TallyDataProcessor(excel_file_path= acc_file)
     df = xl.clean_and_transform()
     df = df.fillna("NA")
     df = df.drop(columns='material_centre', axis=1)
     # print(df.head(10))
-    importer = DatabaseCrud(db_connector)
-    importer.test_import_data('test_table', df=df, commit=True)
+    # importer = DatabaseCrud(db_connector)
+    test_importing(table_name='test_table', df=df, commit=True)
 
 

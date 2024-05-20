@@ -1,17 +1,20 @@
 import pandas as pd
-from sqlalchemy.orm import scoped_session, sessionmaker
-from sqlalchemy import insert, delete, and_, func, cast, case, Numeric
+from sqlalchemy.orm import scoped_session, sessionmaker, Session
+from sqlalchemy import insert, delete, and_, func, cast, case, Numeric, MetaData, Table, create_engine
 from logging_config import logger
 from utils.common_utils import tables
 from database.models.busy_models.busy_pricing import BusyPricingKBBIO
 from database.models.busy_models.busy_reports import SalesKBBIO
 from sqlalchemy.exc import SQLAlchemyError
+import os
+
 
 
 class DatabaseCrud:
     def __init__(self, db_connector) -> None:
         self.db_connector = db_connector
-        self.Session = scoped_session(sessionmaker(bind=self.db_connector.engine))
+        self.engine = db_connector.engine
+        self.Session = scoped_session(sessionmaker(bind=self.db_connector.engine, autoflush=False))
 
     
     def delete_date_range_query(self, table_name, start_date, end_date, commit):
@@ -129,41 +132,32 @@ class DatabaseCrud:
         return df_results
 
 
-    def test_import_data(self, table_name, df: pd.DataFrame, commit):
-        if df is not None and not df.empty:
-            try:
-                with self.Session() as session:
-                    # Get the table object from the database metadata
-                    table = tables.get(table_name)
-                    if table is None:
-                        logger.info(f"Table {table_name} not found in metadata.")
-                        return
 
-                    data_to_insert = df.to_dict(orient='records')
-                    if not data_to_insert:
-                        logger.info(f"No data to insert into {table_name}.")
-                        return
+    # def test_import_data(self, table_name, df:pd.DataFrame, commit=False):
+    #     """
+    #     Import data into a table using the engine.
 
-                    logger.info(f"First few records to insert into {table_name}: {data_to_insert[:5]}")
+    #     Args:
+    #     - table_name (str): Name of the table to import data into.
+    #     - df (pd.DataFrame): DataFrame containing the data to insert.
+    #     - commit (bool): Whether to commit changes after inserting data.
 
-                    insert_stmt = insert(table).values(data_to_insert)
-                    # df.to_sql(table_name, self.db_connector.engine, if_exists='append', index=False, method='multi', chunksize=500)
+    #     """
+    #     if df is not None and not df.empty:
+    #         # Assuming data_to_insert is a list of dictionaries representing rows
+    #         data_to_insert = df.to_dict(orient='records')
+    #         if not data_to_insert:
+    #             print(f"No data to insert into {table_name}.")
+    #             return
 
-                    session.execute(insert_stmt)
-                    logger.info(f"Executed insert statement for {table_name}")
+    #         table = tables.get(table_name)
+    #         if table is None:
+    #             print(f"Table {table_name} not found in metadata.")
+    #             return
 
-                    if commit:
-                        session.commit()
-                        logger.info("Committed changes.")
-                    else:
-                        session.rollback()
-                        logger.info("Changes not committed.")
-
-                    logger.info(f"Transaction state: {session.get_transaction()}")
-
-            except SQLAlchemyError as e:
-                logger.error(f"Error inserting data into {table_name}: {e}")
-                session.rollback()
-                logger.error(f"Rolling back changes in {table_name} due to import error.")
-        else:
-            logger.info(f"Empty DataFrame hence 0 rows imported in {table_name}")   
+    #         insert_query = insert(table).values(data_to_insert)
+    #         result = self.Session.execute(insert_query)
+    #         self.Session.rollback()
+    #         print(f"Inserted {result.rowcount} rows into {table_name}.")
+    #     else:
+    #         print(f"Empty DataFrame, no rows inserted into {table_name}.")
