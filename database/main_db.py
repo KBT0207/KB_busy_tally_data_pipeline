@@ -54,21 +54,20 @@ def delete_busy_material():
 
 
 
-def delete_tally_data():    
+def delete_tally_data(start_date:str, end_date:str, commit:bool):    
     Base.metadata.create_all(db_engine)
-
-    current_date = datetime.today().date()
-    startdate = current_date - timedelta(days=2)
-    #date1= "2024-05-03"
-    endate = current_date - timedelta(days=1)
-    #date2= "2024-05-02"
 
     tables_list = list(tally_tables.keys())
     importer = DatabaseCrud(db_connector)
     
+
     for table in tables_list:
         if 'accounts' not in table:
-            importer.delete_date_range_query(table, start_date= startdate, end_date=endate, commit=True)
+            importer.delete_date_range_query(table, start_date= start_date, 
+                                             end_date=end_date, commit=commit)
+
+
+
 
 
 
@@ -164,12 +163,10 @@ def import_busy_masters_material():
 
 
 
-def import_tally_data():    
+def import_tally_data(date):    
     Base.metadata.create_all(db_engine)
     
-    # todays_date = "Apr-17-May-24"
-    todays_date = datetime.today().strftime("%d-%b-%Y")
-    tally_files = glob.glob("D:\\automated_tally_downloads\\" + f"**\\*{todays_date}.xlsx", recursive=True)
+    tally_files = glob.glob("D:\\automated_tally_downloads\\" + f"**\\*{date}.xlsx", recursive=True)
     if len(tally_files) != 0:
         for file in tally_files:
             excel_data = TallyDataProcessor(file)
@@ -211,20 +208,28 @@ def import_tally_data():
 
 
 
-def dealer_price_validation_report(from_date, to_date):
-    
+def dealer_price_validation_report(from_date:str, to_date:str, send_email:bool, exceptions:list = None) -> None:
+    """Generated dealer price validation report as per the arguments.
+
+    Args:
+        from_date (str): The date from which busy sales needed to be validated from.
+        to_date (str): The date till which busy sales needed to be validated.
+        send_email (bool): when False only excel file with report get generated. True if you want to send email with the excel file.
+        exceptions (list, optional): Takes in Sales Voucher Number which you want to be excluded from the report. Defaults to None.
+    """
     db_crud = DatabaseCrud(db_connector)
     
-    validation_df = db_crud.sales_price_validation(from_date= from_date, to_date= to_date)  
+    validation_df = db_crud.sales_price_validation(from_date= from_date, to_date= to_date, exceptions= exceptions)
     
-    if validation_df is not None:
-        counts = len(validation_df)
-        validation_df.to_excel(fr"D:\Reports\Price Validation from Month to {to_date}.xlsx", index=False)
+    counts = len(validation_df)
+    if counts != 0:
+        
+        validation_df.to_excel(fr"D:\Reports\Price Validation from Month to {to_date}.xlsx", index= False)
         
         subject = f"Busy Sales Price Validation Report from Month to {to_date} with {counts} rows of descrepancies"
         body = f"Greetings All,\nKindly find the Busy Sales Price Validation Report attached from Month to {to_date} with {counts} rows of descrepancies.\n In the attached excel, column 'Total Price' is the sum of List Price ('Sales_Price') and 'Discout_Amt' which is the compared with the actual Price List."
         attachment = fr"D:\Reports\Price Validation from Month to {to_date}.xlsx"
-        logger.info(f"Busy Sales Price Validation Report Exported to Excel with Descrepencies")
+        logger.info(f"Busy Sales Price Validation Report Exported to Excel with {counts} Descrepencies")
 
     else:
         subject = f"Busy Sales Price Validation Report from Month to {to_date} without descrepancy"
@@ -233,31 +238,53 @@ def dealer_price_validation_report(from_date, to_date):
 
         logger.info(f"Report Produced without discrepancies")
 
-    try:
-        receivers = ['shivprasad@kaybeebio.com', 
-                     'holkar.h@kaybeebio.com'
-                    ]
-        cc = ['danish@kaybeeexports.com', 's.gaurav@kaybeeexports.com', 
-              'mahendra@kaybeeexports.com'
-            ]
-        email_send(reciever= receivers, cc= cc, subject= subject, contents= body, attachemnts= attachment)
-        logger.info(f"Successfully emailed the Busy Sales Price Validation Report.")
-    except Exception as e:
-        logger.critical(f"Failed to email the Busy Sales Price Validation Report : {e}")
+    if send_email:
+        try:
+            receivers = ['shivprasad@kaybeebio.com', 
+                        'holkar.h@kaybeebio.com'
+                        ]
+            cc = ['danish@kaybeeexports.com', 's.gaurav@kaybeeexports.com', 
+                'mahendra@kaybeeexports.com'
+                ]
+            email_send(reciever= receivers, cc= cc, subject= subject, contents= body, attachemnts= attachment)
+            logger.info(f"Successfully emailed the Busy Sales Price Validation Report.")
+        except Exception as e:
+            logger.critical(f"Failed to email the Busy Sales Price Validation Report : {e}")
 
 
 
-from database.test_import import test_importing
+def import_tally_accounts():
+    path = r'D:\automated_tally_downloads\10007\accounts\10007_accounts_21-May-2024.xlsx'
+    db_crud = DatabaseCrud(db_connector)
+    tally = TallyDataProcessor(path)
+    data = tally.clean_and_transform()
+    df = db_crud.import_unmatched_data(df=data, commit=False)
+    print(df)
 
-def one():
-    # Base.metadata.create_all(db_engine)
-    acc_file = r"D:\tally_accounts\10001_accounts_testing.xlsx"
-    xl = TallyDataProcessor(excel_file_path= acc_file)
-    df = xl.clean_and_transform()
-    df = df.fillna("NA")
-    df = df.drop(columns='material_centre', axis=1)
-    # print(df.head(10))
-    # importer = DatabaseCrud(db_connector)
-    test_importing(table_name='test_table', df=df, commit=True)
+#     db_crud = DatabaseCrud(db_connector)
+#     data = db_crud.import_unmatched_data(df=df, commit=commit)
+#     print(data)
+# def one(commit):
+#     # Base.metadata.create_all(db_engine)
+#     acc_file = r"D:\tally_accounts\10001_accounts_testing.xlsx"
+#     xl = TallyDataProcessor(excel_file_path= acc_file)
+#     df = xl.clean_and_transform()
+#     df = df.fillna("NA")
+#     df = df.drop(columns='material_centre', axis=1)
+#     # print(df.head(10))
+#     importer = DatabaseCrud(db_connector)
+#     importer.test_import_data(table_name='test_table', df=df, commit=commit)
 
+
+
+# def delete_one(commit):
+#     # Base.metadata.create_all(db_engine)
+#     acc_file = r"D:\tally_accounts\10001_accounts_testing.xlsx"
+#     xl = TallyDataProcessor(excel_file_path= acc_file)
+#     df = xl.clean_and_transform()
+#     df = df.fillna("NA")
+#     df = df.drop(columns='material_centre', axis=1)
+#     # print(df.head(10))
+#     importer = DatabaseCrud(db_connector)
+#     importer.test_delete(table_name='test_table', start_date= '2024-05-20 17:47:00' , end_date= '2024-05-20 17:49:00', commit=commit)
 

@@ -94,8 +94,9 @@ tally_comp_codes = {
                     10021: "AS Phaltan", 
                     10022: "Bhatinda",
                     10023: "NA Hubli", 
-                    # 20000: "Phaltan",        
+                    # 20000: "Phaltan",  
                     20001: "Phaltan", 
+                    # 91820: "Phaltan",
                     }
 
 acc_comp_codes = {

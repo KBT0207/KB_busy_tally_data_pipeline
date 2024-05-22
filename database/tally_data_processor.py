@@ -101,9 +101,9 @@ def apply_accounts_transformation(file_path, material_centre_name) -> pd.DataFra
     df["material_centre"] = mc_name
     df["ledger_name"] = df["ledger_name"].replace('_x000D_\\n','', regex=True)
     df["under"] = df["under"].replace('_x000D_\\n','', regex=True)
-    columns_to_na = ['alias_code', 'busy_name', 'dealer_code']
-    for col in columns_to_na:
-        df[col] = np.where(df[col] == '-', np.nan, df[col])
+    # columns_to_na = ['alias_code', 'busy_name', 'dealer_code']
+    # for col in columns_to_na:
+    #     df[col] = np.where(df[col] == '-', np.nan, df[col])
     df["gst_no"] = df["gst_no"].str.rstrip()
     df["opening_balance"] = df["opening_balance"].fillna(0)
     

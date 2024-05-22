@@ -9,10 +9,15 @@ from utils.common_utils import tally_comp_codes
 
 
 def tally_to_sql():
+    current_date = datetime.today().strftime("%d-%b-%Y")
+    startdate = (datetime.today().date() - timedelta(days=2)).strftime("%Y-%m-%d")
+    endate = (datetime.today().date() - timedelta(days=1)).strftime("%Y-%m-%d")
     companies = sorted(list(tally_comp_codes.keys()))
+    
     main_tally.exporting_data(company=companies)
-    main_db.delete_tally_data()
-    main_db.import_tally_data()
+    main_db.delete_tally_data(start_date= startdate, end_date= endate, commit=True)
+    main_db.import_tally_data(date= current_date)
+
 
 
 def busy_sales():
@@ -31,22 +36,30 @@ def busy_material_masters():
 
 
 
+def reports():
+    fromdate = datetime.today().date().replace(day=1).strftime('%Y-%m-%d')
+    todate = (datetime.today().date() - timedelta(days=1)).strftime('%Y-%m-%d')
+    
+    excluded_invoices = ['KBAKNU/2425/3']
+    main_db.dealer_price_validation_report(from_date= fromdate, 
+                                           to_date= todate, send_email= True, 
+                                           exceptions= excluded_invoices)
+
 
 if __name__ == "__main__":
-
-
-    # fromdate = datetime.today().date().replace(day=1).strftime('%Y-%m-%d')
-    # todate = (datetime.today().date() - timedelta(days=1)).strftime('%Y-%m-%d')
+    main_db.import_tally_accounts()
     
-    # main_db.dealer_price_validation_report(from_date= fromdate, to_date= todate)
+    # main_db.delete_one(commit=True)
+    # main_db.import_tally_data()
 
-    main_db.one()
-
-    # schedule.every().day.at("21:21").do(busy_sales)
+    # schedule.every().day.at("21:00").do(busy_sales)
 
     # schedule.every().day.at("00:05").do(busy_material_masters)
 
-    # schedule.every().day.at("05:00").do(tally_to_sql)
+    # schedule.every().day.at("04:30").do(tally_to_sql)
+
+    # schedule.every().day.at("10:00").do(reports)
+
     
     # while True:
     #     schedule.run_pending()

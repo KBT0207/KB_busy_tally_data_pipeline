@@ -122,3 +122,27 @@
 ---------------------------------------- 
 18-05-2024 11:03:35.76 - Backing up database: kbbio 
 An error occurred while dumping database: kbbio 
+21-05-2024 14:38:11.40 - Starting backup process 
+---------------------------------------- 
+21-05-2024 14:38:11.44 - Backing up database: kbbio 
+21-05-2024 14:38:11.44 - Backup completed: kbbio 
+21-05-2024 14:38:11.44 - Backing up database: sys 
+21-05-2024 14:38:11.44 - Backup completed: sys 
+---------------------------------------- 
+21-05-2024 14:38:25.81 - Backup process completed 
+21-05-2024 16:43:55.48 - Starting backup process 
+---------------------------------------- 
+21-05-2024 16:43:55.59 - Backing up database: kbbio 
+21-05-2024 16:43:55.59 - Backup completed: kbbio 
+21-05-2024 16:43:55.59 - Backing up database: sys 
+21-05-2024 16:43:55.59 - Backup completed: sys 
+---------------------------------------- 
+21-05-2024 16:44:06.79 - Backup process completed 
+22-05-2024 15:41:06.01 - Starting backup process 
+---------------------------------------- 
+22-05-2024 15:41:06.35 - Backing up database: kbbio 
+22-05-2024 15:41:06.35 - Backup completed: kbbio 
+22-05-2024 15:41:06.35 - Backing up database: sys 
+22-05-2024 15:41:06.35 - Backup completed: sys 
+---------------------------------------- 
+22-05-2024 15:41:18.03 - Backup process completed 
