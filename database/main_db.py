@@ -22,10 +22,12 @@ def truncate_busy_masters():
     
 
 
+
 def delete_busy_sales():    
     Base.metadata.create_all(db_engine)
 
     current_date = datetime.today().date()
+    # current_date = datetime.today().date()-timedelta(days=1)
     date1 = current_date - timedelta(days=2)
     # date1= "2024-05-06"
     date2 = current_date - timedelta(days=1)
@@ -36,6 +38,7 @@ def delete_busy_sales():
     for table in tables_list:
         if "sales" in table:
             importer.delete_date_range_query(table, start_date= date1, end_date=date2, commit=True)
+
 
 
 
@@ -54,6 +57,7 @@ def delete_busy_material():
 
 
 
+
 def delete_tally_data(start_date:str, end_date:str, commit:bool):    
     Base.metadata.create_all(db_engine)
 
@@ -69,13 +73,12 @@ def delete_tally_data(start_date:str, end_date:str, commit:bool):
 
 
 
-
-
 def import_busy_sales():    
     Base.metadata.create_all(db_engine)
     
     # todays_date = "Apr-2024"
     todays_date = datetime.today().strftime("%d-%b-%Y")
+    # todays_date = '23-May-2024'
     busy_files = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*sales*{todays_date}.xlsx", recursive=True)
     if len(busy_files) != 0:
         for file in busy_files:
@@ -160,6 +163,7 @@ def import_busy_masters_material():
             logger.error(f"{get_filename(file)} and {get_compname(file)} of {file} didn't match the criteria")    
     else:
         logger.critical("No File for today's date found to import in database")
+
 
 
 
@@ -258,8 +262,9 @@ def import_tally_accounts():
     db_crud = DatabaseCrud(db_connector)
     tally = TallyDataProcessor(path)
     data = tally.clean_and_transform()
-    df = db_crud.import_unmatched_data(df=data, commit=False)
-    print(df)
+    # df = db_crud.import_unmatched_data(df=data, commit=False)
+    db_crud.import_unmatched_data(df=data, commit=False)
+    
 
 #     db_crud = DatabaseCrud(db_connector)
 #     data = db_crud.import_unmatched_data(df=df, commit=commit)

@@ -4,7 +4,7 @@ from sqlalchemy import insert, delete, and_, func, cast, select, Numeric, Table,
 from logging_config import logger
 from utils.common_utils import tables
 from database.models.busy_models.busy_pricing import BusyPricingKBBIO
-from database.models.busy_models.busy_reports import SalesKBBIO
+from database.models.busy_models.busy_reports import SalesKBBIO, SalesOrderKBBIO
 from sqlalchemy.exc import SQLAlchemyError
 from database.models.tally_models.tally_report_models import TallyAccounts
 
@@ -133,7 +133,6 @@ class DatabaseCrud:
                 SalesKBBIO.date.between(from_date, to_date),
                 func.abs(cast((SalesKBBIO.main_price + SalesKBBIO.discount_amt), Numeric(10,2)) - cast(BusyPricingKBBIO.selling_price, Numeric(10,2))) > 1,
                 SalesKBBIO.party_type == "Dealer", BusyPricingKBBIO.selling_price != 0,
-                SalesKBBIO.voucher_no 
             ))
         if exceptions:
                 join_query = join_query.filter(~SalesKBBIO.voucher_no.in_(exceptions)
@@ -155,6 +154,27 @@ class DatabaseCrud:
 
 
 
+    def salesman_order_validation(self, from_date:str, to_date:str, exceptions:list = None) -> pd.DataFrame:
+        
+        salesorder = self.Session.query(SalesOrderKBBIO).filter(and_(SalesOrderKBBIO.date.between(from_date, to_date),
+                                                                     SalesOrderKBBIO.voucher_no.is)
+                                   ).with_entities(SalesOrderKBBIO.date, 
+                                    SalesOrderKBBIO.voucher_no, SalesOrderKBBIO.particulars,
+                                    SalesOrderKBBIO.item_details, SalesOrderKBBIO.material_centre, 
+                                    SalesOrderKBBIO.main_qty, SalesOrderKBBIO.main_unit, SalesOrderKBBIO.main_price, 
+                                    SalesOrderKBBIO.alt_qty, SalesOrderKBBIO.alt_unit, SalesOrderKBBIO.alt_qty, 
+                                    SalesOrderKBBIO.alt_unit, SalesOrderKBBIO.alt_price, SalesOrderKBBIO.amount,
+                                    SalesOrderKBBIO.tax_amt, SalesOrderKBBIO.order_amt, SalesOrderKBBIO.salesman,
+                                    SalesOrderKBBIO.salesman_id,
+                                   ).all()
+        df_salesorder = pd.DataFrame(salesorder, 
+                                     columns=['Date', 'Voucher No', 'Particulars', 'Item Details', 
+                                              'Material Centre', 'Main Qty', 'Main Unit', 'Main Price', 
+                                              'Alt Qty', 'Alt Unit', 'Alt Price', 'Amount', 'Tax Amnt', 
+                                              'Order Amnt', 'Salesman Name', 'Salesman ID',
+                                                    ])
+        return df_salesorder 
+
     def import_unmatched_data(self, 
                               df:pd.DataFrame, 
                               commit:bool,
@@ -175,27 +195,28 @@ class DatabaseCrud:
         import_new_data = to_import_data.loc[to_import_data['_merge']=='left_only', 
                                   ['ledger_name', 'under', 'state_x', 'gst_registration_type', 
                                    'gst_no', 'opening_balance', 'material_centre_x', 'alias_code', 'busy_name',
-                                   ]]
+                                   ]].replace({pd.NA: None})
 
         import_new_data.columns = import_new_data.columns.str.rstrip("_x")
 
         values = import_new_data.to_dict('records')
-        print(values)
-        # insert_stmt = insert(TallyAccounts).values(values)
-        # try:
-        #     with self.db_engine.connect() as connection:
-        #         result = connection.execute(insert_stmt)
-        #         if commit:
-        #             connection.commit()
-        #             print(f"Inserted {result.rowcount} rows into tally_accounts.")
-        #         else:
-        #             connection.rollback()
-        # except SQLAlchemyError as e:
-        #     logger.critical(f"Error inserting data into tally_accounts: {e}")
-        #     connection.rollback()
-        #     logger.error(f"Rolling back changes in tally_accounts due to import error.")
-        # except Exception as e:
-        #     logger.critical(f"Unknown error occurred: {e}")
+        # print(values)
+        insert_stmt = insert(TallyAccounts).values(values)
+        try:
+            with self.db_engine.connect() as connection:
+                result = connection.execute(insert_stmt)
+                if commit:
+                    connection.commit()
+                    logger.info(f"Inserted {result.rowcount} rows into tally_accounts.")
+                else:
+                    connection.rollback()
+                    logger.info(f"Transaction rollback successfully as commit was given False.")
+        except SQLAlchemyError as e:
+            logger.critical(f"Error inserting data into tally_accounts: {e}")
+            connection.rollback()
+            logger.error(f"Rolling back changes in tally_accounts due to import error.")
+        except Exception as e:
+            logger.critical(f"Unknown error occurred: {e}")
         # from xlwings import view    
         # return view(import_new_data)
         # return df_accounts['material_centre'].value_counts()
@@ -241,6 +262,8 @@ class DatabaseCrud:
 
 
     def test_delete(self, table_name, start_date, end_date, commit):
+
+
         table_class = tables.get(table_name)
         if table_class:
             if start_date <= end_date:
@@ -263,3 +286,6 @@ class DatabaseCrud:
                     logger.error(f"Error occurred during deletion: {e}")
         else:
             logger.info(f"Table {table_name} not found in table_mapping. Delete query Failed to execute")
+
+
+

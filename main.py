@@ -43,24 +43,28 @@ def reports():
     excluded_invoices = ['KBAKNU/2425/3']
     main_db.dealer_price_validation_report(from_date= fromdate, 
                                            to_date= todate, send_email= True, 
-                                           exceptions= excluded_invoices)
+                                           exceptions= excluded_invoices,
+                                           )
+
+    
 
 
 if __name__ == "__main__":
-    main_db.import_tally_accounts()
+    # main_db.delete_busy_sales()
+    # main_db.import_busy_sales()
+    # main_db.import_tally_accounts()
     
     # main_db.delete_one(commit=True)
     # main_db.import_tally_data()
 
-    # schedule.every().day.at("21:00").do(busy_sales)
+    schedule.every().day.at("21:00").do(busy_sales)
 
-    # schedule.every().day.at("00:05").do(busy_material_masters)
+    schedule.every().day.at("00:05").do(busy_material_masters)
 
-    # schedule.every().day.at("04:30").do(tally_to_sql)
+    schedule.every().day.at("04:30").do(tally_to_sql)
 
-    # schedule.every().day.at("10:00").do(reports)
-
+    schedule.every().day.at("10:00").do(reports)
     
-    # while True:
-    #     schedule.run_pending()
-    #     time.sleep(1)    
+    while True:
+        schedule.run_pending()
+        time.sleep(1)    
