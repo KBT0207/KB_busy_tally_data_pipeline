@@ -157,14 +157,15 @@ class DatabaseCrud:
     def salesman_order_validation(self, from_date:str, to_date:str, exceptions:list = None) -> pd.DataFrame:
         
         salesorder = self.Session.query(SalesOrderKBBIO).filter(and_(SalesOrderKBBIO.date.between(from_date, to_date),
-                                                                     SalesOrderKBBIO.voucher_no.is)
-                                   ).with_entities(SalesOrderKBBIO.date, 
-                                    SalesOrderKBBIO.voucher_no, SalesOrderKBBIO.particulars,
-                                    SalesOrderKBBIO.item_details, SalesOrderKBBIO.material_centre, 
-                                    SalesOrderKBBIO.main_qty, SalesOrderKBBIO.main_unit, SalesOrderKBBIO.main_price, 
-                                    SalesOrderKBBIO.alt_qty, SalesOrderKBBIO.alt_unit, SalesOrderKBBIO.alt_qty, 
-                                    SalesOrderKBBIO.alt_unit, SalesOrderKBBIO.alt_price, SalesOrderKBBIO.amount,
-                                    SalesOrderKBBIO.tax_amt, SalesOrderKBBIO.order_amt, SalesOrderKBBIO.salesman,
+                                                        SalesOrderKBBIO.salesman.is_(None), SalesOrderKBBIO.salesman == None))
+        if exceptions:
+            salesorder = salesorder.filter(SalesOrderKBBIO.voucher_no.in_(exceptions))
+        salesorder = salesorder.with_entities(SalesOrderKBBIO.date, SalesOrderKBBIO.voucher_no, 
+                                    SalesOrderKBBIO.particulars, SalesOrderKBBIO.item_details, 
+                                    SalesOrderKBBIO.material_centre, SalesOrderKBBIO.main_qty, 
+                                    SalesOrderKBBIO.main_unit, SalesOrderKBBIO.main_price, SalesOrderKBBIO.alt_qty, 
+                                    SalesOrderKBBIO.alt_unit, SalesOrderKBBIO.alt_price, SalesOrderKBBIO.amount, 
+                                    SalesOrderKBBIO.tax_amt, SalesOrderKBBIO.order_amt, SalesOrderKBBIO.salesman, 
                                     SalesOrderKBBIO.salesman_id,
                                    ).all()
         df_salesorder = pd.DataFrame(salesorder, 
@@ -173,7 +174,9 @@ class DatabaseCrud:
                                               'Alt Qty', 'Alt Unit', 'Alt Price', 'Amount', 'Tax Amnt', 
                                               'Order Amnt', 'Salesman Name', 'Salesman ID',
                                                     ])
-        return df_salesorder 
+        return df_salesorder
+    
+
 
     def import_unmatched_data(self, 
                               df:pd.DataFrame, 
@@ -201,25 +204,25 @@ class DatabaseCrud:
 
         values = import_new_data.to_dict('records')
         # print(values)
-        insert_stmt = insert(TallyAccounts).values(values)
-        try:
-            with self.db_engine.connect() as connection:
-                result = connection.execute(insert_stmt)
-                if commit:
-                    connection.commit()
-                    logger.info(f"Inserted {result.rowcount} rows into tally_accounts.")
-                else:
-                    connection.rollback()
-                    logger.info(f"Transaction rollback successfully as commit was given False.")
-        except SQLAlchemyError as e:
-            logger.critical(f"Error inserting data into tally_accounts: {e}")
-            connection.rollback()
-            logger.error(f"Rolling back changes in tally_accounts due to import error.")
-        except Exception as e:
-            logger.critical(f"Unknown error occurred: {e}")
+        # insert_stmt = insert(TallyAccounts).values(values)
+        # try:
+        #     with self.db_engine.connect() as connection:
+        #         result = connection.execute(insert_stmt)
+        #         if commit:
+        #             connection.commit()
+        #             logger.info(f"Inserted {result.rowcount} rows into tally_accounts.")
+        #         else:
+        #             connection.rollback()
+        #             logger.info(f"Transaction rollback successfully as commit was given False.")
+        # except SQLAlchemyError as e:
+        #     logger.critical(f"Error inserting data into tally_accounts: {e}")
+        #     connection.rollback()
+        #     logger.error(f"Rolling back changes in tally_accounts due to import error.")
+        # except Exception as e:
+        #     logger.critical(f"Unknown error occurred: {e}")
         # from xlwings import view    
         # return view(import_new_data)
-        # return df_accounts['material_centre'].value_counts()
+        # # return df_accounts['material_centre'].value_counts()
         # return df['material_centre'].value_counts()
 
         # to_import_data.to_excel(r"C:\Users\HP\Desktop\test_files\Accounts_merged.xlsx", index=False)

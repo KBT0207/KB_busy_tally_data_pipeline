@@ -228,11 +228,11 @@ def dealer_price_validation_report(from_date:str, to_date:str, send_email:bool, 
     counts = len(validation_df)
     if counts != 0:
         
-        validation_df.to_excel(fr"D:\Reports\Price Validation from Month to {to_date}.xlsx", index= False)
+        validation_df.to_excel(fr"D:\Reports\Busy_Sales_Price\Price Validation from Month to {to_date}.xlsx", index= False)
         
         subject = f"Busy Sales Price Validation Report from Month to {to_date} with {counts} rows of descrepancies"
         body = f"Greetings All,\nKindly find the Busy Sales Price Validation Report attached from Month to {to_date} with {counts} rows of descrepancies.\n In the attached excel, column 'Total Price' is the sum of List Price ('Sales_Price') and 'Discout_Amt' which is the compared with the actual Price List."
-        attachment = fr"D:\Reports\Price Validation from Month to {to_date}.xlsx"
+        attachment = fr"D:\Reports\Busy_Sales_Price\Price Validation from Month to {to_date}.xlsx"
         logger.info(f"Busy Sales Price Validation Report Exported to Excel with {counts} Descrepencies")
 
     else:
@@ -254,6 +254,43 @@ def dealer_price_validation_report(from_date:str, to_date:str, send_email:bool, 
             logger.info(f"Successfully emailed the Busy Sales Price Validation Report.")
         except Exception as e:
             logger.critical(f"Failed to email the Busy Sales Price Validation Report : {e}")
+
+
+
+
+def salesorder_salesman_report(from_date:str, to_date:str, send_email:bool, exceptions:list = None) -> None:
+    db_crud = DatabaseCrud(db_connector)
+    
+    validation_df = db_crud.salesman_order_validation(from_date= from_date, to_date= to_date, exceptions= exceptions)
+    
+    counts = len(validation_df)
+    if counts != 0:
+        
+        validation_df.to_excel(fr"D:\Busy_SalesOrder_Salesman\Reports\Salesman Validation from Month to {to_date}.xlsx", index= False)
+        
+        subject = f"Busy SalesOrder Salesman Validation Report from Month to {to_date} with {counts} rows of descrepancies"
+        body = f"Greetings All,\nKindly find the Busy SalesOrder Salesman Validation Report attached from Month to {to_date} with {counts} rows of descrepancies.\nThe attached excel contains the busy entries without the mention of salesman name."
+        attachment = fr"D:\Reports\Busy_SalesOrder_Salesman\Salesman Validation from Month to {to_date}.xlsx"
+        logger.info(f"Busy SalesOrder Salesman Validation Report Exported to Excel with {counts} Descrepencies")
+
+    else:
+        subject = f"Busy SalesOrder Salesman Validation Report from Month to {to_date} without descrepancy"
+        attachment = None
+        body = f"Greetings All,\nAs per yesterday's data, there were no descrepancy found in busy salesorder regarding salesman."
+
+        logger.info(f"Report Produced without discrepancies")
+
+    if send_email:
+        try:
+            receivers = ['shivprasad@kaybeebio.com', 
+                        ]
+            cc = ['danish@kaybeeexports.com', 's.gaurav@kaybeeexports.com', 
+                ]
+            email_send(reciever= receivers, cc= cc, subject= subject, contents= body, attachemnts= attachment)
+            logger.info(f"Successfully emailed the Busy SalesOrder Salesman Validation Report.")
+        except Exception as e:
+            logger.critical(f"Failed to email the Busy SalesOrder Salesman Validation Report : {e}")
+
 
 
 

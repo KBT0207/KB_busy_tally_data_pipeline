@@ -46,7 +46,7 @@ class DatabaseConnector:
         self.host = host
         self.port = port
         self.database = database
-        self.engine = create_engine(self.get_db_string(),isolation_level='READ COMMITTED', echo=True)
+        self.engine = create_engine(self.get_db_string(),isolation_level='READ COMMITTED')
 
 
     def get_db_string(self):
