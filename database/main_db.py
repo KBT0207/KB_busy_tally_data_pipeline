@@ -78,7 +78,7 @@ def import_busy_sales():
     
     # todays_date = "Apr-2024"
     todays_date = datetime.today().strftime("%d-%b-%Y")
-    # todays_date = '23-May-2024'
+    # todays_date = '25-May-2024'
     busy_files = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*sales*{todays_date}.xlsx", recursive=True)
     if len(busy_files) != 0:
         for file in busy_files:
@@ -306,16 +306,17 @@ def import_tally_accounts():
 #     db_crud = DatabaseCrud(db_connector)
 #     data = db_crud.import_unmatched_data(df=df, commit=commit)
 #     print(data)
-# def one(commit):
-#     # Base.metadata.create_all(db_engine)
-#     acc_file = r"D:\tally_accounts\10001_accounts_testing.xlsx"
-#     xl = TallyDataProcessor(excel_file_path= acc_file)
-#     df = xl.clean_and_transform()
-#     df = df.fillna("NA")
-#     df = df.drop(columns='material_centre', axis=1)
-#     # print(df.head(10))
-#     importer = DatabaseCrud(db_connector)
-#     importer.test_import_data(table_name='test_table', df=df, commit=commit)
+def one(path, commit):
+    # Base.metadata.create_all(db_engine)
+    # acc_file = r"C:\Users\HP\Downloads\sales_22-23.xlsx"
+    import pandas as pd
+    import numpy as np
+    xl = BusyDataProcessor(excel_file_path= path)
+    data = xl.clean_and_transform()
+    data = data.replace({pd.NA: None, np.nan: None, "": None })
+    # print(data.head(10))
+    importer = DatabaseCrud(db_connector)
+    importer.test_import_data(table_name='busy_sales_return', df= data, commit=commit)
 
 
 

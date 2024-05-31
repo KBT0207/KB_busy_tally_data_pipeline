@@ -47,7 +47,7 @@ def reports():
                                            )
 
     main_db.salesorder_salesman_report(from_date= fromdate, 
-                                       to_date=todate, send_email=True,
+                                       to_date=todate, send_email= True,
                                     #    exceptions= None,
                                        )
 
@@ -56,15 +56,17 @@ if __name__ == "__main__":
     # main_db.delete_busy_sales()
     # main_db.import_busy_sales()
     # main_db.import_tally_accounts()
+    # f = r"D:\automated_busy_downloads\comp0005\sales_return\comp0005_sales_return_21-22.xlsx"
+    # main_db.one(path=f, commit= True)
     
-    schedule.every().day.at("21:00").do(busy_sales)
+    # schedule.every().day.at("21:00").do(busy_sales)
 
-    schedule.every().day.at("00:05").do(busy_material_masters)
+    # schedule.every().day.at("00:05").do(busy_material_masters)
 
-    schedule.every().day.at("04:30").do(tally_to_sql)
+    # schedule.every().day.at("04:30").do(tally_to_sql)
 
-    schedule.every().day.at("10:00").do(reports)
+    # schedule.every().day.at("10:05").do(reports)
     
-    while True:
-        schedule.run_pending()
-        time.sleep(1)    
+    # while True:
+    #     schedule.run_pending()
+    #     time.sleep(1)    

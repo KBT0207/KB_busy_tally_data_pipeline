@@ -46,6 +46,12 @@ def apply_sales_transformation(file_path:str, top_row:int) -> pd.DataFrame:
     df["mfg_date"] = pd.to_datetime(df["mfg_date"]).dt.strftime("%b-%Y")
     df["exp_date"] = pd.to_datetime(df["exp_date"]).dt.strftime("%b-%Y")
     
+    # df['main_price'] = df['main_price'].fillna(0)
+    # df['alt_price'] = df['alt_price'].fillna(0)
+    # df['mrp'] = df['mrp'].fillna(0)
+    # df['amount'] = df['amount'].fillna(0)
+
+
     return df
 
 
@@ -95,7 +101,7 @@ def apply_sales_return_transformation(file_path:str, top_row:int) -> pd.DataFram
     columns_ffill = ["Date", "Vch/Bill No", "Party Type", "State", "Material Centre", "Particulars", ]
     df.loc[:, columns_ffill] = df[columns_ffill].ffill()
 
-    columns_fillna_with_0 = ["Disc %", "Disc Amt", "Tax Amount", "Price", "Amount", "Bill Amount"]
+    columns_fillna_with_0 = ["Disc %", "Disc Amt", "Tax Amount", "Price", "Amount", "Bill Amount", "MRP"]
     df.loc[:,columns_fillna_with_0] = df[columns_fillna_with_0].fillna(0)
 
     columns_conditional_ffill = ["Dealer Code", "TIN/GSTIN No.",
@@ -121,6 +127,10 @@ def apply_sales_return_transformation(file_path:str, top_row:int) -> pd.DataFram
     df["mfg_date"] = pd.to_datetime(df["mfg_date"]).dt.strftime("%b-%Y")
     df["exp_date"] = pd.to_datetime(df["exp_date"]).dt.strftime("%b-%Y")
     
+    df["main_qty"] = df["main_qty"].fillna(0)
+    df["alt_qty"] = df["alt_qty"].fillna(0)
+    df["alt_price"] = df["alt_price"].fillna(0)
+
     return df
 
 

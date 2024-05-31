@@ -34,6 +34,11 @@ def exporting_data(company):
         tally_utils.accounts()
         tally_utils.export_accounts_data(path= fr"D:\automated_tally_downloads\{comp}\accounts",
                         filename= f"{comp}_accounts_{todays_date}.xlsx")
+        
+        # tally_utils.items()
+        # tally_utils.export_accounts_data(path= fr"D:\automated_tally_downloads\{comp}\accounts",
+        #                 filename= f"{comp}_accounts_{todays_date}.xlsx")
+
         time.sleep(2)
         pg.press('esc')
         time.sleep(2)
@@ -50,26 +55,5 @@ def exporting_data(company):
 
 
 
-def exporting_tally_items():
-    pg.hotkey("win", "d")
-    todays_date = datetime.today().strftime("%d-%b-%Y")
 
-    tally_utils.start_tally()
-    logger.info("Tally started...")
-
-    tally_utils.select_company(company_code= 20001)
-    tally_utils.items()
-    tally_utils.export_accounts_data(path= fr"D:\automated_tally_downloads\items",
-                    filename= f"tally_items_{todays_date}.xlsx")   
-    
-    logger.info(f"Exported items data of {todays_date}")
-    
-    time.sleep(1)
-    pg.press('esc')
-    time.sleep(1)
-    pg.press('esc')
-    time.sleep(1)
-    pg.press('esc')
-    pg.press('y')
-    logger.info("Tally closed ...")
 

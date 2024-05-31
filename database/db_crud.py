@@ -128,15 +128,15 @@ class DatabaseCrud:
                 SalesKBBIO.item_details == BusyPricingKBBIO.item_name,
             ))
 
-        results = join_query.filter(
+        query = join_query.filter(
             and_(
                 SalesKBBIO.date.between(from_date, to_date),
                 func.abs(cast((SalesKBBIO.main_price + SalesKBBIO.discount_amt), Numeric(10,2)) - cast(BusyPricingKBBIO.selling_price, Numeric(10,2))) > 1,
                 SalesKBBIO.party_type == "Dealer", BusyPricingKBBIO.selling_price != 0,
             ))
         if exceptions:
-                join_query = join_query.filter(~SalesKBBIO.voucher_no.in_(exceptions)
-                                ).with_entities(SalesKBBIO.date, SalesKBBIO.voucher_no, 
+            query = query.filter(~SalesKBBIO.voucher_no.in_(exceptions))
+        results = query.with_entities(SalesKBBIO.date, SalesKBBIO.voucher_no, 
                                                 SalesKBBIO.dealer_code, SalesKBBIO.particulars, 
                                                 SalesKBBIO.item_details,           
             cast(SalesKBBIO.main_price + SalesKBBIO.discount_amt, Numeric(10,2)).label('total_price'),
@@ -221,7 +221,7 @@ class DatabaseCrud:
         # except Exception as e:
         #     logger.critical(f"Unknown error occurred: {e}")
         # from xlwings import view    
-        # return view(import_new_data)
+        return import_new_data
         # # return df_accounts['material_centre'].value_counts()
         # return df['material_centre'].value_counts()
 
