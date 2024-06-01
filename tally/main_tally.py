@@ -34,10 +34,6 @@ def exporting_data(company):
         tally_utils.accounts()
         tally_utils.export_accounts_data(path= fr"D:\automated_tally_downloads\{comp}\accounts",
                         filename= f"{comp}_accounts_{todays_date}.xlsx")
-        
-        # tally_utils.items()
-        # tally_utils.export_accounts_data(path= fr"D:\automated_tally_downloads\{comp}\accounts",
-        #                 filename= f"{comp}_accounts_{todays_date}.xlsx")
 
         time.sleep(2)
         pg.press('esc')
@@ -56,4 +52,38 @@ def exporting_data(company):
 
 
 
+def exporting_outstanding_balance(company):
+    pg.hotkey("win", "d")
+    todays_date = datetime.today().strftime("%d-%b-%Y")
+    # todays_date = "Apr-17-May-24"
+    from_date = (datetime.today() - timedelta(days=2)).strftime("%d-%m-%Y")
+    # from_date = "1-4-2017"
+    to_date = (datetime.today().date() - timedelta(days=1)).strftime("%d-%m-%Y")
+    # to_date = "15-5-2024"
+
+    tally_utils.start_tally()
+    logger.info("Tally started...")
+
+    for comp in company:
+        tally_utils.select_company(company_code= comp)
+        logger.info(f"{comp} selected...")
+        
+        tally_utils.outstanding_balance()
+        tally_utils.change_period(from_date= '01-04-2024', to_date= to_date)
+        tally_utils.export_accounts_data(path= fr"D:\automated_tally_downloads\{comp}\outstanding_balance",
+                        filename= f"{comp}_outstanding_balance_{to_date}.xlsx")
+
+        time.sleep(2)
+        pg.press('esc')
+        time.sleep(2)
+        pg.press('esc')
+        logger.info(f"Exported accounts of {comp} of {to_date}")
+
+        tally_utils.change_company()
+    
+    time.sleep(2)
+    pg.press('esc')
+    time.sleep(2)
+    pg.press('y')
+    logger.info("Tally closed ...")
 

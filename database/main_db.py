@@ -197,10 +197,13 @@ def import_tally_data(date):
                 importer.import_data('tally_journal', excel_data.clean_and_transform(), commit=True)
 
             if get_filename(file) == 'accounts':
-                importer.import_data('tally_accounts', excel_data.clean_and_transform(), commit=True)
+                importer.import_accounts_data('tally_accounts', excel_data.clean_and_transform(), commit=True)
 
             if get_filename(file) == 'items':
                 importer.import_data('tally_items', excel_data.clean_and_transform(), commit=True)
+
+            if get_filename(file) == 'outstanding_balance':
+                importer.import_data('outstanding_balance', excel_data.clean_and_transform(), commit=True)
 
             logger.info(f"{get_filename(file)} and {get_compname(file)} imported into database.. ")
         else:
@@ -294,12 +297,12 @@ def salesorder_salesman_report(from_date:str, to_date:str, send_email:bool, exce
 
 
 
-def import_tally_accounts():
-    path = r'D:\automated_tally_downloads\10007\accounts\10007_accounts_21-May-2024.xlsx'
-    db_crud = DatabaseCrud(db_connector)
-    tally = TallyDataProcessor(path)
-    data = tally.clean_and_transform()
-    df = db_crud.import_unmatched_data(df=data, commit=True)
+# def import_tally_accounts():
+#     path = r'D:\automated_tally_downloads\10007\accounts\10007_accounts_21-May-2024.xlsx'
+#     db_crud = DatabaseCrud(db_connector)
+#     tally = TallyDataProcessor(path)
+#     data = tally.clean_and_transform()
+#     db_crud.import_unmatched_data(df=data, commit=True)
     
     # db_crud.import_unmatched_data(df=data, commit=False)
 #     db_crud = DatabaseCrud(db_connector)
@@ -308,18 +311,16 @@ def import_tally_accounts():
 
 
 
-# def one(path, commit):
-#     # Base.metadata.create_all(db_engine)
-#     # acc_file = r"C:\Users\HP\Downloads\sales_22-23.xlsx"
-#     import pandas as pd
-#     import numpy as np
-#     xl = BusyDataProcessor(excel_file_path= path)
-#     data = xl.clean_and_transform()
-#     data = data.replace({pd.NA: None, np.nan: None, "": None })
-#     # print(data.head(10))
-#     importer = DatabaseCrud(db_connector)
-#     importer.test_import_data(table_name='busy_sales_return', df= data, commit=commit)
-
+def one(path, commit):
+    Base.metadata.create_all(db_engine)
+    import pandas as pd
+    import numpy as np
+    xl = TallyDataProcessor(excel_file_path= path)
+    data = xl.clean_and_transform()
+    
+    importer = DatabaseCrud(db_connector)
+    importer.test_import_data(table_name='outstanding_balance', df= data, commit=commit)
+    print(data)
 
 
 # def delete_one(commit):

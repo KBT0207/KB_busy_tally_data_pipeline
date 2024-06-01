@@ -10,6 +10,10 @@ def get_compname(path:str):
     return path.split("\\")[-1].split("_")[0]
 
 
+def get_date(path:str):
+    return path.split("\\")[-1].split("_")[-1]
+
+
 
 def apply_sales_transformation(file_path:str, top_row:int) -> pd.DataFrame:
     try:
@@ -127,9 +131,9 @@ def apply_sales_return_transformation(file_path:str, top_row:int) -> pd.DataFram
     df["mfg_date"] = pd.to_datetime(df["mfg_date"]).dt.strftime("%b-%Y")
     df["exp_date"] = pd.to_datetime(df["exp_date"]).dt.strftime("%b-%Y")
     
-    df["main_qty"] = df["main_qty"].fillna(0)
-    df["alt_qty"] = df["alt_qty"].fillna(0)
-    df["alt_price"] = df["alt_price"].fillna(0)
+    # df["main_qty"] = df["main_qty"].fillna(0)
+    # df["alt_qty"] = df["alt_qty"].fillna(0)
+    # df["alt_price"] = df["alt_price"].fillna(0)
 
     return df
 

@@ -190,6 +190,39 @@ def items():
 
 
 
+def outstanding_balance():
+    find_img('tally/images/tally_gateway.png')
+    pg.press('b')
+    time.sleep(1.5)
+    try:
+        assets = pg.locateOnScreen('images/current_assets.png', confidence=0.9)
+        pg.click(assets, duration=0.2)
+        pg.press('enter')
+    except:
+        pg.locateOnScreen('images/sel_current_assets.png', confidence=0.9)
+        pg.press('enter')
+    try:
+        sundry = pg.locateOnScreen('images/sundry.png', confidence=0.9)
+        pg.click(sundry, duration=0.2)
+        pg.press('enter')
+    except:
+        pg.locateOnScreen('images/sel_sundry.png', confidence=0.9)
+        pg.press('enter')
+
+    pg.press('f12')
+    find_img('images/grouping.png')
+    pg.click()
+    pg.typewrite('ledger')
+    pg.press('enter')
+
+    find_img('images/display_name.png')
+    pg.click()
+    pg.typewrite('name only')
+    pg.press('enter')
+    pg.hotkey('ctrl', 'a')
+
+
+
 def exporting_reports(report:str, from_date:str, to_date:str,  path:str, filename:str, esc:int):
     time.sleep(1)
     select_report(report_type= report)

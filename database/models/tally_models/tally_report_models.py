@@ -140,6 +140,20 @@ class TallyItems(Base):
     created_at = Column(DateTime, server_default=func.now())
 
 
+
+class TallyOutstandingBalance(Base):
+    __tablename__ = 'outstanding_balance'
+
+    id = Column(Integer, primary_key= True, autoincrement= True, index= True)
+    date = Column(Date, nullable= False)
+    particulars = Column(String(250), nullable= False)
+    debit = Column(DECIMAL(10,2), nullable= False)
+    credit = Column(DECIMAL(10,2), nullable= False)
+    material_centre = Column(String(50), nullable= False)
+    created_at = Column(DateTime, server_default=func.now())
+
+
+
 class TestTable(Base):
     __tablename__ = 'test_table'
 

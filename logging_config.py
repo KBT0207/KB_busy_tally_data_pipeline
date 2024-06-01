@@ -67,7 +67,7 @@ LOGGING_CONFIG = {
                         'console_handler',
                         'file_handler', 
                         # 'critical_email_handler', 
-                        # 'better_stack_handler',
+                        'better_stack_handler',
                         ],
             'level': 'INFO',
             'propagate': False

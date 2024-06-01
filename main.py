@@ -55,21 +55,20 @@ def reports():
 if __name__ == "__main__":
     # main_db.delete_busy_sales()
     # main_db.import_busy_sales()
+    # f = r"D:\automated_tally_downloads\10001\outstanding_balance\10001_outstanding_balance_27-May-2024.xlsx"
+    # main_db.one(path= f, commit= True)
     
-    main_db.import_tally_accounts()
+    # main_tally.exporting_outstanding_balance(company= [10001, 10003])
     
-    # f = r"D:\automated_busy_downloads\comp0005\sales_return\comp0005_sales_return_21-22.xlsx"
-    # main_db.one(path=f, commit= True)
-    
-    # schedule.every().day.at("21:00").do(busy_sales)
+    schedule.every().day.at("21:00").do(busy_sales)
 
-    # schedule.every().day.at("00:05").do(busy_material_masters)
+    schedule.every().day.at("00:05").do(busy_material_masters)
 
-    # schedule.every().day.at("04:30").do(tally_to_sql)
+    schedule.every().day.at("04:30").do(tally_to_sql)
 
-    # schedule.every().day.at("09:40").do(reports)
+    schedule.every().day.at("09:40").do(reports)
     
 
-    # while True:
-    #     schedule.run_pending()
-    #     time.sleep(1)    
+    while True:
+        schedule.run_pending()
+        time.sleep(1)    

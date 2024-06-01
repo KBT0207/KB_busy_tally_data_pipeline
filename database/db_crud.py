@@ -181,7 +181,7 @@ class DatabaseCrud:
     
 
 
-    def import_unmatched_data(self, 
+    def import_accounts_data(self, 
                               df:pd.DataFrame, 
                               commit:bool,
                               ):
@@ -190,8 +190,6 @@ class DatabaseCrud:
 
         df_material_centre = df["material_centre"][1]
         
-        join_query = self.Session.query(TallyAccounts).filter(TallyAccounts.material_centre == df_material_centre)     
-
         if 'NA' in df_material_centre:
             busy_table = BusyAccountsNewAge
         elif 'AS' in df_material_centre:
@@ -201,54 +199,146 @@ class DatabaseCrud:
         else:
             busy_table = BusyAccountsKBBIO
 
-        join_query = join_query.outerjoin(busy_table,
-                                TallyAccounts.ledger_name == busy_table.name)
-        accounts = join_query.with_entities(TallyAccounts.ledger_name, busy_table.name, 
-                                            TallyAccounts.alias_code, TallyAccounts.state, 
-                                            TallyAccounts.material_centre,                                 
+        busy_data = self.Session.query(busy_table).with_entities(busy_table.name, busy_table.alias, 
+                                                                 ).all()
+        df_busy_data = pd.DataFrame(busy_data, columns= ['busy_name', 'alias_code'])
+
+        join_query = self.Session.query(TallyAccounts).filter(TallyAccounts.material_centre == df_material_centre)
+
+        accounts = join_query.with_entities(TallyAccounts.ledger_name, TallyAccounts.alias_code, 
+                                            TallyAccounts.state, TallyAccounts.material_centre,                                 
                                             ).all()
-        df_accounts = pd.DataFrame(accounts, columns=['ledger_name', 'busy_name', 
-                                                      'alias_code', 'state', 'material_centre', 
+        df_accounts = pd.DataFrame(accounts, columns=['ledger_name', 'alias_code', 
+                                                      'state', 'material_centre', 
                                                     ])
         
         df_accounts['ledger_name'] = df_accounts['ledger_name'].str.title()
 
-        to_import_data = df.merge(df_accounts, how= 'left', on= 'ledger_name', indicator=True)
-        import_new_data = to_import_data.loc[to_import_data['_merge']=='left_only', 
-                                  ['ledger_name', 'busy_name', 'under', 'state_x', 'gst_registration_type', 
+        new_data = df.merge(df_accounts, how= 'left', on= 'ledger_name', indicator=True)
+        new_data = new_data.loc[new_data['_merge']=='left_only', 
+                                  ['ledger_name', 'under', 'state_x', 'gst_registration_type', 
                                    'gst_no', 'opening_balance', 'material_centre_x', 
                                     'alias_code',
-                                    ]].replace({pd.NA: None})
+                                    ]
+                                    ].replace({pd.NA: None})
+        new_data.columns = new_data.columns.str.rstrip("_x")
 
-        import_new_data.columns = import_new_data.columns.str.rstrip("_x")
+        new_data_with_busy_name = new_data.merge(df_busy_data, how= 'left', 
+                                                 left_on= 'ledger_name', right_on= 'busy_name', 
+                                                 indicator= True)
+        new_data_with_busy_name = new_data_with_busy_name.drop(columns=['alias_code_x', '_merge']).replace({pd.NA: None})
 
-        values = import_new_data.to_dict('records')
-        # print(values)
-        insert_stmt = insert(TallyAccounts).values(values)
-        try:
-            with self.db_engine.connect() as connection:
-                result = connection.execute(insert_stmt)
-                if commit:
-                    connection.commit()
-                    logger.info(f"Inserted {result.rowcount} rows into tally_accounts.")
-                else:
-                    connection.rollback()
-                    logger.info(f"Transaction rollback successfully without any errors as commit was given False.")
-        except SQLAlchemyError as e:
-            logger.critical(f"Error inserting data into tally_accounts: {e}")
-            connection.rollback()
-            logger.error(f"Rolling back changes in tally_accounts due to import error.")
-        except Exception as e:
-            logger.critical(f"Unknown error occurred: {e}")
-        
-        # from xlwings import view    
+        new_data_with_busy_name.columns = new_data_with_busy_name.columns.str.rstrip("_y")
+
+        if not new_data_with_busy_name.empty: 
+            values = new_data_with_busy_name.to_dict('records')
+            insert_stmt = insert(TallyAccounts).values(values)
+            try:
+                with self.db_engine.connect() as connection:
+                    result = connection.execute(insert_stmt)
+                    if commit:
+                        connection.commit()
+                        logger.info(f"Inserted {result.rowcount} rows into tally_accounts.")
+                    else:
+                        connection.rollback()
+                        logger.info(f"Transaction rollback successfully without any errors as commit was given False.")
+            except SQLAlchemyError as e:
+                logger.critical(f"Error inserting data into tally_accounts: {e}")
+                connection.rollback()
+                logger.error(f"Rolling back changes in tally_accounts due to import error.")
+            except Exception as e:
+                logger.critical(f"Unknown error occurred: {e}")
+        else:
+            logger.info(f"No new data to import in the database.")
+        # from xlwings import view
         # return view(to_import_data)
-        # return view(import_new_data)
+        # return view(new_data_with_busy_name)
     
         # # return df_accounts['material_centre'].value_counts()
         # return df['material_centre'].value_counts()
 
         # to_import_data.to_excel(r"C:\Users\HP\Desktop\test_files\Accounts_merged.xlsx", index=False)
+
+
+
+    # def import_items_data(self, 
+    #                           df:pd.DataFrame, 
+    #                           commit:bool,
+    #                           ):
+        
+    #     df['ledger_name'] = df['ledger_name'].str.title()
+
+    #     df_material_centre = df["material_centre"][1]
+        
+    #     if 'NA' in df_material_centre:
+    #         busy_table = BusyAccountsNewAge
+    #     elif 'AS' in df_material_centre:
+    #         busy_table = BusyAccountsAgri
+    #     elif 'GE' in df_material_centre:
+    #         busy_table = BusyAccountsGreenEra
+    #     else:
+    #         busy_table = BusyAccountsKBBIO
+
+    #     busy_data = self.Session.query(busy_table).with_entities(busy_table.name, busy_table.alias, 
+    #                                                              ).all()
+    #     df_busy_data = pd.DataFrame(busy_data, columns= ['busy_name', 'alias_code'])
+
+    #     join_query = self.Session.query(TallyAccounts).filter(TallyAccounts.material_centre == df_material_centre)
+
+    #     accounts = join_query.with_entities(TallyAccounts.ledger_name, TallyAccounts.alias_code, 
+    #                                         TallyAccounts.state, TallyAccounts.material_centre,                                 
+    #                                         ).all()
+    #     df_accounts = pd.DataFrame(accounts, columns=['ledger_name', 'alias_code', 
+    #                                                   'state', 'material_centre', 
+    #                                                 ])
+        
+    #     df_accounts['ledger_name'] = df_accounts['ledger_name'].str.title()
+
+    #     new_data = df.merge(df_accounts, how= 'left', on= 'ledger_name', indicator=True)
+    #     new_data = new_data.loc[new_data['_merge']=='left_only', 
+    #                               ['ledger_name', 'under', 'state_x', 'gst_registration_type', 
+    #                                'gst_no', 'opening_balance', 'material_centre_x', 
+    #                                 'alias_code',
+    #                                 ]
+    #                                 ].replace({pd.NA: None})
+    #     new_data.columns = new_data.columns.str.rstrip("_x")
+
+    #     new_data_with_busy_name = new_data.merge(df_busy_data, how= 'left', 
+    #                                              left_on= 'ledger_name', right_on= 'busy_name', 
+    #                                              indicator= True)
+    #     new_data_with_busy_name = new_data_with_busy_name.drop(columns=['alias_code_x', '_merge']).replace({pd.NA: None})
+
+    #     new_data_with_busy_name.columns = new_data_with_busy_name.columns.str.rstrip("_y")
+
+    #     if not new_data_with_busy_name.empty: 
+    #         values = new_data_with_busy_name.to_dict('records')
+    #         # print(values)
+    #         insert_stmt = insert(TallyAccounts).values(values)
+    #         try:
+    #             with self.db_engine.connect() as connection:
+    #                 result = connection.execute(insert_stmt)
+    #                 if commit:
+    #                     connection.commit()
+    #                     logger.info(f"Inserted {result.rowcount} rows into tally_accounts.")
+    #                 else:
+    #                     connection.rollback()
+    #                     logger.info(f"Transaction rollback successfully without any errors as commit was given False.")
+    #         except SQLAlchemyError as e:
+    #             logger.critical(f"Error inserting data into tally_accounts: {e}")
+    #             connection.rollback()
+    #             logger.error(f"Rolling back changes in tally_accounts due to import error.")
+    #         except Exception as e:
+    #             logger.critical(f"Unknown error occurred: {e}")
+    #     else:
+    #         logger.info(f"No new data to import in the database.")
+    #     # from xlwings import view
+    #     # return view(to_import_data)
+    #     # return view(new_data_with_busy_name)
+    
+    #     # # return df_accounts['material_centre'].value_counts()
+    #     # return df['material_centre'].value_counts()
+
+    #     # to_import_data.to_excel(r"C:\Users\HP\Desktop\test_files\Accounts_merged.xlsx", index=False)
 
 
 
