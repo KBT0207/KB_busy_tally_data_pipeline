@@ -99,7 +99,8 @@ def apply_accounts_transformation(file_path, material_centre_name) -> pd.DataFra
                              })
 
     df["material_centre"] = mc_name
-    df["ledger_name"] = df["ledger_name"].replace('_x000D_\\n','', regex=True)
+    df["ledger_name"] = df["ledger_name"].replace('_x000D_\\n', '', regex=True)
+    # df["ledger_name"] = df["ledger_name"].str.rstrip("")
     df["under"] = df["under"].replace('_x000D_\\n','', regex=True)
     # columns_to_na = ['alias_code', 'busy_name', 'dealer_code']
     # for col in columns_to_na:
@@ -158,8 +159,8 @@ class TallyDataProcessor:
         elif report_type in ['receipts', 'payments', 'journal']:
             df = apply_register_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
         
-        # elif report_type == "accounts":
-        #     df = apply_accounts_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
+        elif report_type == "accounts":
+            df = apply_accounts_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
 
         # elif report_type == "items":
         #     df = apply_items_transformation(file_path=self.excel_file_path)

@@ -99,11 +99,11 @@ tally_comp_codes = {
                     # 91820: "Phaltan",
                     }
 
+
 acc_comp_codes = {
                     10001: "Pune",
                     10002: "Baner" , 
                     10003: "Indore", 
-                    10004: "Jejuri", 
                     10005: "Nashik", 
                     10007: "Hubli",                     
                     10008: "Raipur", 
@@ -114,12 +114,12 @@ acc_comp_codes = {
                     10014: "NA Phaltan", 
                     10016: "Karnal", 
                     10017: "GE Phaltan", 
-                    10018: "100x Phaltan", 
                     10019: "Jaipur", 
                     10020: "Khorda", 
                     10021: "AS Phaltan", 
                     10022: "Bhatinda",
                     10023: "NA Hubli", 
-                    # 20000: "Phaltan",        
                     20001: "Phaltan", 
                     }
+
+

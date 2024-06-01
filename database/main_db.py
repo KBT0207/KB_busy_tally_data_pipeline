@@ -299,24 +299,26 @@ def import_tally_accounts():
     db_crud = DatabaseCrud(db_connector)
     tally = TallyDataProcessor(path)
     data = tally.clean_and_transform()
-    # df = db_crud.import_unmatched_data(df=data, commit=False)
-    db_crud.import_unmatched_data(df=data, commit=False)
+    df = db_crud.import_unmatched_data(df=data, commit=True)
     
-
+    # db_crud.import_unmatched_data(df=data, commit=False)
 #     db_crud = DatabaseCrud(db_connector)
 #     data = db_crud.import_unmatched_data(df=df, commit=commit)
 #     print(data)
-def one(path, commit):
-    # Base.metadata.create_all(db_engine)
-    # acc_file = r"C:\Users\HP\Downloads\sales_22-23.xlsx"
-    import pandas as pd
-    import numpy as np
-    xl = BusyDataProcessor(excel_file_path= path)
-    data = xl.clean_and_transform()
-    data = data.replace({pd.NA: None, np.nan: None, "": None })
-    # print(data.head(10))
-    importer = DatabaseCrud(db_connector)
-    importer.test_import_data(table_name='busy_sales_return', df= data, commit=commit)
+
+
+
+# def one(path, commit):
+#     # Base.metadata.create_all(db_engine)
+#     # acc_file = r"C:\Users\HP\Downloads\sales_22-23.xlsx"
+#     import pandas as pd
+#     import numpy as np
+#     xl = BusyDataProcessor(excel_file_path= path)
+#     data = xl.clean_and_transform()
+#     data = data.replace({pd.NA: None, np.nan: None, "": None })
+#     # print(data.head(10))
+#     importer = DatabaseCrud(db_connector)
+#     importer.test_import_data(table_name='busy_sales_return', df= data, commit=commit)
 
 
 

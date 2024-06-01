@@ -55,7 +55,9 @@ def reports():
 if __name__ == "__main__":
     # main_db.delete_busy_sales()
     # main_db.import_busy_sales()
-    # main_db.import_tally_accounts()
+    
+    main_db.import_tally_accounts()
+    
     # f = r"D:\automated_busy_downloads\comp0005\sales_return\comp0005_sales_return_21-22.xlsx"
     # main_db.one(path=f, commit= True)
     
@@ -65,8 +67,9 @@ if __name__ == "__main__":
 
     # schedule.every().day.at("04:30").do(tally_to_sql)
 
-    # schedule.every().day.at("10:05").do(reports)
+    # schedule.every().day.at("09:40").do(reports)
     
+
     # while True:
     #     schedule.run_pending()
     #     time.sleep(1)    

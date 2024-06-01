@@ -3,7 +3,7 @@
 
 set MYSQLDUMP_PATH="C:\Program Files\MySQL\MySQL Server 8.3\bin\mysqldump.exe"
 set ZIP_PATH="C:\Program Files\7-Zip\7z.exe"
-set BACKUP_DIR="D:\automated_scripts\MySQL_Backups"
+set BACKUP_DIR="D:\MySQL_Backups"
 set BACKUP_LOG_FILE="%BACKUP_DIR%\backup_log.txt"
 
 
