@@ -58,7 +58,14 @@ if __name__ == "__main__":
     # f = r"D:\automated_tally_downloads\10001\outstanding_balance\10001_outstanding_balance_27-May-2024.xlsx"
     # main_db.one(path= f, commit= True)
     
-    # main_tally.exporting_outstanding_balance(company= [10001, 10003])
+    # todays_date = datetime.today().strftime("%d-%b-%Y")
+    # # todays_date = "Apr-17-May-24"
+    # from_date = (datetime.today() - timedelta(days=2)).strftime("%d-%m-%Y")
+    # # from_date = "1-4-2017"
+    # to_date = (datetime.today().date() - timedelta(days=1)).strftime("%d-%m-%Y")
+    # # to_date = "15-5-2024"
+
+    # main_tally.exporting_outstanding_balance(company= [10001, 10003], date= to_date)
     
     schedule.every().day.at("21:00").do(busy_sales)
 
@@ -68,7 +75,6 @@ if __name__ == "__main__":
 
     schedule.every().day.at("09:40").do(reports)
     
-
     while True:
         schedule.run_pending()
         time.sleep(1)    

@@ -199,11 +199,11 @@ def import_tally_data(date):
             if get_filename(file) == 'accounts':
                 importer.import_accounts_data('tally_accounts', excel_data.clean_and_transform(), commit=True)
 
-            if get_filename(file) == 'items':
-                importer.import_data('tally_items', excel_data.clean_and_transform(), commit=True)
+            # if get_filename(file) == 'items':
+            #     importer.import_data('tally_items', excel_data.clean_and_transform(), commit=True)
 
-            if get_filename(file) == 'outstanding_balance':
-                importer.import_data('outstanding_balance', excel_data.clean_and_transform(), commit=True)
+            # if get_filename(file) == 'outstanding_balance':
+            #     importer.import_data('outstanding_balance', excel_data.clean_and_transform(), commit=True)
 
             logger.info(f"{get_filename(file)} and {get_compname(file)} imported into database.. ")
         else:

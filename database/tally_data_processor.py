@@ -188,8 +188,8 @@ class TallyDataProcessor:
         # elif report_type == "items":
         #     df = apply_items_transformation(file_path=self.excel_file_path)
 
-        elif report_type == "outstanding_balance":
-            df = apply_outstanding_balance_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
+        # elif report_type == "outstanding_balance":
+        #     df = apply_outstanding_balance_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
 
         if df is None:
             logger.error("Dataframe is None.. Check path variable/value!")

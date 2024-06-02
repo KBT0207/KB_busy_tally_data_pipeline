@@ -73,6 +73,17 @@ def change_period(from_date, to_date):
 
 
 
+def change_period_balance(from_date, to_date):
+    find_img('tally/images/report_particulars.png')
+    time.sleep(1)
+    pg.hotkey("alt", "f2")
+    pg.typewrite(from_date, interval=0.2)
+    pg.press('enter')
+    pg.typewrite(to_date, interval=0.2)
+    pg.press('enter')
+
+
+
 def export_report_data(path, filename):
     find_img('tally/images/report_list.png')
     time.sleep(1)
@@ -148,6 +159,44 @@ def export_accounts_data(path, filename):
 
 
 
+def export_balance_data(path, filename):
+    find_img('tally/images/remove_line.png')
+    time.sleep(0.5)
+    pg.hotkey('ctrl', 'e')
+    time.sleep(1.5)
+    pg.press('c')
+    time.sleep(1.5)
+    pg.press('down')
+    time.sleep(1)
+    find_img('tally/images/export_settings.png', conf=0.95 )
+    time.sleep(1)
+    pg.click()
+    time.sleep(0.5)
+    pg.press('down')
+    pg.press('enter')
+    pg.typewrite('excel', interval=0.3)
+    pg.press('enter')
+
+    find_img("tally/images/folder_path.png")
+    pg.click()
+    pg.press('enter')
+    pg.typewrite(path, interval=0.2)
+    pg.press('enter', presses=2, interval=0.4)
+    
+    pg.press('down')
+    pg.press('enter')
+    pg.typewrite(filename, interval=0.2)
+    pg.press('enter')
+
+    pg.hotkey("ctrl", "a")
+    time.sleep(1)
+    pg.press('e')
+
+    find_img(img='tally/images/remove_line.png', conf=0.95)
+
+
+
+
 def back_to_tally_home(times):
     for _ in range(1, times+1):
         pg.press('esc')
@@ -195,27 +244,27 @@ def outstanding_balance():
     pg.press('b')
     time.sleep(1.5)
     try:
-        assets = pg.locateOnScreen('images/current_assets.png', confidence=0.9)
+        assets = pg.locateOnScreen('tally/images/current_assets.png', confidence=0.9)
         pg.click(assets, duration=0.2)
         pg.press('enter')
     except:
-        pg.locateOnScreen('images/sel_current_assets.png', confidence=0.9)
+        pg.locateOnScreen('tally/images/sel_current_assets.png', confidence=0.9)
         pg.press('enter')
     try:
-        sundry = pg.locateOnScreen('images/sundry.png', confidence=0.9)
+        sundry = pg.locateOnScreen('tally/images/sundry.png', confidence=0.9)
         pg.click(sundry, duration=0.2)
         pg.press('enter')
     except:
-        pg.locateOnScreen('images/sel_sundry.png', confidence=0.9)
+        pg.locateOnScreen('tally/images/sel_sundry.png', confidence=0.9)
         pg.press('enter')
 
     pg.press('f12')
-    find_img('images/grouping.png')
+    find_img('tally/images/grouping.png')
     pg.click()
     pg.typewrite('ledger')
     pg.press('enter')
 
-    find_img('images/display_name.png')
+    find_img('tally/images/display_name_balance.png')
     pg.click()
     pg.typewrite('name only')
     pg.press('enter')
