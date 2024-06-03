@@ -73,6 +73,9 @@ tally_reports = {
                 }
         
 
+volume_discount_scheme = {}
+
+
 tally_comp_codes = {
                     10001: "Pune",
                     10002: "Pune" , 
@@ -148,3 +151,5 @@ balance_comp_codes = {
                     10023: "NA Hubli", 
                     20001: "Phaltan", 
                     }
+
+

@@ -56,11 +56,14 @@ if __name__ == "__main__":
     # main_db.delete_busy_sales()
     # main_db.import_busy_sales()
     # import pandas as pd
-    # f = r"D:\automated_tally_downloads\balance_sheet_data\Apr24-May24.xlsx"
+    # f = r"D:\automated_tally_downloads\balance_sheet_data\JUNE.xlsx"
     # main = pd.read_excel(f)
-    # # print(main)
+    # main["particulars"] = main["particulars"].replace('_x000D_\\n', '', regex=True)
+    # # print(main.sample(20))
     # main_db.balance(df= main, commit= True)
     
+    main_db.volume_discount_report(date= '2024-05-04', send_email= False)
+
     # todays_date = datetime.today().strftime("%d-%b-%Y")
     # # todays_date = "Apr-17-May-24"
     # from_date = (datetime.today() - timedelta(days=2)).strftime("%d-%m-%Y")
