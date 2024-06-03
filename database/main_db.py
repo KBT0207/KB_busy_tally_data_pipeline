@@ -197,7 +197,7 @@ def import_tally_data(date):
                 importer.import_data('tally_journal', excel_data.clean_and_transform(), commit=True)
 
             if get_filename(file) == 'accounts':
-                importer.import_accounts_data('tally_accounts', excel_data.clean_and_transform(), commit=True)
+                importer.import_accounts_data(df=excel_data.clean_and_transform(), commit=True)
 
             # if get_filename(file) == 'items':
             #     importer.import_data('tally_items', excel_data.clean_and_transform(), commit=True)
@@ -321,6 +321,13 @@ def one(path, commit):
     importer = DatabaseCrud(db_connector)
     importer.test_import_data(table_name='outstanding_balance', df= data, commit=commit)
     print(data)
+
+
+def balance(df, commit):
+    # Base.metadata.create_all(db_engine)
+    
+    importer = DatabaseCrud(db_connector)
+    importer.test_import_data(table_name='outstanding_balance', df= df, commit=commit)
 
 
 # def delete_one(commit):

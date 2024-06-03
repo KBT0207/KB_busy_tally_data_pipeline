@@ -30,7 +30,7 @@ def exporting_data(company):
                         filename= f"{comp}_{tally_reports[rep]}_{todays_date}.xlsx", 
                         esc= 4)
             logger.info(f"Exported {tally_reports[rep]} of {comp} of {todays_date}")
-
+                
         tally_utils.accounts()
         tally_utils.export_accounts_data(path= fr"D:\automated_tally_downloads\{comp}\accounts",
                         filename= f"{comp}_accounts_{todays_date}.xlsx")

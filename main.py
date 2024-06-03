@@ -55,8 +55,11 @@ def reports():
 if __name__ == "__main__":
     # main_db.delete_busy_sales()
     # main_db.import_busy_sales()
-    # f = r"D:\automated_tally_downloads\10001\outstanding_balance\10001_outstanding_balance_27-May-2024.xlsx"
-    # main_db.one(path= f, commit= True)
+    # import pandas as pd
+    # f = r"D:\automated_tally_downloads\balance_sheet_data\Apr24-May24.xlsx"
+    # main = pd.read_excel(f)
+    # # print(main)
+    # main_db.balance(df= main, commit= True)
     
     # todays_date = datetime.today().strftime("%d-%b-%Y")
     # # todays_date = "Apr-17-May-24"
@@ -67,14 +70,15 @@ if __name__ == "__main__":
 
     # main_tally.exporting_outstanding_balance(company= [10001, 10003], date= to_date)
     
-    schedule.every().day.at("21:00").do(busy_sales)
+    # schedule.every().day.at("21:30").do(busy_sales)
 
-    schedule.every().day.at("00:05").do(busy_material_masters)
+    # schedule.every().day.at("00:05").do(busy_material_masters)
 
-    schedule.every().day.at("04:30").do(tally_to_sql)
+    # schedule.every().day.at("04:30").do(tally_to_sql)
 
-    schedule.every().day.at("09:40").do(reports)
+    # schedule.every().day.at("09:40").do(reports)
     
-    while True:
-        schedule.run_pending()
-        time.sleep(1)    
+    # while True:
+    #     schedule.run_pending()
+    #     time.sleep(1)    
+
