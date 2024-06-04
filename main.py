@@ -1,10 +1,10 @@
 import time
 import schedule
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from database import main_db
 from busy import main_busy
 from tally import main_tally
-from utils.common_utils import tally_comp_codes
+from utils.common_utils import tally_comp_codes, balance_comp_codes
 
 
 
@@ -35,6 +35,14 @@ def busy_material_masters():
     main_db.import_busy_masters_material()
 
 
+def export_import_outstanding_tallydata():
+    dates = [(datetime.today().date() - timedelta(days=1)).strftime("%d-%m-%Y"),   #yesterday
+             datetime.today().date().strftime("%d-%m-%Y")]                    #today
+    companies = sorted(list(balance_comp_codes.keys()))
+    main_tally.exporting_outstanding_balance(company= companies, dates= dates)
+    main_db.import_outstanding_tallydata(dates=dates)
+
+
 
 def reports():
     fromdate = datetime.today().date().replace(day=1).strftime('%Y-%m-%d')
@@ -53,16 +61,20 @@ def reports():
 
 
 if __name__ == "__main__":
-    # main_db.delete_busy_sales()
-    # main_db.import_busy_sales()
+
     # import pandas as pd
     # f = r"D:\automated_tally_downloads\balance_sheet_data\JUNE.xlsx"
     # main = pd.read_excel(f)
     # main["particulars"] = main["particulars"].replace('_x000D_\\n', '', regex=True)
-    # # print(main.sample(20))
+    # main = main.loc[main['date'] == '2024-06-02 00:00:00']
+    # # print(main)
     # main_db.balance(df= main, commit= True)
-    
-    main_db.volume_discount_report(date= '2024-05-04', send_email= False)
+    # start_date = datetime.date(year= 2024, month= 5, day=1)
+    # end_date = datetime.today().date() - timedelta(days=1)
+
+  
+    main_db.cash_discount_report(dates= ['2024-06-02', '2024-06-03'], send_email= False)
+
 
     # todays_date = datetime.today().strftime("%d-%b-%Y")
     # # todays_date = "Apr-17-May-24"
@@ -73,15 +85,17 @@ if __name__ == "__main__":
 
     # main_tally.exporting_outstanding_balance(company= [10001, 10003], date= to_date)
     
-    # schedule.every().day.at("21:30").do(busy_sales)
+    schedule.every().day.at("21:00").do(busy_sales)
 
-    # schedule.every().day.at("00:05").do(busy_material_masters)
-
-    # schedule.every().day.at("04:30").do(tally_to_sql)
-
-    # schedule.every().day.at("09:40").do(reports)
+    schedule.every().day.at("22:15").do(export_import_outstanding_tallydata)
     
-    # while True:
-    #     schedule.run_pending()
-    #     time.sleep(1)    
+    schedule.every().day.at("00:05").do(busy_material_masters)
+
+    schedule.every().day.at("04:30").do(tally_to_sql)
+
+    schedule.every().day.at("09:26").do(reports)
+    
+    while True:
+        schedule.run_pending()
+        time.sleep(1)    
 

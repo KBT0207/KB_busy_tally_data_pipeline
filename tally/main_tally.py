@@ -52,7 +52,7 @@ def exporting_data(company):
 
 
 
-def exporting_outstanding_balance(company, date):
+def exporting_outstanding_balance(company:list, dates:list):
     pg.hotkey("win", "d")
     
     tally_utils.start_tally()
@@ -63,9 +63,12 @@ def exporting_outstanding_balance(company, date):
         logger.info(f"{comp} selected...")
         
         tally_utils.outstanding_balance()
-        tally_utils.change_period_balance(from_date= '01-04-2024', to_date= date)
-        tally_utils.export_balance_data(path= fr"D:\automated_tally_downloads\{comp}\outstanding",
-                        filename= f"{comp}_outstanding_{date}.xlsx")
+        
+        for date in dates:
+            tally_utils.change_period_balance(from_date= '01-04-2024', to_date= date)
+            tally_utils.export_balance_data(path= fr"D:\automated_tally_downloads\{comp}\outstanding",
+                            filename= f"{comp}_outstanding_{date}.xlsx")
+            time.sleep(1.5)
 
         tally_utils.back_to_tally_home(times= 3)
         logger.info(f"Exported accounts of {comp} of {date}")

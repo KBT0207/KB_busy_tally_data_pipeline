@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from logging_config import logger
 from database.busy_data_processor import get_compname, get_filename, get_date
-from utils.common_utils import tally_comp_codes, acc_comp_codes
+from utils.common_utils import tally_comp_codes, acc_comp_codes, balance_comp_codes
 
 pd.set_option('future.no_silent_downcasting', True)
 
@@ -151,7 +151,7 @@ def apply_outstanding_balance_transformation(file_path, material_centre_name) ->
         logger.warning(f"Empty Excel File of {get_compname(file_path)} and report {get_filename(file_path)}")
         return None
     df.columns = df.columns.str.lower()
-    mc_name = acc_comp_codes[int(material_centre_name)]
+    mc_name = balance_comp_codes[int(material_centre_name)]
 
     df = df.rename(columns={np.nan: "particulars"})
     df["date"] = get_date(path=file_path)
@@ -182,17 +182,17 @@ class TallyDataProcessor:
         elif report_type in ['receipts', 'payments', 'journal']:
             df = apply_register_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
         
-        elif report_type == "accounts":
-            df = apply_accounts_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
+        # elif report_type == "accounts":
+        #     df = apply_accounts_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
 
         # elif report_type == "items":
         #     df = apply_items_transformation(file_path=self.excel_file_path)
 
-        # elif report_type == "outstanding_balance":
-        #     df = apply_outstanding_balance_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
+        elif report_type == "outstanding":
+            df = apply_outstanding_balance_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
 
         if df is None:
-            logger.error("Dataframe is None.. Check path variable/value!")
+            logger.error("Dataframe is None!")
             return None
 
         return df

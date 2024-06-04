@@ -67,7 +67,7 @@ def delete_tally_data(start_date:str, end_date:str, commit:bool):
     
 
     for table in tables_list:
-        if 'accounts' not in table:
+        if 'accounts' not in table and 'outstanding' not in table:
             importer.delete_date_range_query(table, start_date= start_date, 
                                              end_date=end_date, commit=commit)
 
@@ -197,14 +197,13 @@ def import_tally_data(date):
             if get_filename(file) == 'journal':
                 importer.import_data('tally_journal', excel_data.clean_and_transform(), commit=True)
 
-            if get_filename(file) == 'accounts':
-                importer.import_accounts_data(df=excel_data.clean_and_transform(), commit=True)
+            # if get_filename(file) == 'accounts':
+            #     importer.import_accounts_data(df=excel_data.clean_and_transform(), commit=True)
 
             # if get_filename(file) == 'items':
             #     importer.import_data('tally_items', excel_data.clean_and_transform(), commit=True)
 
-            # if get_filename(file) == 'outstanding_balance':
-            #     importer.import_data('outstanding_balance', excel_data.clean_and_transform(), commit=True)
+            
 
             logger.info(f"{get_filename(file)} and {get_compname(file)} imported into database.. ")
         else:
@@ -213,6 +212,19 @@ def import_tally_data(date):
     else:
         logger.critical("No File for today's date found to import in database")
 
+
+
+
+def import_outstanding_tallydata(dates:list):    
+    Base.metadata.create_all(db_engine)
+    for date in dates:
+        tally_files = glob.glob("D:\\automated_tally_downloads\\" + f"**\\*outstanding_{date}.xlsx", recursive=True)
+        if len(tally_files) != 0:
+            for file in tally_files:
+                excel_data = TallyDataProcessor(file)
+                importer = DatabaseCrud(db_connector)
+                if get_filename(file) == 'outstanding':
+                    importer.import_data('outstanding_balance', excel_data.clean_and_transform(), commit=True)
 
 
 
@@ -234,17 +246,17 @@ def dealer_price_validation_report(from_date:str, to_date:str, send_email:bool, 
         
         validation_df.to_excel(fr"D:\Reports\Busy_Sales_Price\Price Validation from Month to {to_date}.xlsx", index= False)
         
-        subject = f"Busy Sales Price Validation Report from Month to {to_date} with {counts} rows of descrepancies"
-        body = f"Greetings All,\nKindly find the Busy Sales Price Validation Report attached from Month to {to_date} with {counts} rows of descrepancies.\n In the attached excel, column 'Total Price' is the sum of List Price ('Sales_Price') and 'Discout_Amt' which is the compared with the actual Price List."
+        subject = f"Busy Sales Price Validation Report from Month to {to_date} with {counts} rows of discrepancies"
+        body = f"Greetings All,\nKindly find the Busy Sales Price Validation Report attached from Month to {to_date} with {counts} rows of discrepancies.\n In the attached excel, column 'Total Price' is the sum of List Price ('Sales_Price') and 'Discout_Amt' which is the compared with the actual Price List."
         attachment = fr"D:\Reports\Busy_Sales_Price\Price Validation from Month to {to_date}.xlsx"
-        logger.info(f"Busy Sales Price Validation Report Exported to Excel with {counts} Descrepencies")
+        logger.info(f"Busy Sales Price Validation Report Exported to Excel with {counts} Discrepencies")
 
     else:
-        subject = f"Busy Sales Price Validation Report from Month to {to_date} without descrepancy"
+        subject = f"Busy Sales Price Validation Report from Month to {to_date} without discrepancy"
         attachment = None
-        body = f"Greetings All,\nAs per yesterday's data, there were no descrepancy found in busy sales with the price list."
+        body = f"Greetings All,\nAs per yesterday's data, there were no discrepancy found in busy sales with the price list."
 
-        logger.info(f"Report Produced without discrepancies")
+        logger.info(f"Busy Sales Price Validation Report Produced without discrepancies")
 
     if send_email:
         try:
@@ -274,17 +286,17 @@ def salesorder_salesman_report(from_date:str, to_date:str, send_email:bool, exce
         
         validation_df.to_excel(fr"D:\Busy_SalesOrder_Salesman\Reports\Salesman Validation from Month to {to_date}.xlsx", index= False)
         
-        subject = f"Busy SalesOrder Salesman Validation Report from Month to {to_date} with {counts} rows of descrepancies"
-        body = f"Greetings All,\nKindly find the Busy SalesOrder Salesman Validation Report attached from Month to {to_date} with {counts} rows of descrepancies.\nThe attached excel contains the busy entries without the mention of salesman name."
+        subject = f"Busy SalesOrder Salesman Validation Report from Month to {to_date} with {counts} rows of discrepancies"
+        body = f"Greetings All,\nKindly find the Busy SalesOrder Salesman Validation Report attached from Month to {to_date} with {counts} rows of discrepancies.\nThe attached excel contains the busy entries without the mention of salesman name."
         attachment = fr"D:\Reports\Busy_SalesOrder_Salesman\Salesman Validation from Month to {to_date}.xlsx"
-        logger.info(f"Busy SalesOrder Salesman Validation Report Exported to Excel with {counts} Descrepencies")
+        logger.info(f"Busy SalesOrder Salesman Validation Report Exported to Excel with {counts} Discrepencies")
 
     else:
-        subject = f"Busy SalesOrder Salesman Validation Report from Month to {to_date} without descrepancy"
+        subject = f"Busy SalesOrder Salesman Validation Report from Month to {to_date} without discrepancy"
         attachment = None
         body = f"Greetings All,\nAs per yesterday's data, there were no descrepancy found in busy salesorder regarding salesman."
 
-        logger.info(f"Report Produced without discrepancies")
+        logger.info(f"SalesOrder Salesman Validation Report Produced without discrepancies")
 
     if send_email:
         try:
@@ -301,27 +313,62 @@ def salesorder_salesman_report(from_date:str, to_date:str, send_email:bool, exce
 
 
 
-def volume_discount_report(date:str, send_email:bool, exceptions:list = None) -> None:
+def volume_discount_report(dates:list, send_email:bool, exceptions:list = None) -> None:
     reports = Reports(db_connector)
     # from xlwings import view
-    validation_df = reports.volume_discount_validation(date= date, exceptions= exceptions)
+    validation_df = reports.volume_discount_validation(dates= dates, exceptions= exceptions)
+    # return view(validation_df)
+    validation_df.to_excel(fr"D:\Reports\Volume_Discount\Volume Discount Report of {dates}.xlsx", index= False)
+    
+    discrepancy_count = validation_df.loc[validation_df['remark'] == 'Discrepancy', 'remark'].count() 
+    # print(discrepancy_count)
+    if discrepancy_count > 0:
+        subject = f"Busy Sales Volume Discount Report of {dates} with {discrepancy_count} discrepancies"
+        body = f"Greetings All,\nKindly find the Busy Sales Volume Discount Report of {dates} attached with discrepancy."
+        attachment = fr"D:\Reports\Volume_Discount\Volume Discount Report of {dates}.xlsx"
+        logger.info(f"Busy Sales Volume Discount Report Exported to Excel with {discrepancy_count} Discrepencies")
+
+    else:
+        subject = f"Busy Sales Volume Discount Report of {dates} without discrepancy"
+        attachment = None
+        body = f"Greetings All,\nAs per yesterday's sales data, there were no descrepancy found in busy sales regarding volume discount."
+        logger.info(f"Volume Discount Report Produced without discrepancies")
+
+    if send_email:
+        try:
+            receivers = ['shivprasad@kaybeebio.com', 
+                        ]
+            cc = ['danish@kaybeeexports.com', 's.gaurav@kaybeeexports.com', 
+                ]
+            email_send(reciever= receivers, 
+                       cc= cc, 
+                       subject= subject, contents= body, attachemnts= attachment)
+            logger.info(f"Successfully emailed the Busy Sales Volume Discount Report.")
+        except Exception as e:
+            logger.critical(f"Failed to email the Busy Sales Volume Discount Report : {e}")
+
+
+
+def cash_discount_report(dates:list, send_email:bool, exceptions:list = None) -> None:
+    reports = Reports(db_connector)
+    # from xlwings import view
+    validation_df = reports.cash_discount_validation(dates= dates, exceptions= exceptions)
     return print(validation_df)
-    # counts = len(validation_df)
-    # if counts != 0:
-        
-    #     validation_df.to_excel(fr"D:\Busy_SalesOrder_Salesman\Reports\Salesman Validation from Month to {date}.xlsx", index= False)
-        
-    #     subject = f"Busy SalesOrder Salesman Validation Report from Month to {date} with {counts} rows of descrepancies"
-    #     body = f"Greetings All,\nKindly find the Busy SalesOrder Salesman Validation Report attached from Month to {date} with {counts} rows of descrepancies.\nThe attached excel contains the busy entries without the mention of salesman name."
-    #     attachment = fr"D:\Reports\Busy_SalesOrder_Salesman\Salesman Validation from Month to {date}.xlsx"
-    #     logger.info(f"Busy SalesOrder Salesman Validation Report Exported to Excel with {counts} Descrepencies")
+    # validation_df.to_excel(fr"D:\Reports\Volume_Discount\Volume Discount Report of {dates}.xlsx", index= False)
+    
+    # discrepancy_count = validation_df.loc[validation_df['remark'] == 'Discrepancy', 'remark'].count() 
+    # # print(discrepancy_count)
+    # if discrepancy_count > 0:
+    #     subject = f"Busy Sales Volume Discount Report of {dates} with {discrepancy_count} discrepancies"
+    #     body = f"Greetings All,\nKindly find the Busy Sales Volume Discount Report of {dates} attached with discrepancy."
+    #     attachment = fr"D:\Reports\Volume_Discount\Volume Discount Report of {dates}.xlsx"
+    #     logger.info(f"Busy Sales Volume Discount Report Exported to Excel with {discrepancy_count} Discrepencies")
 
     # else:
-    #     subject = f"Busy SalesOrder Salesman Validation Report from Month to {date} without descrepancy"
+    #     subject = f"Busy Sales Volume Discount Report of {dates} without discrepancy"
     #     attachment = None
-    #     body = f"Greetings All,\nAs per yesterday's data, there were no descrepancy found in busy salesorder regarding salesman."
-
-    #     logger.info(f"Report Produced without discrepancies")
+    #     body = f"Greetings All,\nAs per yesterday's sales data, there were no descrepancy found in busy sales regarding volume discount."
+    #     logger.info(f"Volume Discount Report Produced without discrepancies")
 
     # if send_email:
     #     try:
@@ -332,11 +379,9 @@ def volume_discount_report(date:str, send_email:bool, exceptions:list = None) ->
     #         email_send(reciever= receivers, 
     #                    cc= cc, 
     #                    subject= subject, contents= body, attachemnts= attachment)
-    #         logger.info(f"Successfully emailed the Busy SalesOrder Salesman Validation Report.")
+    #         logger.info(f"Successfully emailed the Busy Sales Volume Discount Report.")
     #     except Exception as e:
-    #         logger.critical(f"Failed to email the Busy SalesOrder Salesman Validation Report : {e}")
-
-
+    #         logger.critical(f"Failed to email the Busy Sales Volume Discount Report : {e}")
 
 
 # def import_tally_accounts():
