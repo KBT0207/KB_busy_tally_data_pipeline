@@ -129,7 +129,9 @@ def export_accounts_data(path, filename):
     pg.press('c')
     time.sleep(2)
     pg.press('down')
-    time.sleep(1)
+    time.sleep(0.5)
+    pg.press('enter')
+    pg.typewrite( 'Name (Alias)', interval=0.2)
     find_img('tally/images/export_settings.png', conf=0.95 )
     time.sleep(1)
     pg.click()
@@ -223,7 +225,7 @@ def accounts():
     pg.press('enter')
     find_img(img='tally/images/ledgers_list.png')
     pg.press('f5')
-    time.sleep(2.5)
+    time.sleep(0.5)
     
     
 

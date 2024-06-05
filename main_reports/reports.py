@@ -8,7 +8,7 @@ from database.models.busy_models.busy_accounts import (BusyAccounts100x, BusyAcc
                                                     BusyAccountsGreenEra, BusyAccountsKBBIO,
                                                     BusyAccountsNewAge)
 from database.models.busy_models.busy_reports import SalesKBBIO, SalesOrderKBBIO
-
+from database.models.tally_models.tally_report_models import TallyAccounts, TallyOutstandingBalance
 
 
 class Reports(DatabaseCrud):
@@ -162,38 +162,70 @@ class Reports(DatabaseCrud):
 
 
     def cash_discount_validation(self, dates:list, exceptions:list = None) -> pd.DataFrame:
-        
-        # item_catergory_column = case(
-        #                             # (SalesKBBIO.item_details.contains('Organeem'), 'Organeem'),
-        #                             (SalesKBBIO.item_details.contains('Granules'), 'Granules'),
-        #                             (SalesKBBIO.item_details.contains('Tunner'), 'Tunner'),
-        #                         else_='Others').label('item_category')
-        
-        # cash_disc = case((SalesKBBIO.discount_perc >= 25, 25), else_= 0).label('cash_disc')
-
-        query = self.Session.query(SalesKBBIO.date, SalesKBBIO.voucher_no,  SalesKBBIO.alt_qty, 
+        #main busy sales query
+        sales_query = self.Session.query(SalesKBBIO.date, SalesKBBIO.voucher_no,  SalesKBBIO.alt_qty, 
                                    SalesKBBIO.item_details, SalesKBBIO.particulars, 
                                    SalesKBBIO.discount_perc, SalesKBBIO.dealer_code,
                                 #    item_catergory_column, 
                                 ).filter(and_(SalesKBBIO.party_type == 'Dealer', SalesKBBIO.date.in_(dates),
                                               SalesKBBIO.discount_perc >= 20))
+ 
+        sales_distinct_invoice_query = sales_query.distinct(SalesKBBIO.voucher_no)
         
-        query = query.distinct(SalesKBBIO.voucher_no)
-        
-        if exceptions:
-            query = query.filter(SalesKBBIO.voucher_no.in_(exceptions))
+        sales_distinct_dealer_query = sales_query.distinct(SalesKBBIO.dealer_code)
 
-        # group_query = query.group_by(SalesKBBIO.date, SalesKBBIO.particulars, 
-        #                              item_catergory_column, SalesKBBIO.discount_perc, cash_disc,
-        #                             )
-        entity_query = query.with_entities(SalesKBBIO.date, SalesKBBIO.voucher_no, SalesKBBIO.particulars, 
-                                    # item_catergory_column,
-                                    SalesKBBIO.dealer_code, SalesKBBIO.discount_perc,
-                                    )
+        if exceptions:
+            sales_distinct_invoice_query = sales_distinct_invoice_query.filter(SalesKBBIO.voucher_no.in_(exceptions))
+            sales_distinct_dealer_query = sales_distinct_dealer_query.filter(SalesKBBIO.voucher_no.in_(exceptions))
         
-        df = pd.DataFrame(entity_query, columns= ['date', 'invoice_no', 'particulars', 
+        #busy sales distinct invoice query
+        sales_distinct_invoice_query = sales_distinct_invoice_query.with_entities(SalesKBBIO.date, SalesKBBIO.voucher_no, 
+                                            SalesKBBIO.particulars, SalesKBBIO.dealer_code, 
+                                            SalesKBBIO.discount_perc,
+                                    ).order_by(SalesKBBIO.date, SalesKBBIO.dealer_code)
+        #busy sales distinct dealer query
+        sales_distinct_dealer_query = sales_distinct_dealer_query.with_entities(SalesKBBIO.date, 
+                                            SalesKBBIO.particulars, SalesKBBIO.dealer_code, 
+                                    )
+        # come back here ..requires modifications if data not found
+        tally_accounts_query = (sales_distinct_dealer_query.outerjoin(TallyAccounts, 
+                                                                      SalesKBBIO.dealer_code == TallyAccounts.dealer_code)
+                                .with_entities(
+                                        SalesKBBIO.date.label('sales_date'), 
+                                        SalesKBBIO.dealer_code.label('sales_dealer_code'), 
+                                        TallyAccounts.dealer_code.label('tally_dealer_code'), 
+                                        SalesKBBIO.particulars.label('sales_particulars'), 
+                                        TallyAccounts.ledger_name.label('tally_particulars'),
+                                            )).subquery()
+
+        outstanding_query = (self.Session.query(TallyOutstandingBalance.date, TallyOutstandingBalance.particulars,
+                                                TallyOutstandingBalance.debit, TallyOutstandingBalance.credit, 
+                                                TallyOutstandingBalance.material_centre, 
+                                                tally_accounts_query, 
+                                        ).outerjoin(tally_accounts_query,
+                                (TallyOutstandingBalance.particulars == tally_accounts_query.c.tally_particulars) & 
+                                (TallyOutstandingBalance.date == tally_accounts_query.c.sales_date))
+                                        ).filter(tally_accounts_query.c.tally_particulars != None
+                                                 ).group_by( 
+                                                     
+                                                 )
+        
+                
+        sales_invoice_df = pd.DataFrame(sales_distinct_invoice_query, columns= ['date', 'invoice_no', 'particulars', 
                                                 #   'item_category', 
                                                   'dealer_code', 'disc_perc', 
                                            ])
-        
-        return df
+        sales_dealer_df = pd.DataFrame(sales_distinct_dealer_query, columns= ['date', 'particulars', 'dealer_code'])
+        # tally_accounts_df = pd.DataFrame(tally_accounts_query, 
+        #                                  columns= ['sales_date', 'sales_dealer_code', 'tally_dealer_code', 
+        #                                            'sales_particulars', 'tally_particulars',
+        #                                                                   ])
+        outstanding_df = pd.DataFrame(outstanding_query, 
+                                      columns=['outstanding_date', 'outstanding_particulars', 
+                                               'outs_debit', 'outs_credit', 'material_centre',
+                                               'sales_date', 'sales_dealer_code', 'tally_dealer_code', 
+                                               'sales_particulars', 'tally_particulars', 
+                                               ]
+                                        )
+        from xlwings import view
+        return sales_invoice_df

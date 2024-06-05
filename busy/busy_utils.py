@@ -79,13 +79,14 @@ def open_busy() -> None:
     pg.hotkey('win', 'd')
     time.sleep(0.5)
     try:
-        busy = pg.locateCenterOnScreen(image="busy/images/busy_desktop_icon.png",
-                                       confidence=0.8)
-        pg.doubleClick(busy, duration=0.3)
+        pg.hotkey('win', 'r')
+        time.sleep(0.5)
+        pg.typewrite(r'C:\BusyWin\Busy21.exe', interval=0.2)
+        pg.press('enter')
     except pg.ImageNotFoundException as e:
-        logger.critical(f"Busy Icon not found!: {e}")         
+        logger.critical(f"Busy Icon not found!: {e}")   
     finally:
-        time.sleep(3)
+        time.sleep(2)
     location = None
     while location == None:
         try:

@@ -405,17 +405,18 @@ def one(path, commit):
     xl = TallyDataProcessor(excel_file_path= path)
     data = xl.clean_and_transform()
     
-    importer = DatabaseCrud(db_connector)
-    importer.test_import_data(table_name='outstanding_balance', df= data, commit=commit)
+    # importer = DatabaseCrud(db_connector)
+    # importer.test_import_data(table_name='outstanding_balance', df= data, commit=commit)
     print(data)
 
 
-def balance(df, commit):
+def balance(path):
     # Base.metadata.create_all(db_engine)
     
-    importer = DatabaseCrud(db_connector)
-    importer.test_import_data(table_name='outstanding_balance', df= df, commit=commit)
-
+    importer = TallyDataProcessor(excel_file_path=path)
+    df = importer.clean_and_transform()
+    from xlwings import view
+    view(df)
 
 # def delete_one(commit):
 #     # Base.metadata.create_all(db_engine)

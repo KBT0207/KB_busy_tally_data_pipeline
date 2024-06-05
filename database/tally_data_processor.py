@@ -28,8 +28,8 @@ def apply_transformation(file_path, material_centre_name) -> pd.DataFrame:
     df.loc[:, ["credit", "debit"]] = df.loc[:, ["credit", "debit"]].fillna(0)
 
     df["material_centre"] = mc_name
-    df["particulars"] = df["particulars"].str.rstrip().str.rstrip("_x000D_")
-    df["voucher_no"] = df["voucher_no"].replace("_x000D_\\n", "", regex=True)
+    df["particulars"] = df["particulars"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
+    df["voucher_no"] = df["voucher_no"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
 
     df["voucher_no"] = df["voucher_no"].fillna(df["particulars"])
     df = df.loc[~df["particulars"].isna()]
@@ -58,8 +58,8 @@ def apply_register_transformation(file_path, material_centre_name) -> pd.DataFra
     df = df.rename(columns= {"vch_no": "voucher_no"})
     
     df["material_centre"] = mc_name
-    df["particulars"] = df["particulars"].str.rstrip().str.rstrip("_x000D_")
-    df["voucher_no"] = df["voucher_no"].replace("_x000D_\\n", "", regex=True)
+    df["particulars"] = df["particulars"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
+    df["voucher_no"] = df["voucher_no"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
     df.loc[:,["date",'voucher_no']] = df.loc[:,["date",'voucher_no']].ffill()
     df['date'] = pd.to_datetime(df["date"])
     df.loc[:,['credit', 'debit']] = df.loc[:,['credit', 'debit']].fillna(0)
@@ -85,7 +85,6 @@ def apply_accounts_transformation(file_path, material_centre_name) -> pd.DataFra
         df.columns = df.iloc[0]
         df = df.iloc[1:]
     except FileNotFoundError as e:
-        # print(e)
         logger.warning(f"Excel File not found in the given {file_path}: {e}")
     if df.empty:
         logger.warning(f"Empty Excel File of {get_compname(file_path)} and report {get_filename(file_path)}")
@@ -99,8 +98,13 @@ def apply_accounts_transformation(file_path, material_centre_name) -> pd.DataFra
                              })
 
     df["material_centre"] = mc_name
-    df["ledger_name"] = df["ledger_name"].replace('_x000D_\\n', '', regex=True)
-    df["under"] = df["under"].replace('_x000D_\\n','', regex=True)
+
+    df["alias_code"] = df["ledger_name"].str.extract(pat= r'\(([^()]*?/[^()]*?)\)')
+
+    df["ledger_name"] = df["ledger_name"].str.replace(r'\([^()]*?/[^()]*?\)$', '', regex= True)
+    df["ledger_name"] = df["ledger_name"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
+
+    df["under"] = df["under"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
     df["gst_no"] = df["gst_no"].str.rstrip()
     df["opening_balance"] = df["opening_balance"].fillna(0)
     
@@ -128,8 +132,8 @@ def apply_items_transformation(file_path:str) -> pd.DataFrame:
     df = df.rename(columns= {"name_of_item": "item_name",
                              })
 
-    df["item_name"] = df["item_name"].replace('_x000D_\\n','', regex=True)
-    df["under"] = df["under"].replace('_x000D_\\n','', regex=True)
+    df["item_name"] = df["item_name"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
+    df["under"] = df["under"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
     df["under"] = df["under"].replace('_x0004_','', regex=True)
     df.loc[:,['opening_qty', 'rate', 'opening_balance']] = df.loc[:,['opening_qty', 'rate', 'opening_balance']].fillna(0)
     
@@ -155,10 +159,10 @@ def apply_outstanding_balance_transformation(file_path, material_centre_name) ->
 
     df = df.rename(columns={np.nan: "particulars"})
     df["date"] = get_date(path=file_path)
-    df['date'] = pd.to_datetime(df['date'].str.removesuffix('.xlsx'))
+    df['date'] = pd.to_datetime(df['date'].str.removesuffix('.xlsx'), dayfirst=True)
     df["material_centre"] = mc_name
 
-    df["particulars"] = df["particulars"].replace('_x000D_\\n', '', regex=True)
+    df["particulars"] = df["particulars"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
     df.loc[:, ["credit", "debit"]] = df[["credit", "debit"]].fillna(0)
 
     return df
@@ -182,8 +186,8 @@ class TallyDataProcessor:
         elif report_type in ['receipts', 'payments', 'journal']:
             df = apply_register_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
         
-        # elif report_type == "accounts":
-        #     df = apply_accounts_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
+        elif report_type == "accounts":
+            df = apply_accounts_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
 
         # elif report_type == "items":
         #     df = apply_items_transformation(file_path=self.excel_file_path)

@@ -19,7 +19,6 @@ def tally_to_sql():
     main_db.import_tally_data(date= current_date)
 
 
-
 def busy_sales():
     main_busy.exporting_sales()
     time.sleep(1)
@@ -36,8 +35,7 @@ def busy_material_masters():
 
 
 def export_import_outstanding_tallydata():
-    dates = [(datetime.today().date() - timedelta(days=1)).strftime("%d-%m-%Y"),   #yesterday
-             datetime.today().date().strftime("%d-%m-%Y")]                    #today
+    dates = [datetime.today().date().strftime("%d-%m-%Y")]                    #today
     companies = sorted(list(balance_comp_codes.keys()))
     main_tally.exporting_outstanding_balance(company= companies, dates= dates)
     main_db.import_outstanding_tallydata(dates=dates)
@@ -48,16 +46,18 @@ def reports():
     fromdate = datetime.today().date().replace(day=1).strftime('%Y-%m-%d')
     todate = (datetime.today().date() - timedelta(days=1)).strftime('%Y-%m-%d')
     
-    salesprice_excluded_invoices = ['KBAKNU/2425/3']
+    # salesprice_excluded_invoices = ['KBAKNU/2425/3']
     main_db.dealer_price_validation_report(from_date= fromdate, 
                                            to_date= todate, send_email= True, 
-                                           exceptions= salesprice_excluded_invoices,
+                                        #    exceptions= salesprice_excluded_invoices,
                                            )
 
     main_db.salesorder_salesman_report(from_date= fromdate, 
                                        to_date=todate, send_email= True,
                                     #    exceptions= None,
                                        )
+
+    main_db.volume_discount_report(dates= [todate], send_email=True)
 
 
 if __name__ == "__main__":
@@ -71,10 +71,7 @@ if __name__ == "__main__":
     # main_db.balance(df= main, commit= True)
     # start_date = datetime.date(year= 2024, month= 5, day=1)
     # end_date = datetime.today().date() - timedelta(days=1)
-
-  
-    main_db.cash_discount_report(dates= ['2024-06-02', '2024-06-03'], send_email= False)
-
+    
 
     # todays_date = datetime.today().strftime("%d-%b-%Y")
     # # todays_date = "Apr-17-May-24"
@@ -93,7 +90,7 @@ if __name__ == "__main__":
 
     schedule.every().day.at("04:30").do(tally_to_sql)
 
-    schedule.every().day.at("09:26").do(reports)
+    schedule.every().day.at("09:30").do(reports)
     
     while True:
         schedule.run_pending()
