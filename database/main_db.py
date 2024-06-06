@@ -197,8 +197,8 @@ def import_tally_data(date):
             if get_filename(file) == 'journal':
                 importer.import_data('tally_journal', excel_data.clean_and_transform(), commit=True)
 
-            # if get_filename(file) == 'accounts':
-            #     importer.import_accounts_data(df=excel_data.clean_and_transform(), commit=True)
+            if get_filename(file) == 'accounts':
+                importer.import_accounts_data(df=excel_data.clean_and_transform(), commit=True)
 
             # if get_filename(file) == 'items':
             #     importer.import_data('tally_items', excel_data.clean_and_transform(), commit=True)
@@ -405,9 +405,11 @@ def one(path, commit):
     xl = TallyDataProcessor(excel_file_path= path)
     data = xl.clean_and_transform()
     
-    # importer = DatabaseCrud(db_connector)
-    # importer.test_import_data(table_name='outstanding_balance', df= data, commit=commit)
-    print(data)
+    importer = DatabaseCrud(db_connector)
+    importer.import_accounts_data( df= data, commit=commit)
+    # imp = importer.import_accounts_data( df= data, commit=commit)
+    # print(data)
+    # return imp
 
 
 def balance(path):

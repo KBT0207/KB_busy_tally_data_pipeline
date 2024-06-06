@@ -100,8 +100,9 @@ def apply_accounts_transformation(file_path, material_centre_name) -> pd.DataFra
     df["material_centre"] = mc_name
 
     df["alias_code"] = df["ledger_name"].str.extract(pat= r'\(([^()]*?/[^()]*?)\)')
+    df["alias_code"] = df["alias_code"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
 
-    df["ledger_name"] = df["ledger_name"].str.replace(r'\([^()]*?/[^()]*?\)$', '', regex= True)
+    df["ledger_name"] = df["ledger_name"].str.replace(r'\([^()]*?/[^()]*?\)$', '', regex= True).str.rstrip()
     df["ledger_name"] = df["ledger_name"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
 
     df["under"] = df["under"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)

@@ -118,7 +118,7 @@ class TallyAccounts(Base):
     state = Column(String(50), nullable=True)
     gst_registration_type = Column(String(100), nullable= True)
     gst_no = Column(String(100), nullable=True)
-    opening_balance = Column(DECIMAL(10,2), nullable=True)
+    opening_balance = Column(BigInteger, nullable=True)
     busy_name = Column(String(250), nullable= True)
     dealer_code = Column(String(100), nullable= True)
     material_centre = Column(String(50), nullable=False)

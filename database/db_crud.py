@@ -18,7 +18,7 @@ class DatabaseCrud:
         self.db_connector = db_connector
         self.db_engine = db_connector.engine
         self.Session = scoped_session(sessionmaker(bind=self.db_connector.engine, autoflush=False))
-        self.metadata = MetaData()
+        # self.metadata = MetaData()
 
 
     
@@ -132,15 +132,16 @@ class DatabaseCrud:
         else:
             busy_table = BusyAccountsKBBIO
 
-        busy_data = self.Session.query(busy_table).with_entities(busy_table.name, busy_table.alias, 
-                                                                 ).all()
-        df_busy_data = pd.DataFrame(busy_data, columns= ['busy_name', 'alias_code'])
+        busy_data = self.Session.query(busy_table.name, busy_table.alias).filter(busy_table.alias != None
+                                    ).with_entities(busy_table.name, busy_table.alias, 
+                                                                 )
+        df_busy_data = pd.DataFrame(busy_data, columns= ['busy_name', 'dealer_code'])
 
         join_query = self.Session.query(TallyAccounts).filter(TallyAccounts.material_centre == df_material_centre)
 
         accounts = join_query.with_entities(TallyAccounts.ledger_name, TallyAccounts.alias_code, 
                                             TallyAccounts.state, TallyAccounts.material_centre,                                 
-                                            ).all()
+                                            )
         df_accounts = pd.DataFrame(accounts, columns=['ledger_name', 'alias_code', 
                                                       'state', 'material_centre', 
                                                     ])
@@ -151,17 +152,14 @@ class DatabaseCrud:
         new_data = new_data.loc[new_data['_merge']=='left_only', 
                                   ['ledger_name', 'under', 'state_x', 'gst_registration_type', 
                                    'gst_no', 'opening_balance', 'material_centre_x', 
-                                    'alias_code',
-                                    ]
-                                    ].replace({pd.NA: None})
+                                    'alias_code_x',
+                                    ]].replace({pd.NA: None})
         new_data.columns = new_data.columns.str.rstrip("_x")
 
+        new_data['alias_code'] = new_data['alias_code'].astype(str)
+        df_busy_data['dealer_code'] = df_busy_data['dealer_code'].astype(str)
         new_data_with_busy_name = new_data.merge(df_busy_data, how= 'left', 
-                                                 left_on= 'ledger_name', right_on= 'busy_name', 
-                                                 indicator= True)
-        new_data_with_busy_name = new_data_with_busy_name.drop(columns=['alias_code_x', '_merge']).replace({pd.NA: None})
-
-        new_data_with_busy_name.columns = new_data_with_busy_name.columns.str.rstrip("_y")
+                                                 left_on= 'alias_code', right_on= 'dealer_code').replace({pd.NA: None})
 
         if not new_data_with_busy_name.empty: 
             values = new_data_with_busy_name.to_dict('records')
@@ -169,6 +167,7 @@ class DatabaseCrud:
             try:
                 with self.db_engine.connect() as connection:
                     result = connection.execute(insert_stmt)
+                    logger.info(f"{result.rowcount} rows inserted into tally_accounts.")
                     if commit:
                         connection.commit()
                         logger.info(f"Inserted {result.rowcount} rows into tally_accounts.")

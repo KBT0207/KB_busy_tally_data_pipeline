@@ -81,3 +81,34 @@ def exporting_outstanding_balance(company:list, dates:list):
     pg.press('y')
     logger.info("Tally closed ...")
 
+
+
+def export_tally_accounts(company):
+
+    pg.hotkey("win", "d")
+    todays_date = datetime.today().strftime("%d-%b-%Y")
+
+    tally_utils.start_tally()
+    logger.info("Tally started...")
+
+    for comp in company:
+        tally_utils.select_company(company_code= comp)
+        logger.info(f"{comp} selected...")
+         
+        tally_utils.accounts()
+        tally_utils.export_accounts_data(path= fr"D:\automated_tally_downloads\{comp}\accounts",
+                        filename= f"{comp}_accounts_{todays_date}.xlsx")    
+
+        time.sleep(2)
+        pg.press('esc')
+        time.sleep(2)
+        pg.press('esc')
+        logger.info(f"Exported accounts of {comp} of {todays_date}")
+
+        tally_utils.change_company()
+    
+    time.sleep(2)
+    pg.press('esc')
+    time.sleep(2)
+    pg.press('y')
+    logger.info("Tally closed ...")

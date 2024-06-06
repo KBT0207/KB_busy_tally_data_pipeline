@@ -61,9 +61,16 @@ def reports():
 
 
 if __name__ == "__main__":
+  
+    # current_date = datetime.today().strftime("%d-%b-%Y")
+    # main_db.import_tally_data(date= current_date)
 
+    # companies = sorted(list(balance_comp_codes.keys()))
+    # main_tally.export_tally_accounts(company= companies)
+    # main_db.import_tally_data(date= current_date)
     # import pandas as pd
-    # f = r"D:\automated_tally_downloads\balance_sheet_data\JUNE.xlsx"
+    # f = r"D:\automated_tally_downloads\10007\accounts\10007_accounts_01-Apr-2024.xlsx"
+    # main_db.one(path= f, commit= False)
     # main = pd.read_excel(f)
     # main["particulars"] = main["particulars"].replace('_x000D_\\n', '', regex=True)
     # main = main.loc[main['date'] == '2024-06-02 00:00:00']
@@ -71,7 +78,10 @@ if __name__ == "__main__":
     # main_db.balance(df= main, commit= True)
     # start_date = datetime.date(year= 2024, month= 5, day=1)
     # end_date = datetime.today().date() - timedelta(days=1)
-    
+    # exe = ['KAYBEE/001 A']
+    # main_db.cash_discount_report(dates= ['2024-06-01', 
+    #                                      '2024-06-02', '2024-06-03', '2024-06-04', '2024-06-05',
+    #                                      ], send_email= False)
 
     # todays_date = datetime.today().strftime("%d-%b-%Y")
     # # todays_date = "Apr-17-May-24"
@@ -80,17 +90,16 @@ if __name__ == "__main__":
     # to_date = (datetime.today().date() - timedelta(days=1)).strftime("%d-%m-%Y")
     # # to_date = "15-5-2024"
 
-    # main_tally.exporting_outstanding_balance(company= [10001, 10003], date= to_date)
     
     schedule.every().day.at("21:00").do(busy_sales)
 
-    schedule.every().day.at("22:15").do(export_import_outstanding_tallydata)
+    schedule.every().day.at("03:15").do(export_import_outstanding_tallydata)
     
     schedule.every().day.at("00:05").do(busy_material_masters)
 
-    schedule.every().day.at("04:30").do(tally_to_sql)
+    schedule.every().day.at("05:15").do(tally_to_sql)
 
-    schedule.every().day.at("09:30").do(reports)
+    schedule.every().day.at("10:00").do(reports)
     
     while True:
         schedule.run_pending()
