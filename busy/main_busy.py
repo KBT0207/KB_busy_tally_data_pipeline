@@ -104,8 +104,9 @@ def exporting_sales():
 
     today_date = datetime.today().strftime("%d-%b-%Y")
     #today_date = "03-May-2024"
-    receivers = ['shivprasad@kaybeebio.com', 'danish@kaybeeexports.com']
-    #receivers = ['s.gaurav@kaybeeexports.com']
+    receivers = ['shivprasad@kaybeebio.com',  
+                 'sayali@kaybeeexports.com']
+    cc = ['s.gaurav@kaybeeexports.com', 'danish@kaybeeexports.com']
     attachment_path = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*sales*{today_date}.xlsx", recursive=True)
 
     subj_sales = f"KB Companies ['Sales, Sales Voucher and Sales Order'] data of {endate_str}"
@@ -116,7 +117,7 @@ def exporting_sales():
             attachment_path_sales.append(file) 
     if len(attachment_path_sales) != 0:
         try:
-            email.email_send(reciever=receivers, cc = "s.gaurav@kaybeeexports.com", 
+            email.email_send(reciever=receivers, cc = cc,
                             subject= subj_sales, 
                             contents= body_sales, 
                             attachemnts= attachment_path_sales)
