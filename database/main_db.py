@@ -397,17 +397,22 @@ def cash_discount_report(dates:list, send_email:bool, exceptions:list = None) ->
 #     print(data)
 
 
+def rep():
+    r = Reports(db_connector)
+    return r.busy_vs_tally_sales(fromdate= '2024-05-20' , todate= '2024-05-25', exceptions= None)
+
 
 def one(path, commit):
     Base.metadata.create_all(db_engine)
     import pandas as pd
     import numpy as np
-    xl = TallyDataProcessor(excel_file_path= path)
-    data = xl.clean_and_transform()
+    # xl = TallyDataProcessor(excel_file_path= path)
+    data = pd.read_excel(path)
     
     importer = DatabaseCrud(db_connector)
-    importer.import_accounts_data( df= data, commit=commit)
-    # imp = importer.import_accounts_data( df= data, commit=commit)
+    # importer.import_data( df= data, commit=commit)
+    importer.test_import_data(table_name= 'outstanding_balance', 
+                                    df= data, commit=commit)
     # print(data)
     # return imp
 
