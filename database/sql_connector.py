@@ -18,6 +18,8 @@ Dependencies:
 import os
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
+from urllib.parse import quote_plus
+
 
 load_dotenv('.env')
 
@@ -57,7 +59,9 @@ class DatabaseConnector:
         - str: Database connection string in the format 
         'mysql+pymysql://username:password@host:port/database?autocommit=false'.
         """
-        return f'mysql+pymysql://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}?autocommit=false'
+        encoded_username = quote_plus(self.username) 
+        encoded_password = quote_plus(self.password) 
+        return f'mysql+pymysql://{encoded_username}:{encoded_password}@{self.host}:{self.port}/{self.database}?autocommit=false'
 
 
 USERNAME = os.getenv('DB_USERNAME')

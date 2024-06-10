@@ -12,9 +12,9 @@ def exporting_data(company):
     todays_date = datetime.today().strftime("%d-%b-%Y")
     # todays_date = "Apr-17-May-24"
     from_date = (datetime.today() - timedelta(days=2)).strftime("%d-%m-%Y")
-    # from_date = "1-4-2017"
+    # from_date = "06-06-2024"
     to_date = datetime.today().strftime("%d-%m-%Y")
-    # to_date = "15-5-2024"
+    # to_date = "09-06-2024"
 
     tally_utils.start_tally()
     logger.info("Tally started...")
@@ -71,7 +71,7 @@ def exporting_outstanding_balance(company:list, dates:list):
             time.sleep(1.5)
 
         tally_utils.back_to_tally_home(times= 3)
-        logger.info(f"Exported accounts of {comp} of {date}")
+        logger.info(f"Exported outstanding balance of {comp} of {date}")
 
         tally_utils.change_company()
     

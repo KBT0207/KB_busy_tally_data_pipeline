@@ -325,16 +325,15 @@ def volume_discount_report(dates:list, send_email:bool, exceptions:list = None) 
     if discrepancy_count > 0:
         subject = f"Busy Sales Volume Discount Report of {dates} with {discrepancy_count} discrepancies"
         body = f"Greetings All,\nKindly find the Busy Sales Volume Discount Report of {dates} attached with discrepancy."
-        attachment = fr"D:\Reports\Volume_Discount\Volume Discount Report of {dates}.xlsx"
         logger.info(f"Busy Sales Volume Discount Report Exported to Excel with {discrepancy_count} Discrepencies")
 
     else:
         subject = f"Busy Sales Volume Discount Report of {dates} without discrepancy"
-        attachment = None
         body = f"Greetings All,\nAs per yesterday's sales data, there were no descrepancy found in busy sales regarding volume discount."
         logger.info(f"Volume Discount Report Produced without discrepancies")
 
     if send_email:
+        attachment = fr"D:\Reports\Volume_Discount\Volume Discount Report of {dates}.xlsx"
         try:
             receivers = ['shivprasad@kaybeebio.com', 
                         ]
