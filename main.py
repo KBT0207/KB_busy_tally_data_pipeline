@@ -63,7 +63,7 @@ def reports():
 
 if __name__ == "__main__":
   
-
+    main_db.rep()
     # main_db.delete_tally_data(start_date= startdate, end_date= endate, commit=True)
     # main_db.import_tally_data(date= current_date)
 
