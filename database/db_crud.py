@@ -18,8 +18,6 @@ class DatabaseCrud:
         self.db_connector = db_connector
         self.db_engine = db_connector.engine
         self.Session = scoped_session(sessionmaker(bind=self.db_connector.engine, autoflush=False))
-        # self.metadata = MetaData()
-
 
     
     def delete_date_range_query(self, table_name, start_date, end_date, commit):

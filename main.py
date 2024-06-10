@@ -88,8 +88,8 @@ if __name__ == "__main__":
     # main_tally.export_tally_accounts(company= companies)
     # main_db.import_tally_data(date= current_date)
     # import pandas as pd
-    # f = r"D:\automated_tally_downloads\10007\accounts\10007_accounts_01-Apr-2024.xlsx"
-    # main_db.one(path= f, commit= False)
+    # f = r"D:\Updated_May24.xlsx"
+    # main_db.one(path= f, commit= True)
     # start_date = datetime.date(year= 2024, month= 5, day=1)
     # end_date = datetime.today().date() - timedelta(days=1)
     # exe = ['KAYBEE/001 A']
