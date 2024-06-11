@@ -397,7 +397,8 @@ def cash_discount_report(dates:list, send_email:bool, exceptions:list = None) ->
 
 def rep():
     r = Reports(db_connector)
-    return r.busy_vs_tally_sales(fromdate= '2024-05-20' , todate= '2024-05-25', exceptions= None)
+    return r.sales_validation(fromdate= datetime(2024,5,1), 
+                              todate= datetime(2024,5,31), exceptions= None)
 
 
 def one(path, commit):

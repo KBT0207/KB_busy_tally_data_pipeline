@@ -1,6 +1,7 @@
 from sqlalchemy import insert, distinct, and_, case, func, cast, DECIMAL, select, Numeric, Table, text, MetaData
 import pandas as pd
 import numpy as np
+import datetime as dt
 from database.db_crud import DatabaseCrud
 from logging_config import logger
 # from utils.email import email_send
@@ -263,76 +264,144 @@ class Reports(DatabaseCrud):
         return results_df
         # return tally_df
 
-
-    def busy_vs_tally_sales(self, fromdate:str, todate:str, exceptions:list) -> pd.DataFrame:
         
-        def remove_zeros_after_last_slash(column):
-    # Reverse the string
-            reversed_column = func.reverse(column)
-            
-            # Find the position of the first '/' in the reversed string
-            pos_in_reversed = func.position('/' , reversed_column)
-            
-            # Calculate the starting position in the original string
-            start_pos = func.length(column) - pos_in_reversed + 2
-            
-            # Extract the substring from the original string
-            substring = func.substring(column, start_pos, func.length(column))
-            
-            # Replace zeros in the extracted substring
-            cleaned_substring = func.replace(substring, '0', '')
-            
-            return cleaned_substring
+    def sales_validation(self, fromdate, todate, exceptions:list) -> pd.DataFrame:
         
-        busy_sales_query = self.Session.query(SalesKBBIO.date, SalesKBBIO.voucher_no, 
-                                         SalesKBBIO.party_type, SalesKBBIO.dealer_code, 
-                                         SalesKBBIO.particulars, SalesKBBIO.amount, 
-                                         SalesKBBIO.tax_amt,
-                                ).filter(SalesKBBIO.date.between(fromdate, todate),
-                                        ~SalesKBBIO.material_centre.like('GE %'),
-                                        ~SalesKBBIO.material_centre.like('NA %'),
-                                        ~SalesKBBIO.material_centre.like('AS %'), 
-                                        SalesKBBIO.material_centre != 'Pune', 
-                                                        )
-        tally_sales_query = self.Session.query(TallySales.date, TallySales.voucher_no, 
+        def busy_to_tally():
+            busy_query = self.Session.query(SalesKBBIO.date, SalesKBBIO.voucher_no, 
+                                            SalesKBBIO.party_type, SalesKBBIO.dealer_code, 
+                                            SalesKBBIO.particulars, SalesKBBIO.amount, 
+                                            SalesKBBIO.tax_amt,
+                                    ).filter(SalesKBBIO.date.between(fromdate, todate),
+                                            ~SalesKBBIO.material_centre.like('GE %'),
+                                            ~SalesKBBIO.material_centre.like('NA %'),
+                                            ~SalesKBBIO.material_centre.like('AS %'), 
+                                            SalesKBBIO.material_centre != 'Pune', 
+                                                            )
+        
+            tally_query = self.Session.query(TallySales.date, TallySales.voucher_no, 
                                          TallySales.particulars, cast(TallySales.debit,DECIMAL(10,2)), 
                                          TallySales.material_centre, 
-                                         
                                 ).filter(~TallySales.material_centre.like('GE %'),
                                         ~TallySales.material_centre.like('NA %'),
                                         ~TallySales.material_centre.like('AS %'),
                                         TallySales.material_centre != 'Pune', 
                                                         )
+            if exceptions:
+                busy_query = busy_query.filter(~SalesKBBIO.voucher_no.in_(exceptions))
+                tally_query = tally_query.filter(~TallySales.voucher_no.in_(exceptions))
 
-        if exceptions:
-            busy_sales_query = busy_sales_query.filter(~SalesKBBIO.voucher_no.in_(exceptions))
-            tally_sales_query = tally_sales_query.filter(~TallySales.voucher_no.in_(exceptions))
-
-        
-            
-        group_busysales_query = busy_sales_query.with_entities(SalesKBBIO.date, 
+            group_busy_query = busy_query.with_entities(SalesKBBIO.date, 
                                             SalesKBBIO.voucher_no, SalesKBBIO.party_type, 
                                             SalesKBBIO.dealer_code, SalesKBBIO.particulars, 
                                             cast(func.sum(SalesKBBIO.amount), DECIMAL(10, 2)).label("amt"),
                                             cast(func.sum(SalesKBBIO.tax_amt), DECIMAL(10, 2)).label("tax_amt"),
                                             cast(func.sum(SalesKBBIO.amount + SalesKBBIO.tax_amt), DECIMAL(10, 2)).label("bill_amt"),
-                                            
                                         ).group_by(
                                             SalesKBBIO.date, SalesKBBIO.voucher_no,
                                             SalesKBBIO.party_type, SalesKBBIO.dealer_code,
                                             SalesKBBIO.particulars,
                                         )
-        
-        
-        busy_result = group_busysales_query.all()
-
-        busy_df = pd.DataFrame(busy_result, columns=['date', 'invoice_no', 'party_type', 'dealer_code', 
-                                        'particulars', 'amt', 'tax_amt', 'bill_amt'])
+            
+            busy_df = pd.DataFrame(group_busy_query, columns=['busy_invoice_date', 'busy_invoice_no', 'party_type', 'dealer_code', 
+                                        'busy_particulars', 'amt', 'tax_amt', 'bill_amt'])
 
 
-        tally_df = pd.DataFrame(tally_sales_query, columns=['date', 'invoice_no', 'particulars', 
+            tally_df = pd.DataFrame(tally_query, columns=['tally_invoice_date', 'tally invoice_no', 'tally_particulars', 
                                                        'debit', 'material_centre'])
         
-        tally_df['tally_invoice_no'] = tally_df['invoice_no'].str.replace(r'(/0*)([1-9]\d*)$', r'/\2')
+            def remove_trailing_zeros(row:str):
+                if '/' in row:
+                    parts = row.split('/')
+                    parts[-1] = str(int(parts[-1]))
+                    return '/'.join(parts)
+                else:
+                    return row
+                
+            tally_df['updated_tally_invoice_no'] = tally_df['tally invoice_no'].apply(remove_trailing_zeros)
 
-        return print(tally_df)
+            busy_to_tally_df = busy_df.merge(tally_df, how='left', 
+                                            left_on= 'busy_invoice_no', right_on= 'updated_tally_invoice_no')
+            busy_to_tally_df['amount_diff'] = busy_to_tally_df['bill_amt'] - busy_to_tally_df['debit']
+
+            return busy_to_tally_df
+        
+
+        # result_busy_to_tally.to_excel(fr'D:\Reports\Sales_Validation\Sales_Validation_{fromdate}-{todate}.xlsx', 
+        #                               sheet_name= 'Busy-Tally', index=False)
+
+            # from xlwings import view
+            # return view(busy_to_tally_df)
+            # return busy_to_tally_df
+        
+        def tally_to_busy():
+            tally_query = self.Session.query(TallySales.date, TallySales.voucher_no, 
+                                         TallySales.particulars, cast(TallySales.debit,DECIMAL(10,2)), 
+                                         TallySales.material_centre, 
+                                ).filter(TallySales.date.between(fromdate, todate), 
+                                        ~TallySales.material_centre.like('GE %'),
+                                        ~TallySales.material_centre.like('NA %'),
+                                        ~TallySales.material_centre.like('AS %'),
+                                        TallySales.material_centre != 'Pune', 
+                                                        )
+        
+            busy_query = self.Session.query(SalesKBBIO.date, SalesKBBIO.voucher_no, 
+                                         SalesKBBIO.party_type, SalesKBBIO.dealer_code, 
+                                         SalesKBBIO.particulars, SalesKBBIO.amount, 
+                                         SalesKBBIO.tax_amt,
+                                ).filter(~SalesKBBIO.material_centre.like('GE %'),
+                                        ~SalesKBBIO.material_centre.like('NA %'),
+                                        ~SalesKBBIO.material_centre.like('AS %'), 
+                                        SalesKBBIO.material_centre != 'Pune', 
+                                                        )
+            
+            if exceptions:
+                tally_query = tally_query.filter(~TallySales.voucher_no.in_(exceptions))
+                busy_query = busy_query.filter(~SalesKBBIO.voucher_no.in_(exceptions))
+
+            group_busy_query = busy_query.with_entities(SalesKBBIO.date, 
+                                            SalesKBBIO.voucher_no, SalesKBBIO.party_type, 
+                                            SalesKBBIO.dealer_code, SalesKBBIO.particulars, 
+                                            cast(func.sum(SalesKBBIO.amount), DECIMAL(10, 2)).label("amt"),
+                                            cast(func.sum(SalesKBBIO.tax_amt), DECIMAL(10, 2)).label("tax_amt"),
+                                            cast(func.sum(SalesKBBIO.amount + SalesKBBIO.tax_amt), DECIMAL(10, 2)).label("bill_amt"),
+                                        ).group_by(
+                                            SalesKBBIO.date, SalesKBBIO.voucher_no,
+                                            SalesKBBIO.party_type, SalesKBBIO.dealer_code,
+                                            SalesKBBIO.particulars,
+                                        )
+            
+            busy_df = pd.DataFrame(group_busy_query, columns=['busy_invoice_date', 'busy_invoice_no', 'party_type', 'dealer_code', 
+                                        'busy_particulars', 'amt', 'tax_amt', 'bill_amt'])
+
+            tally_df = pd.DataFrame(tally_query, columns=['tally_invoice_date', 'tally invoice_no', 'tally_particulars', 
+                                                       'debit', 'material_centre'])
+        
+            def remove_trailing_zeros(row:str):
+                if '/' in row:
+                    parts = row.split('/')
+                    parts[-1] = str(int(parts[-1]))
+                    return '/'.join(parts)
+                else:
+                    return row
+                
+            tally_df['updated_tally_invoice_no'] = tally_df['tally invoice_no'].apply(remove_trailing_zeros)
+
+            tally_to_busy_df = tally_df.merge(busy_df, how='left', 
+                                            left_on= 'updated_tally_invoice_no', right_on= 'busy_invoice_no')
+            tally_to_busy_df['amount_diff'] = tally_to_busy_df['bill_amt'] - tally_to_busy_df['debit']
+
+            # from xlwings import view
+            # return view(tally_to_busy_df)
+            return tally_to_busy_df
+
+        result_busy_to_tally = busy_to_tally()
+        result_tally_to_busy = tally_to_busy()
+        # result_tally_to_busy.to_excel(fr'D:\Reports\Sales_Validation\Sales_Validation_{fromdate}-{todate}.xlsx', 
+        #                             sheet_name= 'Tally-Busy', index=False)
+ 
+        file_path = fr'D:\Reports\Sales_Validation\Busy_vs_Tally_Sales_Reco_{fromdate.strftime("%B")}-{todate.strftime("%d-%m-%Y")}.xlsx'
+
+        with pd.ExcelWriter(file_path) as writer:
+            result_busy_to_tally.to_excel(writer, sheet_name='Busy Sales', index=False)
+            result_tally_to_busy.to_excel(writer, sheet_name='Tally Sales', index=False)
