@@ -269,6 +269,24 @@ class Reports(DatabaseCrud):
                             fromdate:str, todate:str, exceptions:list,
                             ) -> pd.DataFrame:
         
+        def remove_zeros_after_last_slash(column):
+    # Reverse the string
+            reversed_column = func.reverse(column)
+            
+            # Find the position of the first '/' in the reversed string
+            pos_in_reversed = func.position('/' , reversed_column)
+            
+            # Calculate the starting position in the original string
+            start_pos = func.length(column) - pos_in_reversed + 2
+            
+            # Extract the substring from the original string
+            substring = func.substring(column, start_pos, func.length(column))
+            
+            # Replace zeros in the extracted substring
+            cleaned_substring = func.replace(substring, '0', '')
+            
+            return cleaned_substring
+        
         busy_sales_query = self.Session.query(SalesKBBIO.date, SalesKBBIO.voucher_no, 
                                          SalesKBBIO.party_type, SalesKBBIO.dealer_code, 
                                          SalesKBBIO.particulars, SalesKBBIO.amount, 
@@ -281,30 +299,31 @@ class Reports(DatabaseCrud):
                                                         )
         tally_sales_query = self.Session.query(TallySales.date, TallySales.voucher_no, 
                                          TallySales.particulars, cast(TallySales.debit,DECIMAL(10,2)), 
-                                        #  cast(TallySales.credit,DECIMAL(10,2)), 
                                          TallySales.material_centre, 
-                                ).filter(TallySales.date.between(fromdate, todate),
-                                        ~TallySales.material_centre.like('GE %'),
+                                         
+                                ).filter(~TallySales.material_centre.like('GE %'),
                                         ~TallySales.material_centre.like('NA %'),
                                         ~TallySales.material_centre.like('AS %'),
                                         TallySales.material_centre != 'Pune', 
-                                                        )        
+                                                        )
 
         if exceptions:
             busy_sales_query = busy_sales_query.filter(~SalesKBBIO.voucher_no.in_(exceptions))
             tally_sales_query = tally_sales_query.filter(~TallySales.voucher_no.in_(exceptions))
 
-
+        
+            
         group_busysales_query = busy_sales_query.with_entities(SalesKBBIO.date, 
                                             SalesKBBIO.voucher_no, SalesKBBIO.party_type, 
                                             SalesKBBIO.dealer_code, SalesKBBIO.particulars, 
                                             cast(func.sum(SalesKBBIO.amount), DECIMAL(10, 2)).label("amt"),
                                             cast(func.sum(SalesKBBIO.tax_amt), DECIMAL(10, 2)).label("tax_amt"),
-                                            cast(func.sum(SalesKBBIO.amount + SalesKBBIO.tax_amt), DECIMAL(10, 2)).label("bill_amt")
+                                            cast(func.sum(SalesKBBIO.amount + SalesKBBIO.tax_amt), DECIMAL(10, 2)).label("bill_amt"),
+                                            
                                         ).group_by(
                                             SalesKBBIO.date, SalesKBBIO.voucher_no,
                                             SalesKBBIO.party_type, SalesKBBIO.dealer_code,
-                                            SalesKBBIO.particulars
+                                            SalesKBBIO.particulars,
                                         )
         
         # group_tallysales_query = tally_sales_query.with_entities(TallySales.date, 
@@ -326,4 +345,4 @@ class Reports(DatabaseCrud):
         tally_df = pd.DataFrame(tally_sales_query, columns=['date', 'invoice_no', 'particulars', 
                                                        'debit', 'material_centre'])
 
-        return print(busy_df)
+        return print(tally_df)
