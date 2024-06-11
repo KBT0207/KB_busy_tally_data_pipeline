@@ -353,35 +353,34 @@ def cash_discount_report(dates:list, send_email:bool, exceptions:list = None) ->
     reports = Reports(db_connector)
     # from xlwings import view
     validation_df = reports.cash_discount_validation(dates= dates, exceptions= exceptions)
-    return print(validation_df)
-    # validation_df.to_excel(fr"D:\Reports\Volume_Discount\Volume Discount Report of {dates}.xlsx", index= False)
+    # return print(validation_df)
+    validation_df.to_excel(fr"D:\Reports\Cash_Discount\Cash Discount Report of {dates}.xlsx", index= False)
     
-    # discrepancy_count = validation_df.loc[validation_df['remark'] == 'Discrepancy', 'remark'].count() 
-    # # print(discrepancy_count)
-    # if discrepancy_count > 0:
-    #     subject = f"Busy Sales Volume Discount Report of {dates} with {discrepancy_count} discrepancies"
-    #     body = f"Greetings All,\nKindly find the Busy Sales Volume Discount Report of {dates} attached with discrepancy."
-    #     attachment = fr"D:\Reports\Volume_Discount\Volume Discount Report of {dates}.xlsx"
-    #     logger.info(f"Busy Sales Volume Discount Report Exported to Excel with {discrepancy_count} Discrepencies")
+    discrepancy_count = validation_df.loc[validation_df['remark'] == 'Discrepancy', 'remark'].count() 
+    print(discrepancy_count)
+    if discrepancy_count > 0:
+        subject = f"Busy Sales Cash Discount Report of {dates} with {discrepancy_count} discrepancies"
+        body = f"Greetings All,\nKindly find the Busy Sales Cash Discount Report of {dates} attached with discrepancy."
+        logger.info(f"Busy Sales Cash Discount Report Exported to Excel with {discrepancy_count} Discrepencies")
 
-    # else:
-    #     subject = f"Busy Sales Volume Discount Report of {dates} without discrepancy"
-    #     attachment = None
-    #     body = f"Greetings All,\nAs per yesterday's sales data, there were no descrepancy found in busy sales regarding volume discount."
-    #     logger.info(f"Volume Discount Report Produced without discrepancies")
+    else:
+        subject = f"Busy Sales Cash Discount Report of {dates} without discrepancy"
+        body = f"Greetings All,\nAs per the sales data of the above mentioned dates, there were no descrepancy found in busy sales regarding Cash discount."
+        logger.info(f"Cash Discount Report Produced without discrepancies")
 
-    # if send_email:
-    #     try:
-    #         receivers = ['shivprasad@kaybeebio.com', 
-    #                     ]
-    #         cc = ['danish@kaybeeexports.com', 's.gaurav@kaybeeexports.com', 
-    #             ]
-    #         email_send(reciever= receivers, 
-    #                    cc= cc, 
-    #                    subject= subject, contents= body, attachemnts= attachment)
-    #         logger.info(f"Successfully emailed the Busy Sales Volume Discount Report.")
-    #     except Exception as e:
-    #         logger.critical(f"Failed to email the Busy Sales Volume Discount Report : {e}")
+    if send_email:
+        attachment = fr"D:\Reports\Cash_Discount\Cash Discount Report of {dates}.xlsx"
+        try:
+            receivers = ['shivprasad@kaybeebio.com', 
+                        ]
+            cc = ['danish@kaybeeexports.com', 's.gaurav@kaybeeexports.com', 
+                ]
+            email_send(reciever= receivers, 
+                       cc= cc, 
+                       subject= subject, contents= body, attachemnts= attachment)
+            logger.info(f"Successfully emailed the Busy Sales Cash Discount Report.")
+        except Exception as e:
+            logger.critical(f"Failed to email the Busy Sales Cash Discount Report : {e}")
 
 
 # def import_tally_accounts():
