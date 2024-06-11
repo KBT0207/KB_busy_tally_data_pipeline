@@ -193,7 +193,6 @@ class Reports(DatabaseCrud):
         sales_distinct_dealer_query = sales_distinct_dealer_query.with_entities(SalesKBBIO.date, 
                                             SalesKBBIO.particulars, SalesKBBIO.dealer_code, 
                                     )
-        # come back here ..requires modifications if data not found
         tally_accounts_query = (sales_distinct_dealer_query.outerjoin(TallyAccounts, 
                                                                       SalesKBBIO.dealer_code == TallyAccounts.alias_code
                                                                       ).with_entities(
@@ -253,7 +252,7 @@ class Reports(DatabaseCrud):
         results_df = sales_invoice_df.merge(outstanding_df, how= 'left', 
                                             left_on= 'busy_dealer_code', right_on= 'tally_alias_code').fillna(0)
         
-        results_df['remarks'] = np.where(results_df['balance'] >= 0, 'Matched', 'Discrepancy')
+        results_df['remark'] = np.where(results_df['balance'] >= 0, 'Matched', 'Discrepancy')
         results_df = results_df.sort_values(by=['busy_date', 'busy_particulars'])
 
         results_df = results_df.merge(tally_code_df, how= 'left', 
@@ -261,13 +260,11 @@ class Reports(DatabaseCrud):
        
         from xlwings import view
         # return sales_invoice_df, view(outstanding_df)
-        return view(results_df)
+        return results_df
         # return tally_df
 
 
-    def busy_vs_tally_sales(self, 
-                            fromdate:str, todate:str, exceptions:list,
-                            ) -> pd.DataFrame:
+    def busy_vs_tally_sales(self, fromdate:str, todate:str, exceptions:list) -> pd.DataFrame:
         
         busy_sales_query = self.Session.query(SalesKBBIO.date, SalesKBBIO.voucher_no, 
                                          SalesKBBIO.party_type, SalesKBBIO.dealer_code, 
@@ -281,14 +278,13 @@ class Reports(DatabaseCrud):
                                                         )
         tally_sales_query = self.Session.query(TallySales.date, TallySales.voucher_no, 
                                          TallySales.particulars, cast(TallySales.debit,DECIMAL(10,2)), 
-                                        #  cast(TallySales.credit,DECIMAL(10,2)), 
                                          TallySales.material_centre, 
                                 ).filter(TallySales.date.between(fromdate, todate),
                                         ~TallySales.material_centre.like('GE %'),
                                         ~TallySales.material_centre.like('NA %'),
                                         ~TallySales.material_centre.like('AS %'),
                                         TallySales.material_centre != 'Pune', 
-                                                        )        
+                                                        )
 
         if exceptions:
             busy_sales_query = busy_sales_query.filter(~SalesKBBIO.voucher_no.in_(exceptions))
@@ -307,23 +303,17 @@ class Reports(DatabaseCrud):
                                             SalesKBBIO.particulars
                                         )
         
-        # group_tallysales_query = tally_sales_query.with_entities(TallySales.date, 
-        #                                     TallySales.voucher_no, TallySales.particulars, 
-        #                                     cast(func.sum(TallySales.debit), DECIMAL(10, 2)).label("total"),
-        #                                 ).group_by(
-        #                                     TallySales.date, TallySales.voucher_no, 
-        #                                     TallySales.particulars
-        #                                 )
         
-    # Execute the query and fetch all results
         busy_result = group_busysales_query.all()
-        # tally_result = tally_sales_query
 
-        # Convert the results to a DataFrame
         busy_df = pd.DataFrame(busy_result, columns=['date', 'invoice_no', 'party_type', 'dealer_code', 
                                         'particulars', 'amt', 'tax_amt', 'bill_amt'])
 
+
         tally_df = pd.DataFrame(tally_sales_query, columns=['date', 'invoice_no', 'particulars', 
                                                        'debit', 'material_centre'])
+        
+        tally_df['tally_invoice_no'] = tally_df['invoice_no'].str.replace(r'(/0*)([1-9]\d*)$', r'/\2')
 
-        return print(busy_df)
+
+        return print(tally_df)
