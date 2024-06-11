@@ -59,8 +59,8 @@ class DatabaseConnector:
         - str: Database connection string in the format 
         'mysql+pymysql://username:password@host:port/database?autocommit=false'.
         """
-        encoded_username = quote_plus(self.username)
-        encoded_password = quote_plus(self.password)
+        encoded_username = quote_plus(self.username) 
+        encoded_password = quote_plus(self.password) 
         return f'mysql+pymysql://{encoded_username}:{encoded_password}@{self.host}:{self.port}/{self.database}?autocommit=false'
 
 

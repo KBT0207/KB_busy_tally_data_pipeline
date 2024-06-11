@@ -139,7 +139,7 @@ class Reports(DatabaseCrud):
                                               ~SalesKBBIO.material_centre.like('AS %'),
                                               )
         if exceptions:
-            query = query.filter(SalesKBBIO.voucher_no.in_(exceptions))
+            query = query.filter(~SalesKBBIO.dealer_code.in_(exceptions))
 
         group_query = query.group_by(SalesKBBIO.date, SalesKBBIO.particulars, 
                                      item_catergory_column, SalesKBBIO.discount_perc, volume_disc, cash_disc,
@@ -181,8 +181,8 @@ class Reports(DatabaseCrud):
         sales_distinct_dealer_query = sales_query.distinct(SalesKBBIO.dealer_code)
 
         if exceptions:
-            sales_distinct_invoice_query = sales_distinct_invoice_query.filter(SalesKBBIO.voucher_no.in_(exceptions))
-            sales_distinct_dealer_query = sales_distinct_dealer_query.filter(SalesKBBIO.voucher_no.in_(exceptions))
+            sales_distinct_invoice_query = sales_distinct_invoice_query.filter(~SalesKBBIO.dealer_code.in_(exceptions))
+            sales_distinct_dealer_query = sales_distinct_dealer_query.filter(~SalesKBBIO.dealer_code.in_(exceptions))
         
         #busy sales distinct invoice query
         sales_distinct_invoice_query = sales_distinct_invoice_query.with_entities(SalesKBBIO.date, SalesKBBIO.voucher_no, 
