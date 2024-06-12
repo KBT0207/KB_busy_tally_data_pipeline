@@ -273,8 +273,9 @@ class Reports(DatabaseCrud):
         def busy_to_tally():
             busy_query = self.Session.query(SalesKBBIO.date, SalesKBBIO.voucher_no, 
                                             SalesKBBIO.party_type, SalesKBBIO.dealer_code, 
-                                            SalesKBBIO.particulars, SalesKBBIO.amount, 
-                                            SalesKBBIO.tax_amt, SalesKBBIO.gst_no,
+                                            SalesKBBIO.particulars, SalesKBBIO.material_centre,
+                                            SalesKBBIO.amount, SalesKBBIO.tax_amt, 
+                                            SalesKBBIO.gst_no,
                                     ).filter(SalesKBBIO.date.between(fromdate, todate),
                                             ~SalesKBBIO.material_centre.like('GE %'),
                                             ~SalesKBBIO.material_centre.like('NA %'),
@@ -300,7 +301,8 @@ class Reports(DatabaseCrud):
 
             group_busy_query = busy_query.with_entities(SalesKBBIO.date, 
                                             SalesKBBIO.voucher_no, SalesKBBIO.party_type, 
-                                            SalesKBBIO.dealer_code, SalesKBBIO.particulars, SalesKBBIO.gst_no, 
+                                            SalesKBBIO.dealer_code, SalesKBBIO.particulars, 
+                                            SalesKBBIO.gst_no, SalesKBBIO.material_centre,  
                                             cast(func.sum(SalesKBBIO.amount), DECIMAL(10, 2)).label("amt"),
                                             cast(func.sum(SalesKBBIO.tax_amt), DECIMAL(10, 2)).label("tax_amt"),
                                             cast(func.sum(SalesKBBIO.amount + SalesKBBIO.tax_amt), DECIMAL(10, 2)).label("bill_amt"),
@@ -451,8 +453,9 @@ class Reports(DatabaseCrud):
         def busy_to_tally():
             busy_query = self.Session.query(SalesReturnKBBIO.date, SalesReturnKBBIO.voucher_no, 
                                             SalesReturnKBBIO.party_type, SalesReturnKBBIO.dealer_code, 
-                                            SalesReturnKBBIO.particulars, SalesReturnKBBIO.amount, 
-                                            SalesReturnKBBIO.tax_amt, SalesReturnKBBIO.gst_no,
+                                            SalesReturnKBBIO.particulars, SalesReturnKBBIO.material_centre,
+                                            SalesReturnKBBIO.amount, SalesReturnKBBIO.tax_amt, 
+                                            SalesReturnKBBIO.gst_no, 
                                     ).filter(SalesReturnKBBIO.date.between(fromdate, todate),
                                             ~SalesReturnKBBIO.material_centre.like('GE %'),
                                             ~SalesReturnKBBIO.material_centre.like('NA %'),
@@ -461,7 +464,7 @@ class Reports(DatabaseCrud):
                                                             )
         
             tally_query = self.Session.query(TallySalesReturn.date, TallySalesReturn.voucher_no, 
-                                         TallySalesReturn.particulars, cast(TallySalesReturn.debit,DECIMAL(10,2)), 
+                                         TallySalesReturn.particulars, cast(TallySalesReturn.credit,DECIMAL(10,2)), 
                                          TallySalesReturn.material_centre, 
                                     ).outerjoin(TallyAccounts, TallySalesReturn.particulars == TallyAccounts.ledger_name
                                 ).filter(~TallySalesReturn.material_centre.like('GE %'),
@@ -469,8 +472,8 @@ class Reports(DatabaseCrud):
                                         ~TallySalesReturn.material_centre.like('AS %'),
                                         TallySalesReturn.material_centre != 'Pune', 
                                             ).with_entities(TallySalesReturn.date, TallySalesReturn.voucher_no, 
-                                        TallySalesReturn.particulars, cast(TallySalesReturn.debit,DECIMAL(10,2)), 
-                                        TallySalesReturn.material_centre, TallyAccounts.ledger_name,
+                                        TallySalesReturn.particulars, cast(TallySalesReturn.credit,DECIMAL(10,2)), 
+                                        TallySalesReturn.material_centre, TallyAccounts.gst_no, 
                                                         )
             if exceptions:
                 busy_query = busy_query.filter(~SalesReturnKBBIO.voucher_no.in_(exceptions))
@@ -478,26 +481,28 @@ class Reports(DatabaseCrud):
 
             group_busy_query = busy_query.with_entities(SalesReturnKBBIO.date, 
                                             SalesReturnKBBIO.voucher_no, SalesReturnKBBIO.party_type, 
-                                            SalesReturnKBBIO.dealer_code, SalesReturnKBBIO.particulars, SalesReturnKBBIO.gst_no,
+                                            SalesReturnKBBIO.dealer_code, SalesReturnKBBIO.particulars, 
+                                            SalesReturnKBBIO.gst_no, SalesReturnKBBIO.material_centre, 
                                             cast(func.sum(SalesReturnKBBIO.amount), DECIMAL(10, 2)).label("amt"),
                                             cast(func.sum(SalesReturnKBBIO.tax_amt), DECIMAL(10, 2)).label("tax_amt"),
                                             cast(func.sum(SalesReturnKBBIO.amount + SalesReturnKBBIO.tax_amt), DECIMAL(10, 2)).label("bill_amt"),
                                         ).group_by(
                                             SalesReturnKBBIO.date, SalesReturnKBBIO.voucher_no,
                                             SalesReturnKBBIO.party_type, SalesReturnKBBIO.dealer_code,
-                                            SalesReturnKBBIO.particulars, SalesReturnKBBIO.gst_no,
+                                            SalesReturnKBBIO.particulars, SalesReturnKBBIO.material_centre, 
+                                            SalesReturnKBBIO.gst_no,
                                         )
             
             busy_df = pd.DataFrame(group_busy_query, columns=['busy_invoice_date', 'busy_invoice_no', 'party_type', 'dealer_code', 
-                                        'busy_particulars', 'busy_gst_no', 'amt', 'tax_amt', 'bill_amt'])
+                                        'busy_particulars', 'busy_gst_no', 'busy_material_centre', 'amt', 'tax_amt', 'bill_amt'])
             columns = ['amt', 'tax_amt', 'bill_amt']
             for col in columns:
                 busy_df[col] = pd.to_numeric(busy_df[col])
 
             tally_df = pd.DataFrame(tally_query, columns=['tally_invoice_date', 'tally invoice_no', 
-                                                          'tally_particulars', 'debit', 'material_centre', 
+                                                          'tally_particulars', 'credit', 'tally_material_centre', 
                                                           'tally_gst_no'])
-            tally_df['debit'] = pd.to_numeric(tally_df['debit'])
+            tally_df['credit'] = pd.to_numeric(tally_df['credit'])
             
             def remove_trailing_zeros(row: str):
                 import re
@@ -525,14 +530,15 @@ class Reports(DatabaseCrud):
                 
             busy_df['updated_busy_invoice_no'] = busy_df['busy_invoice_no'].apply(remove_trailing_zeros)    
             tally_df['updated_tally_invoice_no'] = tally_df['tally invoice_no'].apply(remove_trailing_zeros)
-
+         
             busy_to_tally_df = busy_df.merge(tally_df, how='left', 
                                             left_on= 'updated_busy_invoice_no', right_on= 'updated_tally_invoice_no')
-            busy_to_tally_df['amount_diff'] = pd.to_numeric(busy_to_tally_df['bill_amt'] - busy_to_tally_df['debit']).abs()
+            busy_to_tally_df['amount_diff'] = pd.to_numeric(busy_to_tally_df['bill_amt'] - busy_to_tally_df['credit']).abs()
             busy_to_tally_df['gst_remark'] = busy_to_tally_df.apply(gst_validation, axis=1)
 
-            return view(busy_to_tally_df)
+            return view(tally_df)
         
+
         
         # def tally_to_busy():
         #     tally_query = self.Session.query(TallySalesReturn.date, TallySalesReturn.voucher_no, 
