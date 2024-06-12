@@ -267,7 +267,7 @@ class Reports(DatabaseCrud):
         # return tally_df
 
         
-
+    # duplicates in result data
     def sales_validation(self, fromdate, todate, exceptions:list) -> pd.DataFrame:
         
         def busy_to_tally():
@@ -306,21 +306,21 @@ class Reports(DatabaseCrud):
                                             cast(func.sum(SalesKBBIO.amount), DECIMAL(10, 2)).label("amt"),
                                             cast(func.sum(SalesKBBIO.tax_amt), DECIMAL(10, 2)).label("tax_amt"),
                                             cast(func.sum(SalesKBBIO.amount + SalesKBBIO.tax_amt), DECIMAL(10, 2)).label("bill_amt"),
-                                        ).group_by(
-                                            SalesKBBIO.date, SalesKBBIO.voucher_no,
+                                        ).group_by(SalesKBBIO.date, SalesKBBIO.voucher_no,
                                             SalesKBBIO.party_type, SalesKBBIO.dealer_code,
-                                            SalesKBBIO.particulars, SalesKBBIO.gst_no,
+                                            SalesKBBIO.particulars, SalesKBBIO.gst_no, 
+                                            SalesKBBIO.material_centre,
                                         )
             
             busy_df = pd.DataFrame(group_busy_query, columns=['busy_invoice_date', 'busy_invoice_no', 'party_type', 
                                                               'dealer_code', 'busy_particulars', 'busy_gst_no', 
-                                                              'amt', 'tax_amt', 'bill_amt'])
+                                                              'busy_material_centre', 'amt', 'tax_amt', 'bill_amt'])
             columns = ['amt', 'tax_amt', 'bill_amt']
             for col in columns:
                 busy_df[col] = pd.to_numeric(busy_df[col])
 
             tally_df = pd.DataFrame(tally_query, columns=['tally_invoice_date', 'tally invoice_no', 'tally_particulars', 
-                                                       'debit', 'material_centre', 'tally_gst_no'])
+                                                       'debit', 'tally_material_centre', 'tally_gst_no'])
             tally_df['debit'] = pd.to_numeric(tally_df['debit'])
             
             def remove_trailing_zeros(row:str):
@@ -341,7 +341,7 @@ class Reports(DatabaseCrud):
                     return "Not Required"
                 
             tally_df['updated_tally_invoice_no'] = tally_df['tally invoice_no'].apply(remove_trailing_zeros)
-
+            tally_df = tally_df.drop_duplicates(subset='updated_tally_invoice_no')
             busy_to_tally_df = busy_df.merge(tally_df, how='left', 
                                             left_on= 'busy_invoice_no', right_on= 'updated_tally_invoice_no')
             busy_to_tally_df['amount_diff'] = pd.to_numeric(busy_to_tally_df['bill_amt'] - busy_to_tally_df['debit']).abs()
@@ -426,7 +426,7 @@ class Reports(DatabaseCrud):
                     return "Not Required"
                 
             tally_df['updated_tally_invoice_no'] = tally_df['tally invoice_no'].apply(remove_trailing_zeros)
-
+            tally_df = tally_df.drop_duplicates(subset='updated_tally_invoice_no')
             tally_to_busy_df = tally_df.merge(busy_df, how='left', 
                                             left_on= 'updated_tally_invoice_no', right_on= 'busy_invoice_no')
             tally_to_busy_df['amount_diff'] = pd.to_numeric(tally_to_busy_df['bill_amt'] - tally_to_busy_df['debit']).abs()
@@ -517,7 +517,8 @@ class Reports(DatabaseCrud):
                         parts[-1] = '0'  # Handle case where cleaned_last_part becomes empty
                     return '/'.join(parts)
                 else:
-                    return row
+                    cleaned_invoice_no = re.sub(r'([A-Z]+)0+([1-9][0-9]*)', r'\1\2', row)
+                    return cleaned_invoice_no
                 
             def gst_validation(row):
                 if row['busy_gst_no']:
@@ -531,12 +532,13 @@ class Reports(DatabaseCrud):
             busy_df['updated_busy_invoice_no'] = busy_df['busy_invoice_no'].apply(remove_trailing_zeros)    
             tally_df['updated_tally_invoice_no'] = tally_df['tally invoice_no'].apply(remove_trailing_zeros)
          
+            tally_df = tally_df.drop_duplicates(subset='updated_tally_invoice_no')
             busy_to_tally_df = busy_df.merge(tally_df, how='left', 
                                             left_on= 'updated_busy_invoice_no', right_on= 'updated_tally_invoice_no')
             busy_to_tally_df['amount_diff'] = pd.to_numeric(busy_to_tally_df['bill_amt'] - busy_to_tally_df['credit']).abs()
             busy_to_tally_df['gst_remark'] = busy_to_tally_df.apply(gst_validation, axis=1)
 
-            return view(tally_df)
+            return view(busy_to_tally_df)
         
 
         

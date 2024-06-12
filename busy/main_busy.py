@@ -57,7 +57,7 @@ def exporting_sales():
 
                 endate_str = endate.strftime("%d-%m-%Y")
                 #endate_str = "03-05-2024"
-                #startdate_str = "01-05-2024"
+                #startdate_str = "01-04-2024"
                 startdate_str = startdate.strftime("%d-%m-%Y")
                 
                 try:
