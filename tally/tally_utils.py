@@ -29,8 +29,10 @@ def close_rdc() -> None:
 
 
 def start_tally() -> None:
-    find_img('tally/images/tally_desktop.png', conf=0.9)
-    pg.doubleClick()    
+    pg.hotkey('win', 'r')
+    time.sleep(0.5)
+    pg.typewrite(r'C:\Program Files\TallyPrime\tally.exe', interval=0.2)
+    pg.press('enter')    
     
 
 

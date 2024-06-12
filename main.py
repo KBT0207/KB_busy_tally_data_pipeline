@@ -36,7 +36,7 @@ def busy_material_masters():
 
 def export_import_outstanding_tallydata():
     dates = [(datetime.today().date()- timedelta(days=1)).strftime("%d-%m-%Y"),
-             (datetime.today().date()- timedelta(days=2)).strftime("%d-%m-%Y")]                    #yesterday
+            ]                    #yesterday
     companies = sorted(list(balance_comp_codes.keys()))
     main_tally.exporting_outstanding_balance(company= companies, dates= dates)
     main_db.import_outstanding_tallydata(dates=dates)
@@ -60,24 +60,26 @@ def reports():
     main_db.volume_discount_report(dates= [todate], send_email=True, 
                                    exceptions= ['KAYBEE/001 A'])
 
+    main_db.cash_discount_report(dates= [todate], send_email=True, 
+                                   exceptions= ['KAYBEE/001 A'])
 
 if __name__ == "__main__":
   
-    main_db.rep()
+    # main_db.rep()
 
-    # schedule.every().day.at("21:00").do(busy_sales)
+    schedule.every().day.at("21:00").do(busy_sales)
 
-    # schedule.every().day.at("09:32").do(export_import_outstanding_tallydata)
+    schedule.every().day.at("03:15").do(export_import_outstanding_tallydata)
     
-    # schedule.every().day.at("00:05").do(busy_material_masters)
+    schedule.every().day.at("00:05").do(busy_material_masters)
 
-    # schedule.every().day.at("05:15").do(tally_to_sql)
+    schedule.every().day.at("05:15").do(tally_to_sql)
 
-    # schedule.every().day.at("10:00").do(reports)
+    schedule.every().day.at("10:00").do(reports)
     
-    # while True:
-    #     schedule.run_pending()
-    #     time.sleep(1)    
+    while True:
+        schedule.run_pending()
+        time.sleep(1)    
 
     # current_date = datetime.today().strftime("%d-%b-%Y")
     # main_db.import_tally_data(date= current_date)
