@@ -52,12 +52,12 @@ def exporting_sales():
                 export_busy_reports.transaction_report_selection(report= rep_func)
 
                 endate = datetime.today().date()
-                #endate = "2024-05-03"
+                # endate = "2024-06-13"
                 startdate = endate - timedelta(days=2)
 
                 endate_str = endate.strftime("%d-%m-%Y")
-                #endate_str = "03-05-2024"
-                #startdate_str = "01-04-2024"
+                # endate_str = "13-06-2024"
+                # startdate_str = "11-06-2024"
                 startdate_str = startdate.strftime("%d-%m-%Y")
                 
                 try:

@@ -10,8 +10,11 @@ from utils.common_utils import tally_comp_codes, balance_comp_codes
 
 def tally_to_sql():
     current_date = datetime.today().strftime("%d-%b-%Y")
+    # current_date = 'Apr-24-Jun-24'
     startdate = (datetime.today().date() - timedelta(days=2)).strftime("%Y-%m-%d")
+    # startdate = '2024-04-01'
     endate = (datetime.today().date() - timedelta(days=1)).strftime("%Y-%m-%d")
+    # endate = '2024-06-12'
     companies = sorted(list(tally_comp_codes.keys()))
     
     main_tally.exporting_data(company=companies)
@@ -66,16 +69,16 @@ def reports():
 
 
 if __name__ == "__main__":
-  
-    main_db.rep()
+
+    reports()
 
     # schedule.every().day.at("21:00").do(busy_sales)
 
-    # schedule.every().day.at("07:14").do(export_import_outstanding_tallydata)
+    # schedule.every().day.at("03:15").do(export_import_outstanding_tallydata)
     
     # schedule.every().day.at("00:05").do(busy_material_masters)
 
-    # schedule.every().day.at("09:48").do(tally_to_sql)
+    # schedule.every().day.at("05:15").do(tally_to_sql)
 
     # schedule.every().day.at("10:00").do(reports)
     
@@ -94,17 +97,3 @@ if __name__ == "__main__":
     # main_db.one(path= f, commit= True)
     # start_date = datetime.date(year= 2024, month= 5, day=1)
     # end_date = datetime.today().date() - timedelta(days=1)
-    # exe = ['KAYBEE/001 A']
-    # main_db.cash_discount_report(dates= ['2024-06-01', 
-    #                                      '2024-06-02', '2024-06-03', '2024-06-04', '2024-06-05',
-    #                                      ], send_email= False)
-
-    # todays_date = datetime.today().strftime("%d-%b-%Y")
-    # # todays_date = "Apr-17-May-24"
-    # from_date = (datetime.today() - timedelta(days=2)).strftime("%d-%m-%Y")
-    # # from_date = "1-4-2017"
-    # to_date = (datetime.today().date() - timedelta(days=1)).strftime("%d-%m-%Y")
-    # # to_date = "15-5-2024"
-
-    
-    

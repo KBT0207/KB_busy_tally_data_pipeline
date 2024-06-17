@@ -31,7 +31,7 @@ def close_rdc() -> None:
 def start_tally() -> None:
     pg.hotkey('win', 'r')
     time.sleep(0.5)
-    pg.typewrite(r'C:\Program Files\TallyPrime\tally.exe', interval=0.2)
+    pg.typewrite(r'C:\Program Files\TallyPrime\tally.exe', interval=0.1)
     pg.press('enter')    
     
 
@@ -39,12 +39,12 @@ def start_tally() -> None:
 def select_company(company_code):
     find_img('tally/images/tally_start.png', conf=0.95)
     time.sleep(1)
-    pg.typewrite(str(company_code), interval=0.4)
+    pg.typewrite(str(company_code), interval=0.2)
     pg.press("enter")
     find_img('tally/images/tally_username.png')
-    pg.typewrite(os.getenv('TALLY_USERNAME'), interval=0.2)
+    pg.typewrite(os.getenv('TALLY_USERNAME'), interval=0.1)
     pg.press('enter')
-    pg.typewrite(os.getenv('TALLY_PASSWORD'), interval=0.2)
+    pg.typewrite(os.getenv('TALLY_PASSWORD'), interval=0.1)
     pg.press('enter')
 
 

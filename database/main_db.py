@@ -30,9 +30,9 @@ def delete_busy_sales():
     current_date = datetime.today().date()
     # current_date = datetime.today().date()-timedelta(days=1)
     date1 = current_date - timedelta(days=2)
-    # date1= "2024-05-06"
+    # date1= "2024-06-11"
     date2 = current_date - timedelta(days=1)
-    # date2= "2024-05-07"
+    # date2= "2024-06-14"
 
     tables_list = list(busy_tables.keys())
     importer = DatabaseCrud(db_connector)
@@ -79,7 +79,7 @@ def import_busy_sales():
     
     # todays_date = "Apr-2024"
     todays_date = datetime.today().strftime("%d-%b-%Y")
-    # todays_date = '25-May-2024'
+    # todays_date = '13-Jun-2024'
     busy_files = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*sales*{todays_date}.xlsx", recursive=True)
     if len(busy_files) != 0:
         for file in busy_files:

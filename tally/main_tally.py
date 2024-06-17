@@ -10,11 +10,11 @@ from logging_config import logger
 def exporting_data(company):
     pg.hotkey("win", "d")
     todays_date = datetime.today().strftime("%d-%b-%Y")
-    # todays_date = "Apr-17-May-24"
+    # todays_date = "Apr-24-Jun-24"
     from_date = (datetime.today() - timedelta(days=2)).strftime("%d-%m-%Y")
     # from_date = "01-04-2024"
     to_date = datetime.today().strftime("%d-%m-%Y")
-    # to_date = "10-06-2024"
+    # to_date = "12-06-2024"
 
     tally_utils.start_tally()
     logger.info("Tally started...")
