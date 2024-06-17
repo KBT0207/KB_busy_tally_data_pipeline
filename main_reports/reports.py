@@ -10,7 +10,7 @@ from database.models.busy_models.busy_pricing import BusyPricingKBBIO
 from database.models.busy_models.busy_accounts import (BusyAccounts100x, BusyAccountsAgri, 
                                                     BusyAccountsGreenEra, BusyAccountsKBBIO,
                                                     BusyAccountsNewAge)
-from database.models.busy_models.busy_reports import (SalesKBBIO, SalesOrderKBBIO, SalesReturnKBBIO,)
+from database.models.busy_models.busy_reports import (SalesKBBIO, SalesOrderKBBIO, SalesReturnKBBIO, MITPKBBIO, MRFPKBBIO)
 from database.models.tally_models.tally_report_models import (TallyAccounts, TallyOutstandingBalance, 
                                                               TallySales, TallySalesReturn,)
 
@@ -538,97 +538,148 @@ class Reports(DatabaseCrud):
             busy_to_tally_df['amount_diff'] = pd.to_numeric(busy_to_tally_df['bill_amt'] - busy_to_tally_df['credit']).abs()
             busy_to_tally_df['gst_remark'] = busy_to_tally_df.apply(gst_validation, axis=1)
 
-            return view(busy_to_tally_df)
+            return busy_to_tally_df
         
 
         
-        # def tally_to_busy():
-        #     tally_query = self.Session.query(TallySalesReturn.date, TallySalesReturn.voucher_no, 
-        #                                  TallySalesReturn.particulars, cast(TallySalesReturn.debit,DECIMAL(10,2)), 
-        #                                  TallySalesReturn.material_centre, 
-        #                             ).outerjoin(TallyAccounts, TallySales.particulars == TallyAccounts.ledger_name
-        #                         ).filter(TallySalesReturn.date.between(fromdate, todate), 
-        #                                 ~TallySalesReturn.material_centre.like('GE %'),
-        #                                 ~TallySalesReturn.material_centre.like('NA %'),
-        #                                 ~TallySalesReturn.material_centre.like('AS %'),
-        #                                 TallySalesReturn.material_centre != 'Pune', 
-        #                                     ).with_entities(TallySalesReturn.date, 
-        #                                             TallySalesReturn.voucher_no, 
-        #                                             TallySalesReturn.particulars, 
-        #                                             cast(TallySalesReturn.debit,DECIMAL(10,2)), 
-        #                                             TallySalesReturn.material_centre, TallyAccounts.ledger_name, 
-        #                                             )
+        def tally_to_busy():
+            tally_query = self.Session.query(TallySalesReturn.date, TallySalesReturn.voucher_no, 
+                                         TallySalesReturn.particulars, cast(TallySalesReturn.credit,DECIMAL(10,2)), 
+                                         TallySalesReturn.material_centre, TallySalesReturn.voucher_type,
+                                    ).outerjoin(TallyAccounts, TallySalesReturn.particulars == TallyAccounts.ledger_name
+                                ).filter(TallySalesReturn.date.between(fromdate, todate), 
+                                        ~TallySalesReturn.material_centre.like('GE %'),
+                                        ~TallySalesReturn.material_centre.like('NA %'),
+                                        ~TallySalesReturn.material_centre.like('AS %'),
+                                        TallySalesReturn.material_centre != 'Pune', 
+                                        ~TallySalesReturn.voucher_type.contains('Discount'), 
+                                            ).with_entities(TallySalesReturn.date, 
+                                                    TallySalesReturn.voucher_no, 
+                                                    TallySalesReturn.particulars, 
+                                                    cast(TallySalesReturn.credit,DECIMAL(10,2)), 
+                                                    TallySalesReturn.material_centre, TallyAccounts.gst_no, 
+                                                    )
         
-        #     busy_query = self.Session.query(SalesReturnKBBIO.date, SalesReturnKBBIO.voucher_no, 
-        #                                  SalesReturnKBBIO.party_type, SalesReturnKBBIO.dealer_code, 
-        #                                  SalesReturnKBBIO.particulars, SalesReturnKBBIO.amount, 
-        #                                  SalesReturnKBBIO.tax_amt, SalesReturnKBBIO.gst_no, 
-        #                         ).filter(~SalesReturnKBBIO.material_centre.like('GE %'),
-        #                                 ~SalesReturnKBBIO.material_centre.like('NA %'),
-        #                                 ~SalesReturnKBBIO.material_centre.like('AS %'), 
-        #                                 SalesReturnKBBIO.material_centre != 'Pune', 
-        #                                                 )
+            busy_query = self.Session.query(SalesReturnKBBIO.date, SalesReturnKBBIO.voucher_no, 
+                                         SalesReturnKBBIO.party_type, SalesReturnKBBIO.dealer_code, 
+                                         SalesReturnKBBIO.particulars, SalesReturnKBBIO.amount, 
+                                         SalesReturnKBBIO.tax_amt, SalesReturnKBBIO.gst_no, 
+                                ).filter(~SalesReturnKBBIO.material_centre.like('GE %'),
+                                        ~SalesReturnKBBIO.material_centre.like('NA %'),
+                                        ~SalesReturnKBBIO.material_centre.like('AS %'), 
+                                        SalesReturnKBBIO.material_centre != 'Pune', 
+                                                        )
             
-        #     if exceptions:
-        #         tally_query = tally_query.filter(~TallySalesReturn.voucher_no.in_(exceptions))
-        #         busy_query = busy_query.filter(~SalesReturnKBBIO.voucher_no.in_(exceptions))
+            if exceptions:
+                tally_query = tally_query.filter(~TallySalesReturn.voucher_no.in_(exceptions))
+                busy_query = busy_query.filter(~SalesReturnKBBIO.voucher_no.in_(exceptions))
 
-        #     group_busy_query = busy_query.with_entities(SalesReturnKBBIO.date, 
-        #                                     SalesReturnKBBIO.voucher_no, SalesReturnKBBIO.party_type, 
-        #                                     SalesReturnKBBIO.dealer_code, SalesReturnKBBIO.particulars, SalesReturnKBBIO.gst_no,
-        #                                     cast(func.sum(SalesReturnKBBIO.amount), DECIMAL(10, 2)).label("amt"),
-        #                                     cast(func.sum(SalesReturnKBBIO.tax_amt), DECIMAL(10, 2)).label("tax_amt"),
-        #                                     cast(func.sum(SalesReturnKBBIO.amount + SalesReturnKBBIO.tax_amt), DECIMAL(10, 2)).label("bill_amt"),
-        #                                 ).group_by(
-        #                                     SalesReturnKBBIO.date, SalesReturnKBBIO.voucher_no,
-        #                                     SalesReturnKBBIO.party_type, SalesReturnKBBIO.dealer_code,
-        #                                     SalesReturnKBBIO.particulars, SalesReturnKBBIO.gst_no,
-        #                                         )
+            group_busy_query = busy_query.with_entities(SalesReturnKBBIO.date, 
+                                            SalesReturnKBBIO.voucher_no, SalesReturnKBBIO.party_type, 
+                                            SalesReturnKBBIO.dealer_code, SalesReturnKBBIO.particulars, 
+                                            SalesReturnKBBIO.material_centre, SalesReturnKBBIO.gst_no,
+                                            cast(func.sum(SalesReturnKBBIO.amount), DECIMAL(10, 2)).label("amt"),
+                                            cast(func.sum(SalesReturnKBBIO.tax_amt), DECIMAL(10, 2)).label("tax_amt"),
+                                            cast(func.sum(SalesReturnKBBIO.amount + SalesReturnKBBIO.tax_amt), DECIMAL(10, 2)).label("bill_amt"),
+                                        ).group_by(
+                                            SalesReturnKBBIO.date, SalesReturnKBBIO.voucher_no,
+                                            SalesReturnKBBIO.party_type, SalesReturnKBBIO.dealer_code,
+                                            SalesReturnKBBIO.particulars, SalesReturnKBBIO.material_centre, 
+                                            SalesReturnKBBIO.gst_no,
+                                                )
             
-        #     busy_df = pd.DataFrame(group_busy_query, columns=['busy_invoice_date', 'busy_invoice_no', 'party_type', 
-        #                                                       'dealer_code', 'busy_particulars', 'busy_gst_no', 
-        #                                                       'amt', 'tax_amt', 'bill_amt'])
-        #     columns = ['amt', 'tax_amt', 'bill_amt']
-        #     for col in columns:
-        #         busy_df[col] = pd.to_numeric(busy_df[col])
+            busy_df = pd.DataFrame(group_busy_query, columns=['busy_invoice_date', 'busy_invoice_no', 'party_type', 
+                                                              'dealer_code', 'busy_particulars', 'busy_material_centre', 
+                                                              'busy_gst_no', 'amt', 'tax_amt', 'bill_amt'])
+            columns = ['amt', 'tax_amt', 'bill_amt']
+            for col in columns:
+                busy_df[col] = pd.to_numeric(busy_df[col])
 
-        #     tally_df = pd.DataFrame(tally_query, columns=['tally_invoice_date', 'tally invoice_no', 'tally_particulars', 
-        #                                                'debit', 'material_centre', 'tally_gst_no'])
-        #     tally_df['debit'] = pd.to_numeric(tally_df['debit'])
+            tally_df = pd.DataFrame(tally_query, columns=['tally_invoice_date', 'tally_invoice_no', 'tally_particulars', 
+                                                       'credit', 'tally_material_centre', 'tally_gst_no'])
+            tally_df['credit'] = pd.to_numeric(tally_df['credit'])
         
-        #     def remove_trailing_zeros(row:str):
-        #         if '/' in row:
-        #             parts = row.split('/')
-        #             parts[-1] = str(int(parts[-1]))
-        #             return '/'.join(parts)
-        #         else:
-        #             return row
+            def remove_trailing_zeros(row: str):
+                import re
+                if '/' in row:
+                    parts = row.split('/')
+                    # Remove non-digit characters from the last part
+                    cleaned_last_part = re.sub(r'\D', '', parts[-1])
+                    # Convert to integer to remove leading zeros and back to string
+                    if cleaned_last_part:  # Check if cleaned_last_part is not empty
+                        parts[-1] = str(int(cleaned_last_part))
+                    else:
+                        parts[-1] = '0'  # Handle case where cleaned_last_part becomes empty
+                    return '/'.join(parts)
+                else:
+                    cleaned_invoice_no = re.sub(r'([A-Z]+)0+([1-9][0-9]*)', r'\1\2', row)
+                    return cleaned_invoice_no
                 
-        #     def gst_validation(row):
-        #         if row['tally_gst_no']:
-        #             if row['tally_gst_no'] == row['busy_gst_no']:
-        #                 return "Matched"
-        #             else:
-        #                 return "Not Matched"
-        #         else:
-        #             return "Not Required"
+            def gst_validation(row):
+                if row['busy_gst_no']:
+                    if row['busy_gst_no'] == row['tally_gst_no']:
+                        return "Matched"
+                    else:
+                        return "Not Matched"
+                else:
+                    return "Not Required"
 
-        #     tally_df['updated_tally_invoice_no'] = tally_df['tally invoice_no'].apply(remove_trailing_zeros)
+            tally_df['updated_tally_invoice_no'] = tally_df['tally_invoice_no'].apply(remove_trailing_zeros)
+            busy_df['updated_busy_invoice_no'] = busy_df['busy_invoice_no'].apply(remove_trailing_zeros)
+            tally_df = tally_df.drop_duplicates(subset='updated_tally_invoice_no')
+            tally_to_busy_df = tally_df.merge(busy_df, how='left', 
+                                            left_on= 'updated_tally_invoice_no', right_on= 'updated_busy_invoice_no')
+            tally_to_busy_df['amount_diff'] = pd.to_numeric(tally_to_busy_df['bill_amt'] - tally_to_busy_df['credit']).abs()
+            tally_to_busy_df['gst_remark'] = tally_to_busy_df.apply(gst_validation, axis=1)
 
-        #     tally_to_busy_df = tally_df.merge(busy_df, how='left', 
-        #                                     left_on= 'updated_tally_invoice_no', right_on= 'busy_invoice_no')
-        #     tally_to_busy_df['amount_diff'] = pd.to_numeric(tally_to_busy_df['bill_amt'] - tally_to_busy_df['debit'])
-        #     tally_to_busy_df['gst_remark'] = tally_to_busy_df.apply(gst_validation, axis=1)
-
-        #     # from xlwings import view
-        #     # return view(tally_to_busy_df)
-        #     return tally_to_busy_df
+            from xlwings import view
+            # return view(tally_to_busy_df)
+            return tally_to_busy_df
 
         result_busy_to_tally = busy_to_tally()
-        # result_tally_to_busy = tally_to_busy()
+        result_tally_to_busy = tally_to_busy()
       
-        # file_path = fr'D:\Reports\Sales_Return_Validation\Busy_vs_Tally_Sales_Return_Reco_Month-to-{todate}.xlsx'
+        file_path = fr'D:\Reports\Sales_Return_Validation\Busy_vs_Tally_Sales_Return_Reco_Month-to-{todate}.xlsx'
 
-        # with pd.ExcelWriter(file_path) as writer:
-        #     result_busy_to_tally.to_excel(writer, sheet_name='Busy Sales Return', index=False)
-            # result_tally_to_busy.to_excel(writer, sheet_name='Tally Sales Return', index=False)
+        with pd.ExcelWriter(file_path) as writer:
+            result_busy_to_tally.to_excel(writer, sheet_name='Busy Sales Return', index=False)
+            result_tally_to_busy.to_excel(writer, sheet_name='Tally Sales Return', index=False)
+
+
+
+    def salesorder_mitp_reco(self, fromdate, todate, exceptions:list) -> pd.DataFrame:
+        salesorder_query = self.Session.query(SalesOrderKBBIO.date, SalesOrderKBBIO.voucher_no, 
+                                                   SalesOrderKBBIO.particulars, SalesOrderKBBIO.item_details, 
+                                                   SalesOrderKBBIO.material_centre, SalesOrderKBBIO.main_qty, 
+                                                   SalesOrderKBBIO.main_unit,
+                                ).outerjoin(MITPKBBIO, 
+                                            and_(SalesOrderKBBIO.voucher_no == MITPKBBIO.sales_order_no, 
+                                                 SalesOrderKBBIO.material_centre == MITPKBBIO.material_centre, 
+                                                 SalesOrderKBBIO.item_details == MITPKBBIO.item_details, 
+                                                 SalesOrderKBBIO.main_unit == MITPKBBIO.main_unit, 
+                                                )
+                                    ).filter(SalesOrderKBBIO.date.between(fromdate, todate), 
+                                    ).order_by(SalesOrderKBBIO.date, SalesOrderKBBIO.voucher_no
+                                        ).with_entities(SalesOrderKBBIO.date, SalesOrderKBBIO.voucher_no, 
+                                                        SalesOrderKBBIO.particulars, SalesOrderKBBIO.item_details, 
+                                                        SalesOrderKBBIO.material_centre, SalesOrderKBBIO.main_qty, 
+                                                        SalesOrderKBBIO.main_unit, 
+                                                        MITPKBBIO.date, MITPKBBIO.sales_order_no, 
+                                                        MITPKBBIO.particulars, MITPKBBIO.item_details, 
+                                                        MITPKBBIO.material_centre, MITPKBBIO.main_qty, 
+                                                        MITPKBBIO.main_unit,
+                                                    )
+        if exceptions:
+            salesorder_query = salesorder_query.filter(SalesOrderKBBIO.voucher_no.in_(exceptions))
+
+        salesorder_df = pd.DataFrame(salesorder_query, columns= ['salesorder_date', 'salesorder_no', 'salesorder_particulars', 
+                                                                 'salesorder_items', 'salesorder_material_centre', 
+                                                                 'salesorder_qty', 'salesorder_unit',
+                                                                 'mitp_date', 'mitp_salesorder_no', 'mitp_particulars', 
+                                                     'mitp_items', 'mitp_material_centre', 
+                                                     'mitp_qty', 'mitp_unit',
+                                                                 ])
+        
+        salesorder_df['remark'] = np.where(salesorder_df['salesorder_qty'] >= salesorder_df['mitp_qty'], "Pass", "Discrepancy")
+
+        return view(salesorder_df)

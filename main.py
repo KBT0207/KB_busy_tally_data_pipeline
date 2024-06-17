@@ -18,8 +18,8 @@ def tally_to_sql():
     companies = sorted(list(tally_comp_codes.keys()))
     
     main_tally.exporting_data(company=companies)
-    # main_db.delete_tally_data(start_date= startdate, end_date= endate, commit=True)
-    # main_db.import_tally_data(date= current_date)
+    main_db.delete_tally_data(start_date= startdate, end_date= endate, commit=True)
+    main_db.import_tally_data(date= current_date)
 
 
 def busy_sales():
@@ -69,9 +69,7 @@ def reports():
 
 
 if __name__ == "__main__":
-
-    reports()
-
+    main_db.rep()
     # schedule.every().day.at("21:00").do(busy_sales)
 
     # schedule.every().day.at("03:15").do(export_import_outstanding_tallydata)
