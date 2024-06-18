@@ -254,10 +254,10 @@ class Reports(DatabaseCrud):
         
         results_df = sales_invoice_df.merge(outstanding_df, how= 'left', 
                                             left_on= 'busy_dealer_code', right_on= 'tally_alias_code').fillna(0)
-        
-        results_df['remark'] = np.where(results_df['balance'] >= 0, 'Matched', 'Discrepancy')
+                
+        results_df['remark'] = np.where(results_df['Cr Balance'] >= 0, 'Matched', 'Discrepancy')
         results_df = results_df.sort_values(by=['busy_date', 'busy_particulars'])
-
+        results_df['Cr Balance'] = pd.to_numeric(results_df['Cr Balance'])
         results_df = results_df.merge(tally_code_df, how= 'left', 
                                       left_on= 'busy_dealer_code', right_on= 'tally_dealer_code_new')
        
@@ -649,37 +649,48 @@ class Reports(DatabaseCrud):
 
     def salesorder_mitp_reco(self, fromdate, todate, exceptions:list) -> pd.DataFrame:
         salesorder_query = self.Session.query(SalesOrderKBBIO.date, SalesOrderKBBIO.voucher_no, 
-                                                   SalesOrderKBBIO.particulars, SalesOrderKBBIO.item_details, 
-                                                   SalesOrderKBBIO.material_centre, SalesOrderKBBIO.main_qty, 
-                                                   SalesOrderKBBIO.main_unit,
-                                ).outerjoin(MITPKBBIO, 
-                                            and_(SalesOrderKBBIO.voucher_no == MITPKBBIO.sales_order_no, 
-                                                 SalesOrderKBBIO.material_centre == MITPKBBIO.material_centre, 
-                                                 SalesOrderKBBIO.item_details == MITPKBBIO.item_details, 
-                                                 SalesOrderKBBIO.main_unit == MITPKBBIO.main_unit, 
-                                                )
-                                    ).filter(SalesOrderKBBIO.date.between(fromdate, todate), 
-                                    ).order_by(SalesOrderKBBIO.date, SalesOrderKBBIO.voucher_no
-                                        ).with_entities(SalesOrderKBBIO.date, SalesOrderKBBIO.voucher_no, 
-                                                        SalesOrderKBBIO.particulars, SalesOrderKBBIO.item_details, 
-                                                        SalesOrderKBBIO.material_centre, SalesOrderKBBIO.main_qty, 
-                                                        SalesOrderKBBIO.main_unit, 
-                                                        MITPKBBIO.date, MITPKBBIO.sales_order_no, 
-                                                        MITPKBBIO.particulars, MITPKBBIO.item_details, 
-                                                        MITPKBBIO.material_centre, MITPKBBIO.main_qty, 
-                                                        MITPKBBIO.main_unit,
-                                                    )
+                                             SalesOrderKBBIO.particulars, SalesOrderKBBIO.item_details, 
+                                             SalesOrderKBBIO.material_centre, SalesOrderKBBIO.main_qty, 
+                                             SalesOrderKBBIO.main_unit,
+                                             func.sum(SalesOrderKBBIO.main_qty).label('salesorder_qty'), 
+                            ).filter(SalesOrderKBBIO.date.between(fromdate, todate), 
+                                ).group_by(SalesOrderKBBIO.date, SalesOrderKBBIO.voucher_no, 
+                                             SalesOrderKBBIO.particulars, SalesOrderKBBIO.item_details, 
+                                             SalesOrderKBBIO.material_centre, SalesOrderKBBIO.main_unit, 
+                                ).order_by(SalesOrderKBBIO.date, SalesOrderKBBIO.voucher_no
+                                            ).with_entities(SalesOrderKBBIO.date, SalesOrderKBBIO.voucher_no, 
+                                                            SalesOrderKBBIO.particulars, SalesOrderKBBIO.item_details, 
+                                                            SalesOrderKBBIO.material_centre, 
+                                                            func.sum(SalesOrderKBBIO.main_qty).label('salesorder_qty'), 
+                                                            SalesOrderKBBIO.main_unit, 
+                                                            )
+        mitp_query = self.Session.query(MITPKBBIO.date, MITPKBBIO.voucher_no, MITPKBBIO.particulars, 
+                                        MITPKBBIO.item_details, MITPKBBIO.material_centre, 
+                                        MITPKBBIO.sales_order_no, MITPKBBIO.main_qty, MITPKBBIO.main_unit, 
+                                        func.sum(MITPKBBIO.main_qty).label('mitp_total_qty'), 
+                                        ).group_by(MITPKBBIO.particulars, MITPKBBIO.item_details, 
+                                                   MITPKBBIO.material_centre, MITPKBBIO.sales_order_no, 
+                                                   MITPKBBIO.main_unit, 
+                                            ).with_entities(MITPKBBIO.sales_order_no, MITPKBBIO.particulars, 
+                                                            MITPKBBIO.item_details, MITPKBBIO.material_centre, 
+                                                            func.sum(MITPKBBIO.main_qty).label('mitp_total_qty'), 
+                                                            MITPKBBIO.main_unit, 
+                                                            ) 
         if exceptions:
             salesorder_query = salesorder_query.filter(SalesOrderKBBIO.voucher_no.in_(exceptions))
 
         salesorder_df = pd.DataFrame(salesorder_query, columns= ['salesorder_date', 'salesorder_no', 'salesorder_particulars', 
                                                                  'salesorder_items', 'salesorder_material_centre', 
                                                                  'salesorder_qty', 'salesorder_unit',
-                                                                 'mitp_date', 'mitp_salesorder_no', 'mitp_particulars', 
-                                                     'mitp_items', 'mitp_material_centre', 
-                                                     'mitp_qty', 'mitp_unit',
                                                                  ])
-        
-        salesorder_df['remark'] = np.where(salesorder_df['salesorder_qty'] >= salesorder_df['mitp_qty'], "Pass", "Discrepancy")
+        mitp_df = pd.DataFrame(mitp_query, columns= ['mitp_salesorder_no', 'mitp_particulars', 
+                                                     'mitp_items', 'mitp_material_centre', 
+                                                     'mitp_total_qty', 'mitp_unit', 
+                                                     ])
+        result_df = salesorder_df.merge(mitp_df, how='left', 
+                                        left_on= ['salesorder_no', 'salesorder_items', 'salesorder_material_centre', 'salesorder_unit', ], 
+                                        right_on= ['mitp_salesorder_no', 'mitp_items', 'mitp_material_centre', 'mitp_unit', ])
 
-        return view(salesorder_df)
+        result_df['remark'] = np.where(result_df['mitp_total_qty'] > result_df['salesorder_qty'], "Discrepancy", "Pass")
+
+        return view(result_df)

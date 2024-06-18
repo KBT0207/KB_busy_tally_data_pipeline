@@ -83,27 +83,26 @@ def exporting_outstanding_balance(company:list, dates:list):
 
 
 
-def export_tally_accounts(company):
-
+def exporting_receivables(company:list, dates:list):
     pg.hotkey("win", "d")
-    todays_date = datetime.today().strftime("%d-%b-%Y")
-
+    
     tally_utils.start_tally()
     logger.info("Tally started...")
 
     for comp in company:
         tally_utils.select_company(company_code= comp)
         logger.info(f"{comp} selected...")
-         
-        tally_utils.accounts()
-        tally_utils.export_accounts_data(path= fr"D:\automated_tally_downloads\{comp}\accounts",
-                        filename= f"{comp}_accounts_{todays_date}.xlsx")    
+        
+        tally_utils.receivables()
+        
+        for date in dates:
+            tally_utils.change_period_balance(from_date= '01-04-2024', to_date= date)
+            tally_utils.export_balance_data(path= fr"D:\automated_tally_downloads\{comp}\receivables",
+                            filename= f"{comp}_receivables_{date}.xlsx")
+            time.sleep(1)
 
-        time.sleep(2)
-        pg.press('esc')
-        time.sleep(2)
-        pg.press('esc')
-        logger.info(f"Exported accounts of {comp} of {todays_date}")
+        tally_utils.back_to_tally_home(times= 6)
+        logger.info(f"Exported receivables of {comp} of {date}")
 
         tally_utils.change_company()
     

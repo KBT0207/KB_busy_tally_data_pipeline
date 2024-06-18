@@ -398,8 +398,9 @@ def cash_discount_report(dates:list, send_email:bool, exceptions:list = None) ->
 def rep():
     r = Reports(db_connector)
     return r.salesorder_mitp_reco(
-                            # fromdate= '2024-05-01', todate= '2024-05-31',
-                            fromdate= datetime.today().date().replace(day=1).strftime("%Y-%m-%d"), 
+                            fromdate= '2024-04-01', 
+                            # todate= '2024-05-31',
+                            # fromdate= datetime.today().date().replace(day=1).strftime("%Y-%m-%d"), 
                             todate= datetime.today().date().strftime("%Y-%m-%d"), 
                             exceptions= None)
 

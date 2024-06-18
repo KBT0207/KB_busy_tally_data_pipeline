@@ -201,6 +201,42 @@ def export_balance_data(path, filename):
 
 
 
+# def export_receivables_data(path, filename):
+#     find_img('tally/images/remove_line.png')
+#     time.sleep(0.5)
+#     pg.hotkey('ctrl', 'e')
+#     time.sleep(1)
+#     pg.press('c')
+#     time.sleep(1)
+#     pg.press('down')
+#     time.sleep(1)
+#     find_img('tally/images/export_settings.png', conf=0.95 )
+#     time.sleep(1)
+#     pg.click()
+#     time.sleep(0.5)
+#     pg.press('down')
+#     pg.press('enter')
+#     pg.typewrite('excel', interval=0.3)
+#     pg.press('enter')
+
+#     find_img("tally/images/folder_path.png")
+#     pg.click()
+#     pg.press('enter')
+#     pg.typewrite(path, interval=0.2)
+#     pg.press('enter', presses=2, interval=0.4)
+    
+#     pg.press('down')
+#     pg.press('enter')
+#     pg.typewrite(filename, interval=0.2)
+#     pg.press('enter')
+
+#     pg.hotkey("ctrl", "a")
+#     time.sleep(1)
+#     pg.press('e')
+
+#     find_img(img='tally/images/remove_line.png', conf=0.95)
+
+
 
 def back_to_tally_home(times):
     for _ in range(1, times+1):
@@ -275,6 +311,22 @@ def outstanding_balance():
     pg.press('enter')
     pg.hotkey('ctrl', 'a')
 
+
+def receivables():
+    find_img('tally/images/tally_gateway.png')
+    pg.press('d')
+    pg.press('s')
+    time.sleep(0.3)
+    pg.press('o')
+    time.sleep(0.3)
+    pg.press('g')
+    pg.typewrite('sundry debtors', interval=0.2)
+    pg.press('enter')
+    find_img('tally/images/report_particulars.png')
+    pg.press('f5')
+    time.sleep(1)
+    pg.hotkey('ctrl', 'f8')
+    
 
 
 def exporting_reports(report:str, from_date:str, to_date:str,  path:str, filename:str, esc:int):
