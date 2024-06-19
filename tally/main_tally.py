@@ -96,7 +96,7 @@ def exporting_receivables(company:list, dates:list):
         tally_utils.receivables()
         
         for date in dates:
-            tally_utils.change_period_balance(from_date= '01-04-2024', to_date= date)
+            tally_utils.change_receivables_period(from_date= '01-04-2024', to_date= date)
             tally_utils.export_balance_data(path= fr"D:\automated_tally_downloads\{comp}\receivables",
                             filename= f"{comp}_receivables_{date}.xlsx")
             time.sleep(1)

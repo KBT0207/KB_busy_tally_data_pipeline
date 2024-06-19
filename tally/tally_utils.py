@@ -75,6 +75,17 @@ def change_period(from_date, to_date):
 
 
 
+def change_receivables_period(from_date, to_date):
+    find_img('tally/images/remove_line.png')
+    time.sleep(2)
+    pg.hotkey("alt", "f2")
+    pg.typewrite(from_date, interval=0.2)
+    pg.press('enter')
+    pg.typewrite(to_date, interval=0.2)
+    pg.press('enter')
+
+
+
 def change_period_balance(from_date, to_date):
     find_img('tally/images/report_particulars.png')
     time.sleep(1)

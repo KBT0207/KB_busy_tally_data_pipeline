@@ -228,6 +228,19 @@ def import_outstanding_tallydata(dates:list):
 
 
 
+def import_receivables_tallydata(dates:list):    
+    Base.metadata.create_all(db_engine)
+    for date in dates:
+        tally_files = glob.glob("D:\\automated_tally_downloads\\" + f"**\\*receivables_{date}.xlsx", recursive=True)
+        if len(tally_files) != 0:
+            for file in tally_files:
+                excel_data = TallyDataProcessor(file)
+                importer = DatabaseCrud(db_connector)
+                if get_filename(file) == 'receivables':
+                    importer.import_data('tally_receivables', excel_data.clean_and_transform(), commit=True)
+
+
+
 def dealer_price_validation_report(from_date:str, to_date:str, send_email:bool, exceptions:list = None) -> None:
     """Generated dealer price validation report as per the arguments.
 
@@ -406,17 +419,18 @@ def rep():
 
 
 def one(path, commit):
+    Base.metadata.create_all(db_engine)
+
     import pandas as pd
     import numpy as np
-    # xl = TallyDataProcessor(excel_file_path= path)
-    data = pd.read_excel(path)
+    xl = TallyDataProcessor(excel_file_path= path)
+    data = xl.clean_and_transform()
     
-    importer = DatabaseCrud(db_connector)
-    # importer.import_data( df= data, commit=commit)
-    importer.test_import_data(table_name= 'outstanding_balance', 
-                                    df= data, commit=commit)
-    # print(data)
-    # return imp
+    # importer = DatabaseCrud(db_connector)
+    # # importer.import_data( df= data, commit=commit)
+    # importer.test_import_data(table_name= 'tally_receivables', 
+                                    # df= data, commit=commit)
+    print(data)
 
 
 def balance(path):

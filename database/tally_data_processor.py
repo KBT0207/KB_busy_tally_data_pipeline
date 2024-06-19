@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from logging_config import logger
 from database.busy_data_processor import get_compname, get_filename, get_date
-from utils.common_utils import tally_comp_codes, acc_comp_codes, balance_comp_codes
+from utils.common_utils import tally_comp_codes, acc_comp_codes, balance_comp_codes, receivables_comp_codes
 
 pd.set_option('future.no_silent_downcasting', True)
 
@@ -170,6 +170,42 @@ def apply_outstanding_balance_transformation(file_path, material_centre_name) ->
 
 
 
+def apply_receivables_transformation(file_path, material_centre_name) -> pd.DataFrame:
+    try:
+        df = pd.read_excel(file_path, header=None, skipfooter=1)
+        date_index = df.loc[df.eq('Date').any(axis=1)].index[0]
+        df = df.drop(range(date_index)).reset_index(drop=True)
+        df.columns = df.iloc[0]
+        df = df.drop(index=0)
+        df = df.iloc[1:].reset_index(drop=True)
+        
+    except FileNotFoundError as e:
+        logger.warning(f"Excel File not found in the given {file_path}: {e}")
+    if df.empty:
+        logger.warning(f"Empty Excel File of {get_compname(file_path)} and report {get_filename(file_path)}")
+        return None
+    df.columns = df.columns.str.lower().str.replace(" ", "_").str.replace(".", "")
+    mc_name = receivables_comp_codes[int(material_centre_name)]
+
+    df = df.rename(columns={'date': 'voucher_date', 'ref_no': 'voucher_no', 
+                            "party's_name": "particulars", 'opening': 'opening_amt', 
+                            'pending': 'pending_amt', 'due_on': 'due_date', 
+                            'overdue': 'overdue_days', 
+                            })
+    df["date"] = get_date(path=file_path)
+    df['date'] = df['date'].str.removesuffix('.xlsx')
+    date_columns = ['date', 'voucher_date', 'due_date']
+    for col in date_columns:
+         df[col] = pd.to_datetime(df[col], dayfirst=True)
+
+    df["material_centre"] = mc_name
+
+    df["particulars"] = df["particulars"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
+    df["voucher_no"] = df["voucher_no"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
+
+    return df
+
+
 class TallyDataProcessor:
     def __init__(self, excel_file_path) -> None:
         self.excel_file_path = excel_file_path      
@@ -196,6 +232,9 @@ class TallyDataProcessor:
         elif report_type == "outstanding":
             df = apply_outstanding_balance_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
 
+        elif report_type == "receivables":
+            df = apply_receivables_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
+        
         if df is None:
             logger.error("Dataframe is None!")
             return None

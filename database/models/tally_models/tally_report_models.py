@@ -154,6 +154,42 @@ class TallyOutstandingBalance(Base):
 
 
 
+class TallyReceivables(Base):
+    __tablename__ = 'tally_receivables'
+
+    id = Column(Integer, primary_key= True, autoincrement= True, index= True)
+    date = Column(Date, nullable= False)
+    voucher_date = Column(Date, nullable= False)
+    voucher_no = Column(String(100), nullable= False)
+    particulars = Column(String(250), nullable= False)
+    opening_amt = Column(DECIMAL(10,2), nullable= False)
+    pending_amt = Column(DECIMAL(10,2), nullable= False)
+    due_date = Column(Date, nullable= False)
+    overdue_days = Column(Integer, nullable= False)
+    material_centre = Column(String(50), nullable= False)
+    created_at = Column(DateTime, server_default=func.now())
+
+
+
+class DebtorsBalance(Base):
+    __tablename__ = 'debtors_balance'
+
+    id = Column(Integer, primary_key= True, autoincrement= True, index= True)
+    date = Column(Date, nullable= False)
+    particulars = Column(String(250), nullable= False)
+    alias = Column(String(50), nullable= False, index= True)
+    sales = Column(DECIMAL(10,2), nullable= False)
+    credit_note = Column(DECIMAL(10,2), nullable= False)
+    debit_note = Column(DECIMAL(10,2), nullable= False)
+    receipt = Column(DECIMAL(10,2), nullable= False)
+    journal_credit = Column(DECIMAL(10,2), nullable= False)
+    journal_debit = Column(DECIMAL(10,2), nullable= False)
+    purchase = Column(DECIMAL(10,2), nullable= False)
+    balance = Column(DECIMAL(10,2), nullable= False)
+    created_at = Column(DateTime, server_default=func.now())
+
+
+
 class TestTable(Base):
     __tablename__ = 'test_table'
 

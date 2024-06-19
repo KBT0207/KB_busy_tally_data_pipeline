@@ -12,7 +12,10 @@ from database.models.busy_models.busy_accounts import (BusyAccounts100x, BusyAcc
                                                     BusyAccountsNewAge)
 from database.models.busy_models.busy_reports import (SalesKBBIO, SalesOrderKBBIO, SalesReturnKBBIO, MITPKBBIO, MRFPKBBIO)
 from database.models.tally_models.tally_report_models import (TallyAccounts, TallyOutstandingBalance, 
-                                                              TallySales, TallySalesReturn,)
+                                                              TallySales, TallySalesReturn, TallyJournal, 
+                                                              TallyPayment, TallyPurchase, TallyPurchaseReturn ,
+                                                              TallyReceipts, 
+                                                              )
 
 
 class Reports(DatabaseCrud):
@@ -693,4 +696,13 @@ class Reports(DatabaseCrud):
 
         result_df['remark'] = np.where(result_df['mitp_total_qty'] > result_df['salesorder_qty'], "Discrepancy", "Pass")
 
-        return view(result_df)
+        return result_df
+    
+
+
+    def populate_debtor_balances(self, fromdate, todate) -> None:
+
+        busy_acc_query = self.Session.query(BusyAccountsKBBIO.name, BusyAccountsKBBIO.alias
+                                            ).with_entities(BusyAccountsKBBIO.name, BusyAccountsKBBIO.alias)
+
+        
