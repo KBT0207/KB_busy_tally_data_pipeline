@@ -30,9 +30,9 @@ def delete_busy_sales():
     current_date = datetime.today().date()
     # current_date = datetime.today().date()-timedelta(days=1)
     date1 = current_date - timedelta(days=2)
-    # date1= "2024-06-11"
+    # date1= "2024-04-01"
     date2 = current_date - timedelta(days=1)
-    # date2= "2024-06-14"
+    # date2= "2024-06-15"
 
     tables_list = list(busy_tables.keys())
     importer = DatabaseCrud(db_connector)
@@ -65,9 +65,9 @@ def delete_tally_data(start_date:str, end_date:str, commit:bool):
     tables_list = list(tally_tables.keys())
     importer = DatabaseCrud(db_connector)
     
-
+    exclude_tables = ['tally_accounts', 'outstanding_balance', 'tally_receivables']
     for table in tables_list:
-        if 'accounts' not in table and 'outstanding' not in table:
+        if table not in exclude_tables:
             importer.delete_date_range_query(table, start_date= start_date, 
                                              end_date=end_date, commit=commit)
 
@@ -410,12 +410,12 @@ def cash_discount_report(dates:list, send_email:bool, exceptions:list = None) ->
 
 def rep():
     r = Reports(db_connector)
-    return r.salesorder_mitp_reco(
-                            fromdate= '2024-04-01', 
-                            # todate= '2024-05-31',
-                            # fromdate= datetime.today().date().replace(day=1).strftime("%Y-%m-%d"), 
-                            todate= datetime.today().date().strftime("%Y-%m-%d"), 
-                            exceptions= None)
+    return r.populate_debtor_balances(
+                            # fromdate= '2024-04-01', 
+                            # # todate= '2024-05-31',
+                            # # fromdate= datetime.today().date().replace(day=1).strftime("%Y-%m-%d"), 
+                            # todate= datetime.today().date().strftime("%Y-%m-%d"), 
+                            )
 
 
 def one(path, commit):
@@ -423,14 +423,15 @@ def one(path, commit):
 
     import pandas as pd
     import numpy as np
-    xl = TallyDataProcessor(excel_file_path= path)
+    xl = BusyDataProcessor(excel_file_path= path)
     data = xl.clean_and_transform()
-    
-    # importer = DatabaseCrud(db_connector)
-    # # importer.import_data( df= data, commit=commit)
-    # importer.test_import_data(table_name= 'tally_receivables', 
-                                    # df= data, commit=commit)
-    print(data)
+
+    from xlwings import view
+    importer = DatabaseCrud(db_connector)
+    importer.import_data( df= data, table_name= 'busy_sales_return', commit=commit)
+    # importer.test_import_data(table_name= 'busy_sales', 
+    #                                 df= data, commit=commit)
+    # view(data)
 
 
 def balance(path):

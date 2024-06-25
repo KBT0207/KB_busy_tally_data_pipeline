@@ -221,7 +221,7 @@ class Reports(DatabaseCrud):
                                     TallyOutstandingBalance.particulars, 
                                     tally_accounts_query.c.tally_alias_code, tally_accounts_query.c.sales_dealer_code, 
 
-                                    (func.sum(TallyOutstandingBalance.credit) - func.sum(TallyOutstandingBalance.debit)).label("balance")
+                                    (func.sum(TallyOutstandingBalance.credit) - func.sum(TallyOutstandingBalance.debit)).label("Cr Balance")
                                 )
                                 .outerjoin(tally_accounts_query,
                                     (TallyOutstandingBalance.particulars == tally_accounts_query.c.tally_particulars) &
@@ -252,7 +252,7 @@ class Reports(DatabaseCrud):
         #                                 )
         outstanding_df = pd.DataFrame(outstanding_query, 
                                       columns=['outstanding_particulars', 
-                                               'tally_alias_code', 'sales_dealer_code', 'balance', 
+                                               'tally_alias_code', 'sales_dealer_code', 'Cr Balance', 
                                                ])
         
         results_df = sales_invoice_df.merge(outstanding_df, how= 'left', 
@@ -700,9 +700,194 @@ class Reports(DatabaseCrud):
     
 
 
-    def populate_debtor_balances(self, fromdate, todate) -> None:
+    def populate_debtor_balances(self,
+                                #   fromdate, todate
+                                 ) -> None:
 
-        busy_acc_query = self.Session.query(BusyAccountsKBBIO.name, BusyAccountsKBBIO.alias
-                                            ).with_entities(BusyAccountsKBBIO.name, BusyAccountsKBBIO.alias)
+        busy_acc_query = (self.Session.query(BusyAccountsKBBIO.name, BusyAccountsKBBIO.alias, 
+                                             BusyAccountsKBBIO.parent_group,)
+                                      .filter(
+                                          BusyAccountsKBBIO.alias.isnot(None),
+                                          BusyAccountsKBBIO.parent_group == 'Dealer', )
+                                       .with_entities(BusyAccountsKBBIO.name, BusyAccountsKBBIO.alias, 
+                                                      ))
 
+        busy_sales_query = (self.Session.query(SalesKBBIO.date, SalesKBBIO.dealer_code, 
+                                               cast(func.sum(SalesKBBIO.bill_amt), 
+                                                    DECIMAL(10, 2)).label('busy_sales_amt'))
+                                        .filter(SalesKBBIO.party_type == 'Dealer', 
+                                                SalesKBBIO.dealer_code.isnot(None), 
+                                                SalesKBBIO.date >= '2024-04-01', )
+                                        .order_by(SalesKBBIO.date, SalesKBBIO.dealer_code)
+                                        .with_entities(SalesKBBIO.dealer_code, 
+                                                       cast(func.sum(SalesKBBIO.bill_amt), 
+                                                    DECIMAL(10, 2)).label('busy_sales_amt')))
+
+        tally_outstanding_query = (self.Session.query(TallyAccounts.alias_code, 
+                                                      func.sum(TallyOutstandingBalance.debit).label('total_debit'), 
+                                                      func.sum(TallyOutstandingBalance.credit).label('total_credit'), 
+                                                      cast(func.sum(TallyOutstandingBalance.debit - TallyOutstandingBalance.credit), 
+                                                           DECIMAL(10, 2)).label("outstanding_balance"), )
+                                .outerjoin(TallyAccounts, 
+                                           TallyOutstandingBalance.particulars == TallyAccounts.ledger_name)
+                                .filter(TallyOutstandingBalance.date == '2024-03-31')
+                                .group_by(TallyAccounts.alias_code, )
+                                .with_entities(TallyAccounts.alias_code, 
+                                               cast(func.sum(TallyOutstandingBalance.debit - TallyOutstandingBalance.credit), 
+                                                    DECIMAL(10, 2)).label("outstanding_balance"))
+                                                    )
+
+        tally_salesreturn_query = (self.Session.query(TallySalesReturn.date, TallySalesReturn.particulars, 
+                                                      cast(func.sum(TallySalesReturn.credit), 
+                                                                 DECIMAL(10, 2))
+                                                            .label("tally_salesreturn_amt"), 
+                                                       TallyAccounts.alias_code )
+                                        .outerjoin(TallyAccounts, 
+                                                    TallySalesReturn.particulars == TallyAccounts.ledger_name)
+                                        .filter(TallySalesReturn.date.between('2024-04-01', '2024-06-25'),  
+                                                TallyAccounts.alias_code != 'None' )
+                                        .group_by(TallyAccounts.alias_code, )
+                                        .order_by(TallyAccounts.alias_code)
+                                        .with_entities(TallyAccounts.alias_code, 
+                                                cast(func.sum(TallySalesReturn.credit), 
+                                                     DECIMAL(10, 2)).label("tally_salesreturn_amt")))
         
+        tally_purchase_query = (self.Session.query(TallyPurchase.date, TallyPurchase.particulars, 
+                                                      cast(func.sum(TallyPurchase.credit), 
+                                                                 DECIMAL(10, 2))
+                                                            .label("tally_purchase_amt"), 
+                                                       TallyAccounts.alias_code )
+                                        .outerjoin(TallyAccounts, 
+                                                    TallyPurchase.particulars == TallyAccounts.ledger_name)
+                                        .filter(TallyPurchase.date.between('2024-04-01', '2024-06-25'),  
+                                                TallyAccounts.alias_code != 'None' )
+                                        .group_by(TallyAccounts.alias_code, )
+                                        .order_by(TallyAccounts.alias_code)
+                                        .with_entities(TallyAccounts.alias_code, 
+                                                cast(func.sum(TallyPurchase.credit), 
+                                                     DECIMAL(10, 2)).label("tally_purchase_amt")))
+        
+        tally_purchasereturn_query = (self.Session.query(TallyPurchaseReturn.date, TallyPurchaseReturn.particulars, 
+                                                      cast(func.sum(TallyPurchaseReturn.debit), 
+                                                                 DECIMAL(10, 2))
+                                                            .label("tally_purchase_amt"), 
+                                                       TallyAccounts.alias_code )
+                                        .outerjoin(TallyAccounts, 
+                                                    TallyPurchaseReturn.particulars == TallyAccounts.ledger_name)
+                                        .filter(TallyPurchaseReturn.date.between('2024-04-01', '2024-06-25'),  
+                                                TallyAccounts.alias_code != 'None' )
+                                        .group_by(TallyAccounts.alias_code, )
+                                        .order_by(TallyAccounts.alias_code)
+                                        .with_entities(TallyAccounts.alias_code, 
+                                                cast(func.sum(TallyPurchaseReturn.credit), 
+                                                     DECIMAL(10, 2)).label("tally_purchase_amt")))
+
+        tally_receipts_amt =  (cast(func.sum(
+                        case((TallyReceipts.amount_type == 'credit', TallyReceipts.amount), else_=0)), 
+                            DECIMAL(10, 2)) - 
+                            cast(func.sum(
+                        case((TallyReceipts.amount_type == 'debit', TallyReceipts.amount), else_=0)), 
+                            DECIMAL(10, 2))
+                                    .label("tally_receipts_amt"))
+        
+        tally_receipts_query = (self.Session.query(TallyReceipts.date, TallyReceipts.particulars, 
+                                                   tally_receipts_amt, TallyAccounts.alias_code)
+                                            .outerjoin(TallyAccounts, 
+                                                       TallyReceipts.particulars == TallyAccounts.ledger_name)
+                                            .filter(TallyReceipts.date.between('2024-04-01', '2024-06-25'), 
+                                                TallyAccounts.alias_code != 'None', )
+                                            .group_by(TallyAccounts.alias_code, )
+                                            .order_by(TallyAccounts.alias_code, )
+                                            .with_entities(TallyReceipts.date, tally_receipts_amt, TallyAccounts.alias_code,))
+        
+        tally_payments_amt = (cast(func.sum(
+                        case((TallyPayment.amount_type == 'debit', TallyPayment.amount), else_=0)), 
+                            DECIMAL(10, 2)) - 
+                            cast(func.sum(
+                        case((TallyPayment.amount_type == 'credit', TallyPayment.amount), else_=0)), 
+                            DECIMAL(10, 2))
+                                    .label("tally_payments_amt"))
+        
+        tally_payments_query = (self.Session.query(TallyPayment.date, TallyPayment.particulars, 
+                                                   tally_payments_amt, TallyAccounts.alias_code)
+                                            .outerjoin(TallyAccounts, 
+                                                       TallyPayment.particulars == TallyAccounts.ledger_name)
+                                            .filter(TallyPayment.date.between('2024-04-01', '2024-06-25'), 
+                                                TallyAccounts.alias_code != 'None', )
+                                            .group_by(TallyAccounts.alias_code, )
+                                            .order_by(TallyAccounts.alias_code, )
+                                            .with_entities(TallyPayment.date, tally_payments_amt, TallyAccounts.alias_code,))
+        
+        tally_journal_amt = (cast(func.sum(
+                        case((TallyJournal.amount_type == 'debit', TallyJournal.amount), else_=0)), 
+                            DECIMAL(10, 2)) - 
+                            cast(func.sum(
+                        case((TallyJournal.amount_type == 'credit', TallyJournal.amount), else_=0)), 
+                            DECIMAL(10, 2))
+                                    .label("tally_journal_amt"))
+        
+        tally_journal_query = (self.Session.query(TallyJournal.date, TallyJournal.particulars, 
+                                                   tally_payments_amt, TallyAccounts.alias_code)
+                                            .outerjoin(TallyAccounts, 
+                                                       TallyJournal.particulars == TallyAccounts.ledger_name)
+                                            .filter(TallyJournal.date.between('2024-04-01', '2024-06-25'), 
+                                                TallyAccounts.alias_code != 'None', )
+                                            .group_by(TallyAccounts.alias_code, )
+                                            .order_by(TallyAccounts.alias_code, )
+                                            .with_entities(TallyJournal.date, tally_journal_amt, TallyAccounts.alias_code,))
+        
+        busy_acc_df = pd.DataFrame(busy_acc_query, columns= ['name', 'alias'])
+        # date_range = pd.date_range(start='2024-04-01', end=pd.Timestamp.today(), freq='D')
+
+        # repeated_rows = []
+        # for name, alias in zip(busy_acc_df['name'], busy_acc_df['alias']):
+        #     for date in date_range:
+        #         repeated_rows.append((date, name, alias))
+
+        # main_busy_acc_df = (pd.DataFrame(repeated_rows, columns=['date', 'name', 'alias'])
+        #                     .sort_values(by= ['date', 'name'], ascending= [True, True] ))
+
+        busy_sales_df = pd.DataFrame(busy_sales_query, columns= [ 'alias', 'sales'])
+        # busy_sales_df['date'] = pd.to_datetime(busy_sales_df['date'])
+
+        tally_outstanding_df = pd.DataFrame(tally_outstanding_query, columns= ['alias', 'outstanding_balance'])
+
+        tally_salesreturn_df = pd.DataFrame(tally_salesreturn_query, 
+                                            columns= [ 'credit_note', 'alias'])
+        # tally_salesreturn_df['date'] = pd.to_datetime(tally_salesreturn_df['date'])
+        
+        tally_purchase_df = pd.DataFrame(tally_purchase_query, 
+                                            columns= [ 'purchase', 'alias'])
+        # tally_purchase_df['date'] = pd.to_datetime(tally_purchase_df['date'])
+
+        tally_purchasereturn_df = pd.DataFrame(tally_purchasereturn_query, 
+                                            columns= [ 'debit_note', 'alias'])
+        # tally_purchasereturn_df['date'] = pd.to_datetime(tally_purchasereturn_df['date'])                                
+        
+        tally_receipts_df = pd.DataFrame(tally_receipts_query, 
+                                            columns= [ 'receipts', 'alias'])
+        # tally_receipts_df['date'] = pd.to_datetime(tally_receipts_df['date'])   
+        
+        tally_payments_df = pd.DataFrame(tally_payments_query, 
+                                            columns= [ 'payments', 'alias'])
+        # tally_payments_df['date'] = pd.to_datetime(tally_payments_df['date'])
+        
+        tally_journal_df = pd.DataFrame(tally_journal_query, 
+                                            columns= [ 'journal', 'alias'])
+        # tally_journal_df['date'] = pd.to_datetime(tally_journal_df['date'])
+        
+        joined_df = (busy_acc_df.merge(tally_outstanding_df, how= 'left', on= ['alias'])
+                     .merge(busy_sales_df, how= 'left', on= [ 'alias'])
+                     .merge(tally_salesreturn_df, how='left', on= [ 'alias'])
+                     .merge(tally_purchase_df, how='left', on= [ 'alias'])
+                     .merge(tally_purchasereturn_df, how='left', on= [ 'alias'])
+                     .merge(tally_receipts_df, how='left', on= [ 'alias'])
+                     .merge(tally_payments_df, how='left', on= [ 'alias'])
+                     .merge(tally_journal_df, how='left', on= [ 'alias']))
+        # joined_df.fillna(0, inplace=True)
+
+        joined_df['balance'] = (joined_df['sales'] - joined_df['credit_note'] - 
+                                joined_df['purchase'] + joined_df['debit_note'] - 
+                                joined_df['receipts'] + joined_df['payments'] + joined_df['journal'])
+
+        return view(joined_df)

@@ -5,6 +5,8 @@ from database import main_db
 from busy import main_busy
 from tally import main_tally
 from utils.common_utils import tally_comp_codes, balance_comp_codes, receivables_comp_codes
+from dotenv import load_dotenv
+
 
 
 
@@ -17,7 +19,7 @@ def tally_to_sql():
     # endate = '2024-06-12'
     companies = sorted(list(tally_comp_codes.keys()))
     
-    # main_tally.exporting_data(company=companies)
+    main_tally.exporting_data(company=companies)
     main_db.delete_tally_data(start_date= startdate, end_date= endate, commit=True)
     main_db.import_tally_data(date= current_date)
 
@@ -39,7 +41,10 @@ def busy_material_masters():
 
 def export_import_outstanding_tallydata():
     dates = [(datetime.today().date()- timedelta(days=1)).strftime("%d-%m-%Y"),
-            ]                    #yesterday
+             (datetime.today().date()- timedelta(days=2)).strftime("%d-%m-%Y"), 
+             (datetime.today().date()- timedelta(days=3)).strftime("%d-%m-%Y"),
+             ]                    #yesterday
+    # dates = ['31-03-2024']
     companies = sorted(list(balance_comp_codes.keys()))
     main_tally.exporting_outstanding_balance(company= companies, dates= dates)
     main_db.import_outstanding_tallydata(dates=dates)
@@ -47,9 +52,11 @@ def export_import_outstanding_tallydata():
 
 def export_import_receivables_tallydata():
     dates = [(datetime.today().date()- timedelta(days=1)).strftime("%d-%m-%Y"),
-            ]                    #yesterday
+             (datetime.today().date()- timedelta(days=2)).strftime("%d-%m-%Y"),
+             (datetime.today().date()- timedelta(days=3)).strftime("%d-%m-%Y"),
+             ]                    #yesterday
     companies = sorted(list(receivables_comp_codes.keys()))
-    # main_tally.exporting_receivables(company= companies, dates= dates)
+    main_tally.exporting_receivables(company= companies, dates= dates)
     main_db.import_receivables_tallydata(dates=dates)
 
 
@@ -77,30 +84,23 @@ def reports():
 
 if __name__ == "__main__":
 
+    # main_db.rep()
+    # export_import_outstanding_tallydata()
+    # export_import_receivables_tallydata()
     # schedule.every().day.at("18:00").do(export_import_receivables_tallydata)
 
-    # schedule.every().day.at("21:00").do(busy_sales)
+    schedule.every().day.at("21:00").do(busy_sales)
 
-    # schedule.every().day.at("03:15").do(export_import_outstanding_tallydata)
+    schedule.every().day.at("07:31").do(export_import_outstanding_tallydata)
     
-    # schedule.every().day.at("00:05").do(busy_material_masters)
+    schedule.every().day.at("00:05").do(busy_material_masters)
 
-    # schedule.every().day.at("05:15").do(tally_to_sql)
+    schedule.every().day.at("05:15").do(tally_to_sql)
 
-    # schedule.every().day.at("10:00").do(reports)
+    schedule.every().day.at("10:00").do(reports)
     
-    # while True:
-    #     schedule.run_pending()
-    #     time.sleep(1)    
+    while True:
+        schedule.run_pending()
+        time.sleep(1)    
 
-    # current_date = datetime.today().strftime("%d-%b-%Y")
-    # main_db.import_tally_data(date= current_date)
 
-    # companies = sorted(list(balance_comp_codes.keys()))
-    # main_tally.export_tally_accounts(company= companies)
-    # main_db.import_tally_data(date= current_date)
-    # import pandas as pd
-    # f = r"D:\Updated_May24.xlsx"
-    # main_db.one(path= f, commit= True)
-    # start_date = datetime.date(year= 2024, month= 5, day=1)
-    # end_date = datetime.today().date() - timedelta(days=1)
