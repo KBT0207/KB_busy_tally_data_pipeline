@@ -64,6 +64,8 @@ def reports():
     fromdate = datetime.today().date().replace(day=1).strftime('%Y-%m-%d')
     todate = (datetime.today().date() - timedelta(days=1)).strftime('%Y-%m-%d')
     
+    todate
+
     main_db.dealer_price_validation_report(from_date= fromdate, 
                                            to_date= todate, send_email= True, 
                                         #    exceptions= salesprice_excluded_invoices,
@@ -84,23 +86,24 @@ def reports():
 
 if __name__ == "__main__":
 
-    # main_db.rep()
+    main_db.rep()
+
     # export_import_outstanding_tallydata()
     # export_import_receivables_tallydata()
     # schedule.every().day.at("18:00").do(export_import_receivables_tallydata)
 
-    schedule.every().day.at("21:00").do(busy_sales)
+    # schedule.every().day.at("21:00").do(busy_sales)
 
-    schedule.every().day.at("07:31").do(export_import_outstanding_tallydata)
+    # schedule.every().day.at("07:31").do(export_import_outstanding_tallydata)
     
-    schedule.every().day.at("00:05").do(busy_material_masters)
+    # schedule.every().day.at("00:05").do(busy_material_masters)
 
-    schedule.every().day.at("05:15").do(tally_to_sql)
+    # schedule.every().day.at("05:15").do(tally_to_sql)
 
-    schedule.every().day.at("10:00").do(reports)
+    # schedule.every().day.at("10:00").do(reports)
     
-    while True:
-        schedule.run_pending()
-        time.sleep(1)    
+    # while True:
+    #     schedule.run_pending()
+    #     time.sleep(1)    
 
 

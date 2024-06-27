@@ -178,6 +178,7 @@ class DebtorsBalance(Base):
     date = Column(Date, nullable= False)
     particulars = Column(String(250), nullable= False)
     alias = Column(String(50), nullable= False, index= True)
+    outstanding_balance = Column(DECIMAL(10,2), nullable= False)
     sales = Column(DECIMAL(10,2), nullable= False)
     credit_note = Column(DECIMAL(10,2), nullable= False)
     purchase = Column(DECIMAL(10,2), nullable= False)

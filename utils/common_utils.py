@@ -35,7 +35,7 @@ from database.models.tally_models.tally_report_models import (TallySales, TallyP
                                         TallyPurchaseReturn, TallySalesReturn,
                                         TallyPayment, TallyReceipts , TallyJournal, 
                                         TallyAccounts, TallyOutstandingBalance, TestTable, 
-                                        TallyReceivables, 
+                                        TallyReceivables, DebtorsBalance
                                         )
 from database.models.busy_models.busy_pricing import (BusyPricingKBBIO,
                                         )
@@ -57,7 +57,7 @@ tally_tables = {"tally_sales": TallySales, "tally_sales_return": TallySalesRetur
                 "tally_purchase": TallyPurchase, "tally_purchase_return": TallyPurchaseReturn, 
                 "tally_payments": TallyPayment, "tally_receipts": TallyReceipts, "tally_journal": TallyJournal, 
                 "tally_accounts": TallyAccounts, "outstanding_balance": TallyOutstandingBalance, 
-                "tally_receivables": TallyReceivables, 
+                "tally_receivables": TallyReceivables, "debtors_balance": DebtorsBalance, 
                }
 
 

@@ -9,7 +9,7 @@ from database.models.busy_models.busy_accounts import (BusyAccounts100x, BusyAcc
                                                     BusyAccountsNewAge)
 from database.models.busy_models.busy_reports import SalesKBBIO, SalesOrderKBBIO
 from sqlalchemy.exc import SQLAlchemyError
-from database.models.tally_models.tally_report_models import TallyAccounts
+from database.models.tally_models.tally_report_models import TallyAccounts, DebtorsBalance
 
 
 
@@ -94,21 +94,47 @@ class DatabaseCrud:
 
 
 
-    def truncate_table(self, table_name, commit):
+    def truncate_table(self, table_name: str, commit: bool) -> None:
+        """
+        Truncate the specified database table.
+
+        This method deletes all rows from the specified table using SQLAlchemy's delete operation.
+
+        Args:
+            table_name (str): The name of the table to truncate.
+            commit (bool): If True, commit the transaction; otherwise, roll back.
+
+        Returns:
+            None
+        """
+        # Retrieve table class from metadata
         table_class = tables.get(table_name)
         if table_class:
+            # Prepare truncate query
             truncate_query = delete(table_class)
+
             try:
                 with self.db_engine.connect() as connection:
+                    # Execute truncate query
                     connection.execute(truncate_query)
                     if commit:
                         connection.commit()
-                    logger.info(f"Table '{table_name}' truncated successfully.")
+                        logger.info(f"Table '{table_name}' truncated successfully.")
+                    else:
+                        connection.rollback()
+                        logger.info(f"Transaction rolled back for truncating '{table_name}'.")
+
             except SQLAlchemyError as e:
                 logger.critical(f"Error truncating table '{table_name}': {e}")
                 connection.rollback()
+                logger.error(f"Rolling back changes in '{table_name}' due to truncation error.")
+            except Exception as e:
+                logger.critical(f"Unknown error occurred while truncating '{table_name}': {e}")
+                connection.rollback()
+                logger.error(f"Rolling back changes in '{table_name}' due to an unknown error.")
         else:
             logger.error(f"Table '{table_name}' not found in table_mapping.")
+
 
 
 
@@ -272,43 +298,62 @@ class DatabaseCrud:
 
 
 
-    def test_import_data(self, table_name, df:pd.DataFrame, commit):
- 
+    def manual_import_data(self, table_name:str, df: pd.DataFrame, commit: bool) -> None:
+        """
+        Import data from a DataFrame into a specified database table.
+
+        This method converts the DataFrame into a list of dictionaries, representing rows to be inserted into the database table.
+        It performs the insertion using SQLAlchemy's insert operation.
+
+        Args:
+            table_name (str): The name of the table where data will be inserted as per sql format.
+            df (pd.DataFrame): The DataFrame containing data to be inserted.
+            commit (bool): If True, commit the transaction; otherwise, roll back.
+
+        Returns:
+            None
+        """
         if df is not None and not df.empty:
-            # Assuming data_to_insert is a list of dictionaries representing rows
+            # Convert DataFrame to list of dictionaries
             data_to_insert = df.to_dict(orient='records')
             if not data_to_insert:
-                print(f"No data to insert into {table_name}.")
+                logger.warning(f"No data to insert into {table_name}.")
                 return
 
+            # Get table metadata
             table = tables.get(table_name)
             if table is None:
-                print(f"Table {table_name} not found in metadata.")
+                logger.error(f"Table {table_name} not found in metadata.")
                 return
 
+            # Prepare insert query
             insert_query = insert(table).values(data_to_insert)
+
             try:
                 with self.db_engine.connect() as connection:
+                    # Execute insert query
                     result = connection.execute(insert_query)
                     if commit:
                         connection.commit()
-                        print(f"Inserted {result.rowcount} rows into {table_name}.")
+                        logger.info(f"Inserted {result.rowcount} rows into {table_name}.")
                     else:
                         connection.rollback()
+                        logger.info(f"Transaction rolled back for importing data into {table_name}.")
+
             except SQLAlchemyError as e:
                 logger.critical(f"Error inserting data into {table_name}: {e}")
                 connection.rollback()
                 logger.error(f"Rolling back changes in {table_name} due to import error.")
             except Exception as e:
                 logger.critical(f"Unknown error occurred: {e}")
-                    
+                connection.rollback()
+                logger.error(f"Rolling back changes in {table_name} due to an unknown error.")
         else:
-            print(f"Empty DataFrame, no rows inserted into {table_name}.")
+            logger.warning(f"Empty DataFrame, no rows inserted into {table_name}.")
 
 
 
     def test_delete(self, table_name, start_date, end_date, commit):
-
 
         table_class = tables.get(table_name)
         if table_class:

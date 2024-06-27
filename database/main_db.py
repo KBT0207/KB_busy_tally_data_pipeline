@@ -409,10 +409,10 @@ def cash_discount_report(dates:list, send_email:bool, exceptions:list = None) ->
 
 
 def rep():
+    Base.metadata.create_all(db_engine)
     r = Reports(db_connector)
-    return r.populate_debtor_balances(
-                            # fromdate= '2024-04-01', 
-                            # # todate= '2024-05-31',
+    return r.populate_debtor_balances(fromdate= '2024-04-01', todate= '2024-06-15', to_import= False,
+                                      to_export= False , filename= "test_file", commit= True
                             # # fromdate= datetime.today().date().replace(day=1).strftime("%Y-%m-%d"), 
                             # todate= datetime.today().date().strftime("%Y-%m-%d"), 
                             )
