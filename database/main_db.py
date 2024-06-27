@@ -297,7 +297,7 @@ def salesorder_salesman_report(from_date:str, to_date:str, send_email:bool, exce
     counts = len(validation_df)
     if counts != 0:
         
-        validation_df.to_excel(fr"D:\Busy_SalesOrder_Salesman\Reports\Salesman Validation from Month to {to_date}.xlsx", index= False)
+        validation_df.to_excel(fr"D:\Reports\Busy_SalesOrder_Salesman\Salesman Validation from Month to {to_date}.xlsx", index= False)
         
         subject = f"Busy SalesOrder Salesman Validation Report from Month to {to_date} with {counts} rows of discrepancies"
         body = f"Greetings All,\nKindly find the Busy SalesOrder Salesman Validation Report attached from Month to {to_date} with {counts} rows of discrepancies.\nThe attached excel contains the busy entries without the mention of salesman name."

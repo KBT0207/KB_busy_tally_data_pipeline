@@ -5,7 +5,6 @@ from database import main_db
 from busy import main_busy
 from tally import main_tally
 from utils.common_utils import tally_comp_codes, balance_comp_codes, receivables_comp_codes
-from dotenv import load_dotenv
 
 
 
@@ -41,8 +40,7 @@ def busy_material_masters():
 
 def export_import_outstanding_tallydata():
     dates = [(datetime.today().date()- timedelta(days=1)).strftime("%d-%m-%Y"),
-             (datetime.today().date()- timedelta(days=2)).strftime("%d-%m-%Y"), 
-             (datetime.today().date()- timedelta(days=3)).strftime("%d-%m-%Y"),
+             (datetime.today().date()- timedelta(days=2)).strftime("%d-%m-%Y"),
              ]                    #yesterday
     # dates = ['31-03-2024']
     companies = sorted(list(balance_comp_codes.keys()))
@@ -54,6 +52,8 @@ def export_import_receivables_tallydata():
     dates = [(datetime.today().date()- timedelta(days=1)).strftime("%d-%m-%Y"),
              (datetime.today().date()- timedelta(days=2)).strftime("%d-%m-%Y"),
              (datetime.today().date()- timedelta(days=3)).strftime("%d-%m-%Y"),
+             (datetime.today().date()- timedelta(days=4)).strftime("%d-%m-%Y"),
+             (datetime.today().date()- timedelta(days=5)).strftime("%d-%m-%Y"),
              ]                    #yesterday
     companies = sorted(list(receivables_comp_codes.keys()))
     main_tally.exporting_receivables(company= companies, dates= dates)
@@ -73,7 +73,7 @@ def reports():
 
     main_db.salesorder_salesman_report(from_date= fromdate, 
                                        to_date=todate, send_email= True,
-                                    #    exceptions= None,
+                                       exceptions= None,
                                        )
 
     main_db.volume_discount_report(dates= [todate], send_email=True, 
@@ -98,6 +98,7 @@ if __name__ == "__main__":
     
     # schedule.every().day.at("00:05").do(busy_material_masters)
 
+    # schedule.every().day.at("05:15").do(tally_to_sql)
     # schedule.every().day.at("05:15").do(tally_to_sql)
 
     # schedule.every().day.at("10:00").do(reports)
