@@ -20,29 +20,46 @@ class DatabaseCrud:
         self.Session = scoped_session(sessionmaker(bind=self.db_connector.engine, autoflush=False))
 
     
-    def delete_date_range_query(self, table_name, start_date, end_date, commit):
+    def delete_date_range_query(self, table_name: str, start_date: str, end_date: str, commit: bool) -> None:
+        """
+        Deletes rows in the specified table within the given date range.
+
+        Args:
+            table_name (str): The name of the table from which rows are to be deleted.
+            start_date (str): The start date of the date range in 'YYYY-MM-DD' format.
+            end_date (str): The end date of the date range in 'YYYY-MM-DD' format.
+            commit (bool): Whether to commit the transaction.
+
+        Returns:
+            None
+        """
         table_class = tables.get(table_name)
-        if table_class:
-            if start_date <= end_date:
-                date_condition = and_(table_class.date.between(start_date, end_date))
-            else:
-                logger.critical("Start date or end date not provided for deletion.")
-                return
-            
-            delete_query = delete(table_class).where(date_condition)
-            
+        if not table_class:
+            logger.error(f"Table '{table_name}' not found in table mapping. Delete query failed to execute.")
+            return
+
+        if start_date > end_date:
+            logger.error(f"Start date '{start_date}' should be less than or equal to end date '{end_date}'.")
+            return
+
+        date_condition = table_class.date.between(start_date, end_date)
+        delete_query = delete(table_class).where(date_condition)
+
+        try:
             with self.db_engine.connect() as connection:
-                try:
-                    result = connection.execute(delete_query)
-                    deleted_count = result.rowcount
-                    if commit:
-                        connection.commit()
-                    logger.info(f"Deleted {deleted_count} rows in {table_name} between {start_date} and {end_date}.")
-                except SQLAlchemyError as e:
-                    connection.rollback()
-                    logger.error(f"Error occurred during deletion: {e}")
-        else:
-            logger.info(f"Table {table_name} not found in table_mapping. Delete query Failed to execute")
+                result = connection.execute(delete_query)
+                deleted_count = result.rowcount
+                logger.info(f"Deleted {deleted_count} rows from '{table_name}' between {start_date} and {end_date}.")
+                if commit:
+                    connection.commit()
+                    logger.info("Transaction committed.")
+                else:
+                    logger.info("Transaction not committed.")
+        except SQLAlchemyError as e:
+            logger.error(f"Error occurred during deletion: {e}")
+        finally:
+            connection.rollback()
+            logger.error("Transaction rolled back due to error.")
         
 
 
@@ -137,11 +154,7 @@ class DatabaseCrud:
 
 
 
-
-    def import_accounts_data(self, 
-                              df:pd.DataFrame, 
-                              commit:bool,
-                              ):
+    def import_accounts_data(self, df:pd.DataFrame, commit:bool):
         
         df['ledger_name'] = df['ledger_name'].str.title()
 
@@ -206,96 +219,7 @@ class DatabaseCrud:
                 logger.critical(f"Unknown error occurred: {e}")
         else:
             logger.info(f"No new data to import in the database.")
-        # from xlwings import view
-        # return view(to_import_data)
-        # return view(new_data_with_busy_name)
-    
-        # # return df_accounts['material_centre'].value_counts()
-        # return df['material_centre'].value_counts()
-
-        # to_import_data.to_excel(r"C:\Users\HP\Desktop\test_files\Accounts_merged.xlsx", index=False)
-
-
-
-    # def import_items_data(self, 
-    #                           df:pd.DataFrame, 
-    #                           commit:bool,
-    #                           ):
         
-    #     df['ledger_name'] = df['ledger_name'].str.title()
-
-    #     df_material_centre = df["material_centre"][1]
-        
-    #     if 'NA' in df_material_centre:
-    #         busy_table = BusyAccountsNewAge
-    #     elif 'AS' in df_material_centre:
-    #         busy_table = BusyAccountsAgri
-    #     elif 'GE' in df_material_centre:
-    #         busy_table = BusyAccountsGreenEra
-    #     else:
-    #         busy_table = BusyAccountsKBBIO
-
-    #     busy_data = self.Session.query(busy_table).with_entities(busy_table.name, busy_table.alias, 
-    #                                                              ).all()
-    #     df_busy_data = pd.DataFrame(busy_data, columns= ['busy_name', 'alias_code'])
-
-    #     join_query = self.Session.query(TallyAccounts).filter(TallyAccounts.material_centre == df_material_centre)
-
-    #     accounts = join_query.with_entities(TallyAccounts.ledger_name, TallyAccounts.alias_code, 
-    #                                         TallyAccounts.state, TallyAccounts.material_centre,                                 
-    #                                         ).all()
-    #     df_accounts = pd.DataFrame(accounts, columns=['ledger_name', 'alias_code', 
-    #                                                   'state', 'material_centre', 
-    #                                                 ])
-        
-    #     df_accounts['ledger_name'] = df_accounts['ledger_name'].str.title()
-
-    #     new_data = df.merge(df_accounts, how= 'left', on= 'ledger_name', indicator=True)
-    #     new_data = new_data.loc[new_data['_merge']=='left_only', 
-    #                               ['ledger_name', 'under', 'state_x', 'gst_registration_type', 
-    #                                'gst_no', 'opening_balance', 'material_centre_x', 
-    #                                 'alias_code',
-    #                                 ]
-    #                                 ].replace({pd.NA: None})
-    #     new_data.columns = new_data.columns.str.rstrip("_x")
-
-    #     new_data_with_busy_name = new_data.merge(df_busy_data, how= 'left', 
-    #                                              left_on= 'ledger_name', right_on= 'busy_name', 
-    #                                              indicator= True)
-    #     new_data_with_busy_name = new_data_with_busy_name.drop(columns=['alias_code_x', '_merge']).replace({pd.NA: None})
-
-    #     new_data_with_busy_name.columns = new_data_with_busy_name.columns.str.rstrip("_y")
-
-    #     if not new_data_with_busy_name.empty: 
-    #         values = new_data_with_busy_name.to_dict('records')
-    #         # print(values)
-    #         insert_stmt = insert(TallyAccounts).values(values)
-    #         try:
-    #             with self.db_engine.connect() as connection:
-    #                 result = connection.execute(insert_stmt)
-    #                 if commit:
-    #                     connection.commit()
-    #                     logger.info(f"Inserted {result.rowcount} rows into tally_accounts.")
-    #                 else:
-    #                     connection.rollback()
-    #                     logger.info(f"Transaction rollback successfully without any errors as commit was given False.")
-    #         except SQLAlchemyError as e:
-    #             logger.critical(f"Error inserting data into tally_accounts: {e}")
-    #             connection.rollback()
-    #             logger.error(f"Rolling back changes in tally_accounts due to import error.")
-    #         except Exception as e:
-    #             logger.critical(f"Unknown error occurred: {e}")
-    #     else:
-    #         logger.info(f"No new data to import in the database.")
-    #     # from xlwings import view
-    #     # return view(to_import_data)
-    #     # return view(new_data_with_busy_name)
-    
-    #     # # return df_accounts['material_centre'].value_counts()
-    #     # return df['material_centre'].value_counts()
-
-    #     # to_import_data.to_excel(r"C:\Users\HP\Desktop\test_files\Accounts_merged.xlsx", index=False)
-
 
 
     def manual_import_data(self, table_name:str, df: pd.DataFrame, commit: bool) -> None:
@@ -353,30 +277,6 @@ class DatabaseCrud:
 
 
 
-    def test_delete(self, table_name, start_date, end_date, commit):
-
-        table_class = tables.get(table_name)
-        if table_class:
-            if start_date <= end_date:
-                date_condition = and_(table_class.created_at.between(start_date, end_date))
-            else:
-                logger.critical("Start date or end date not provided for deletion.")
-                return
-            
-            delete_query = delete(table_class).where(date_condition)
-            
-            with self.db_engine.connect() as connection:
-                try:
-                    result = connection.execute(delete_query)
-                    deleted_count = result.rowcount
-                    if commit:
-                        connection.commit()
-                    logger.info(f"Deleted {deleted_count} rows in {table_name} between {start_date} and {end_date}.")
-                except SQLAlchemyError as e:
-                    connection.rollback()
-                    logger.error(f"Error occurred during deletion: {e}")
-        else:
-            logger.info(f"Table {table_name} not found in table_mapping. Delete query Failed to execute")
 
 
 

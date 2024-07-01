@@ -1,4 +1,5 @@
 import glob
+import pandas as pd
 from datetime import datetime, timedelta
 from database.sql_connector import db_engine, db_connector
 from database.busy_data_processor import BusyDataProcessor, get_filename, get_compname
@@ -24,22 +25,16 @@ def truncate_busy_masters():
 
 
 
-def delete_busy_sales():    
-    Base.metadata.create_all(db_engine)
+def delete_busy_sales(startdate:str, enddate:str, commit:bool):   
+    if startdate <= enddate:
+        Base.metadata.create_all(db_engine)
 
-    current_date = datetime.today().date()
-    # current_date = datetime.today().date()-timedelta(days=1)
-    date1 = current_date - timedelta(days=2)
-    # date1= "2024-04-01"
-    date2 = current_date - timedelta(days=1)
-    # date2= "2024-06-15"
-
-    tables_list = list(busy_tables.keys())
-    importer = DatabaseCrud(db_connector)
-    for table in tables_list:
-        if "sales" in table:
-            importer.delete_date_range_query(table, start_date= date1, end_date=date2, commit=True)
-
+        busy_sales_table = ['busy_sales', 'busy_sales_order', 'busy_sales_return']
+        importer = DatabaseCrud(db_connector)
+        for table in busy_sales_table:
+            importer.delete_date_range_query(table, start_date= startdate, end_date=enddate, commit=commit)
+    else:
+        logger.critical(f"Start date: {startdate} should be equal or greater than end date: {enddate}.")
 
 
 
@@ -74,13 +69,10 @@ def delete_tally_data(start_date:str, end_date:str, commit:bool):
 
 
 
-def import_busy_sales():    
+def import_busy_sales(filename:str):    
     Base.metadata.create_all(db_engine)
-    
-    # todays_date = "Apr-2024"
-    todays_date = datetime.today().strftime("%d-%b-%Y")
-    # todays_date = '13-Jun-2024'
-    busy_files = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*sales*{todays_date}.xlsx", recursive=True)
+
+    busy_files = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*sales*{filename}.xlsx", recursive=True)
     if len(busy_files) != 0:
         for file in busy_files:
             excel_data = BusyDataProcessor(file)
@@ -94,8 +86,8 @@ def import_busy_sales():
             if get_filename(file) == 'sales_order':
                 importer.import_data('busy_sales_order', excel_data.clean_and_transform(), commit=True)
 
-        else:
-            logger.error(f"{get_filename(file)} and {get_compname(file)} of {file} didn't match the criteria")    
+            else:
+                logger.error(f"{get_filename(file)} and {get_compname(file)} of {file} didn't match the criteria")    
 
     else:
         logger.critical("No File for today's date found to import in database")        
@@ -369,7 +361,6 @@ def cash_discount_report(dates:list, send_email:bool, exceptions:list = None) ->
     validation_df.to_excel(fr"D:\Reports\Cash_Discount\Cash Discount Report of {dates}.xlsx", index= False)
     
     discrepancy_count = validation_df.loc[validation_df['remark'] == 'Discrepancy', 'remark'].count() 
-    print(discrepancy_count)
     if discrepancy_count > 0:
         subject = f"Busy Sales Cash Discount Report of {dates} with {discrepancy_count} discrepancies"
         body = f"Greetings All,\nKindly find the Busy Sales Cash Discount Report of {dates} attached with discrepancy."
@@ -393,6 +384,123 @@ def cash_discount_report(dates:list, send_email:bool, exceptions:list = None) ->
             logger.info(f"Successfully emailed the Busy Sales Cash Discount Report.")
         except Exception as e:
             logger.critical(f"Failed to email the Busy Sales Cash Discount Report : {e}")
+
+
+
+def busy_tally_sales_reco(start_date:str, end_date:str, send_email:bool, exceptions:list = None) -> None:
+    report = Reports(db_connector)
+    try:
+        report.sales_validation(fromdate= start_date, todate= end_date, exceptions= exceptions)
+        logger.info(f"Busy-Tally sales reco from Month to date: {end_date} exported in excel")
+        busy_sales_df = pd.read_excel(fr'D:\Reports\Sales_Validation\Busy_vs_Tally_Sales_Reco_Month-to-{end_date}.xlsx', 
+                                      sheet_name= 'Busy Sales')
+        tally_sales_df = pd.read_excel(fr'D:\Reports\Sales_Validation\Busy_vs_Tally_Sales_Reco_Month-to-{end_date}.xlsx', 
+                                       sheet_name= 'Tally Sales')
+    except Exception as e :
+        logger.critical(f"Error occured: {e} \n\nWhile exporting Busy-Tally sales reco from Month to date: {end_date} in excel format")
+    busy_amnt_discrepancy = busy_sales_df.loc[busy_sales_df['amount_diff'] >= 5].count()
+    tally_amnt_discrepancy = tally_sales_df.loc[tally_sales_df['amount_diff'] >= 5].count()
+    busy_gst_discrepancy = busy_sales_df.loc[busy_sales_df['gst_remark'] == 'Matched'].count()
+    tally_gst_discrepancy = tally_sales_df.loc[tally_sales_df['gst_remark'] == 'Matched'].count()
+
+    if busy_amnt_discrepancy > 0 or tally_amnt_discrepancy > 0 or busy_gst_discrepancy > 0 or tally_gst_discrepancy > 0:
+        subject = f"Discrepancy found in Busy-Tally Sales Reco from Month to date: {end_date}"
+        body = f"Greetings All,\nKindly find the Busy-Tally Sales Reco from Month to date: {end_date} attached with discrepancies."
+        logger.info(f"Busy-Tally Sales Reco Exported to Excel with discrepancy.")
+
+    else:
+        subject = f"No discrepancy found in Busy-Tally Sales Reco from Month to date: {end_date}"
+        body = f"Greetings All,\nKindly find the Busy-Tally Sales Reco from Month to date: {end_date} attached without discrepancies."
+        logger.info(f"Busy-Tally Sales Reco Exported to Excel without discrepancy.")
+
+    if send_email:
+        attachment = fr"D:\Reports\Sales_Validation\Busy_vs_Tally_Sales_Reco_Month-to-{end_date}.xlsx"
+        try:
+            receivers = ['shivprasad@kaybeebio.com', 
+                        ]
+            cc = ['danish@kaybeeexports.com', 's.gaurav@kaybeeexports.com', 
+                ]
+            email_send(reciever= receivers, 
+                       cc= cc, 
+                       subject= subject, contents= body, attachemnts= attachment)
+            logger.info(f"Successfully emailed the Busy-Tally Sales Reco Report.")
+        except Exception as e:
+            logger.critical(f"Failed to email the Busy-Tally Sales Reco Report: {e}")
+
+
+def busy_tally_salesreturn_reco(start_date:str, end_date:str, send_email:bool, exceptions:list = None) -> None:
+    report = Reports(db_connector)
+    try:
+        report.sales_return_validation(fromdate= start_date, todate= end_date, exceptions= exceptions)
+        logger.info(f"Busy-Tally sales return reco from Month to date: {end_date} exported in excel")
+        busy_df = pd.read_excel(fr'D:\Reports\Sales_Return_Validation\Busy_vs_Tally_Sales_Return_Reco_Month-to-{end_date}.xlsx', 
+                                      sheet_name= 'Busy Sales')
+        tally_df = pd.read_excel(fr'D:\Reports\Sales_Return_Validation\Busy_vs_Tally_Sales_Return_Reco_Month-to-{end_date}.xlsx', 
+                                       sheet_name= 'Tally Sales')
+    except Exception as e :
+        logger.critical(f"Error occured: {e} \n\nWhile exporting Busy-Tally sales return reco from Month to date: {end_date} in excel format")
+    busy_amnt_discrepancy = busy_df.loc[busy_df['amount_diff'] >= 5].count()
+    tally_amnt_discrepancy = tally_df.loc[tally_df['amount_diff'] >= 5].count()
+    busy_gst_discrepancy = busy_df.loc[busy_df['gst_remark'] == 'Matched'].count()
+    tally_gst_discrepancy = tally_df.loc[tally_df['gst_remark'] == 'Matched'].count()
+
+    if busy_amnt_discrepancy > 0 or tally_amnt_discrepancy > 0 or busy_gst_discrepancy > 0 or tally_gst_discrepancy > 0:
+        subject = f"Discrepancy found in Busy-Tally Sales Return Reco from Month to date: {end_date}"
+        body = f"Greetings All,\nKindly find the Busy-Tally Sales Return Reco from Month to date: {end_date} attached with discrepancies."
+        logger.info(f"Busy-Tally Sales Return Reco Exported to Excel with discrepancy.")
+
+    else:
+        subject = f"No discrepancy found in Busy-Tally Sales Return Reco from Month to date: {end_date}"
+        body = f"Greetings All,\nKindly find the Busy-Tally Sales Return Reco from Month to date: {end_date} attached without discrepancies."
+        logger.info(f"Busy-Tally Sales Return Reco Exported to Excel without discrepancy.")
+
+    if send_email:
+        attachment = fr"D:\Reports\Sales_Return_Validation\Busy_vs_Tally_Sales_Return_Reco_Month-to-{end_date}.xlsx"
+        try:
+            receivers = ['shivprasad@kaybeebio.com', 
+                        ]
+            cc = ['danish@kaybeeexports.com', 's.gaurav@kaybeeexports.com', 
+                ]
+            email_send(reciever= receivers, 
+                       cc= cc, 
+                       subject= subject, contents= body, attachemnts= attachment)
+            logger.info(f"Successfully emailed the Busy-Tally Sales Return Reco Report.")
+        except Exception as e:
+            logger.critical(f"Failed to email the Busy-Tally Sales Return Reco Report: {e}")
+
+
+
+def salesorder_mitp_reco_report(start_date:str, end_date:str, send_email:bool, exceptions:list = None) -> None:
+    reports = Reports(db_connector)
+    salesorder_df = reports.salesorder_mitp_reco(fromdate= start_date, todate= end_date, exceptions= exceptions)
+    salesorder_df.to_excel(fr"D:\Reports\SalesOrder_MITP_Reco\SalesOrder-MITP-Reco-Month-to-{end_date}.xlsx", index= False)
+    
+    discrepancy_count = salesorder_df.loc[salesorder_df['remark'] == 'Discrepancy', 'remark'].count() 
+    if discrepancy_count > 0:
+        subject = f"Busy Sales Order-MITP Reco from Month to {end_date} with {discrepancy_count} discrepancies"
+        body = f"Greetings All,\nKindly find the Busy Sales Order - MITP Reco from Month to {end_date} attached with discrepancy."
+        logger.info(f"Busy Sales Order - MITP Reco Exported to Excel with {discrepancy_count} Discrepencies")
+    
+    else:
+        subject: f"Busy Sales Order-MITP Reco from Month to {end_date} without discrepancies"
+        body = f"Greetings All,\nKindly find the Busy Sales Order - MITP Reco from Month to {end_date} attached without discrepancy."
+        logger.info(f"Busy Sales Order - MITP Reco Exported to Excel without Discrepencies")
+
+    if send_email:
+        attachment = fr"D:\Reports\SalesOrder_MITP_Reco\SalesOrder-MITP-Reco-Month-to-{end_date}.xlsx"
+        try:
+            receivers = ['shivprasad@kaybeebio.com', 
+                        ]
+            cc = ['danish@kaybeeexports.com', 's.gaurav@kaybeeexports.com', 
+                ]
+            email_send(reciever= receivers, 
+                       cc= cc, 
+                       subject= subject, contents= body, attachemnts= attachment)
+            logger.info(f"Successfully emailed the Busy Sales Order - MITP Reco.")
+        except Exception as e:
+            logger.critical(f"Failed to email the Busy Sales Order - MITP Reco : {e}")
+
+
 
 
 # def import_tally_accounts():

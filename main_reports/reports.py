@@ -272,8 +272,8 @@ class Reports(DatabaseCrud):
         # return tally_df
 
         
-    # duplicates in result data
-    def sales_validation(self, fromdate, todate, exceptions:list) -> pd.DataFrame:
+
+    def sales_validation(self, fromdate:str, todate:str, exceptions:list) -> pd.DataFrame:
         
         def busy_to_tally():
             busy_query = self.Session.query(SalesKBBIO.date, SalesKBBIO.voucher_no, 
@@ -353,14 +353,7 @@ class Reports(DatabaseCrud):
             busy_to_tally_df['gst_remark'] = busy_to_tally_df.apply(gst_validation, axis=1)
 
             return busy_to_tally_df
-        
 
-        # result_busy_to_tally.to_excel(fr'D:\Reports\Sales_Validation\Sales_Validation_{fromdate}-{todate}.xlsx', 
-        #                               sheet_name= 'Busy-Tally', index=False)
-
-            # from xlwings import view
-            # return view(busy_to_tally_df)
-            # return busy_to_tally_df
         
         def tally_to_busy():
             tally_query = self.Session.query(TallySales.date, TallySales.voucher_no, 
@@ -442,8 +435,6 @@ class Reports(DatabaseCrud):
 
         result_busy_to_tally = busy_to_tally()
         result_tally_to_busy = tally_to_busy()
-        # result_tally_to_busy.to_excel(fr'D:\Reports\Sales_Validation\Sales_Validation_{fromdate}-{todate}.xlsx', 
-        #                             sheet_name= 'Tally-Busy', index=False)
 
         file_path = fr'D:\Reports\Sales_Validation\Busy_vs_Tally_Sales_Reco_Month-to-{todate}.xlsx'
 
@@ -453,7 +444,7 @@ class Reports(DatabaseCrud):
 
 
 
-    def sales_return_validation(self, fromdate, todate, exceptions:list) -> pd.DataFrame:
+    def sales_return_validation(self, fromdate:str, todate:str, exceptions:list) -> pd.DataFrame:
         
         def busy_to_tally():
             busy_query = self.Session.query(SalesReturnKBBIO.date, SalesReturnKBBIO.voucher_no, 
@@ -652,7 +643,8 @@ class Reports(DatabaseCrud):
 
 
 
-    def salesorder_mitp_reco(self, fromdate, todate, exceptions:list) -> pd.DataFrame:
+    def salesorder_mitp_reco(self, fromdate:str, todate:str, exceptions:list) -> pd.DataFrame:
+
         salesorder_query = self.Session.query(SalesOrderKBBIO.date, SalesOrderKBBIO.voucher_no, 
                                              SalesOrderKBBIO.particulars, SalesOrderKBBIO.item_details, 
                                              SalesOrderKBBIO.material_centre, SalesOrderKBBIO.main_qty, 
@@ -703,7 +695,7 @@ class Reports(DatabaseCrud):
 
 
     def populate_debtor_balances(self, fromdate: str, todate: str, filename: str, to_import: bool = True, to_export: bool = False, 
-                             commit: bool = True, export_location: str = r'D:\Reports') -> None:
+                             commit: bool = True, export_location: str = r'D:\Reports\Debtors_Balance') -> None:
         """
         Populate debtor balances for a given date range.
 

@@ -29,7 +29,7 @@ material_dict = {'trans_list': [export_busy_reports.select_mrfp_list,
 
 
 
-def exporting_sales():
+def exporting_sales(start_date:str , end_date:str, filename:str):
 
     busy_utils.open_busy()
     
@@ -44,39 +44,30 @@ def exporting_sales():
         except Exception as e:
             logger.critical(f"Logging into Busy of {comp} Failed! : {e}")
         
-        
         for rep_func, report in zip(sales_dict['trans_list'], sales_dict['reports']):
             if comp != "comp0005" and report == "sales_order" and rep_func == export_busy_reports.select_salesorder_list:
                 continue
             else:
                 export_busy_reports.transaction_report_selection(report= rep_func)
 
-                endate = datetime.today().date()
-                # endate = "2024-06-13"
-                startdate = endate - timedelta(days=2)
-
-                endate_str = endate.strftime("%d-%m-%Y")
-                # endate_str = "13-06-2024"
-                # startdate_str = "11-06-2024"
-                startdate_str = startdate.strftime("%d-%m-%Y")
-                
+                endate_str = datetime.strptime(start_date, '%Y-%m-%d').strftime("%d-%m-%Y")
+                startdate_str = datetime.strptime(end_date, '%Y-%m-%d').strftime("%d-%m-%Y")
                 try:
                     export_busy_reports.list_format(report_type= report, 
-                                    start_date= startdate_str, 
-                                    end_date= endate_str)
+                                    start_date= start_date, 
+                                    end_date= end_date)
                     logger.info(f"Generated data for {comp} and {report} to export successfully...")
                 except Exception as e:
                     logger.critical(f"Data Generation for {comp} and {report} Failed! : {e}")
 
                 try:
-                    curr_date = datetime.today().strftime("%d-%b-%Y")
                     busy_utils.export_format(report_type = report, company = comp, 
-                                            filename= f"{comp}_{report}_{curr_date}")
+                                            filename= f"{comp}_{report}_{filename}")
                     logger.info(f"Exported data for {comp} and {report} successfully...")
                 except Exception as e:
                     logger.critical(f"Exporting Data for {comp} and {report} Failed! : {e}")
 
-                try:    
+                try:
                     busy_utils.return_to_busy_home(esc=3)
                     time.sleep(5)
 
@@ -102,12 +93,10 @@ def exporting_sales():
     pg.press('enter')
     logger.info("Quit Busy Successfully!")
 
-    today_date = datetime.today().strftime("%d-%b-%Y")
-    #today_date = "03-May-2024"
     receivers = ['shivprasad@kaybeebio.com',  
                  'sayali@kaybeeexports.com']
     cc = ['s.gaurav@kaybeeexports.com', 'danish@kaybeeexports.com']
-    attachment_path = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*sales*{today_date}.xlsx", recursive=True)
+    attachment_path = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*sales*{filename}.xlsx", recursive=True)
 
     subj_sales = f"KB Companies ['Sales, Sales Voucher and Sales Order'] data of {endate_str}"
     body_sales = f"Kindly find the attached 'Sales, Sales Voucher and Sales Order' data of {companies} from {startdate_str} to {endate_str}" 
@@ -129,7 +118,7 @@ def exporting_sales():
 
 
     subj_sales_order = f"KBBIO Sales Order of {endate_str}"
-    attachment_path_sales_order = fr"D:\automated_busy_downloads\comp0005\sales_order\comp0005_sales_order_{today_date}.xlsx"
+    attachment_path_sales_order = fr"D:\automated_busy_downloads\comp0005\sales_order\comp0005_sales_order_{filename}.xlsx"
     body_sales_order = f"Kinldy find the Sales Order of {endate_str}"
     if attachment_path_sales_order:
         try:
