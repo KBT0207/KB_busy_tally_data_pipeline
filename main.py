@@ -106,9 +106,8 @@ def reports():
 
 
 if __name__ == "__main__":
-    
-    
-    # main_db.rep()
+
+    tally_to_sql()
 
     # export_import_outstanding_tallydata()
     # export_import_receivables_tallydata()
