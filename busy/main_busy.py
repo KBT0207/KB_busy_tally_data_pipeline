@@ -29,7 +29,7 @@ material_dict = {'trans_list': [export_busy_reports.select_mrfp_list,
 
 
 
-def exporting_sales(start_date:str , end_date:str, filename:str):
+def exporting_sales(start_date:str , end_date:str, filename:str, send_email:bool):
 
     busy_utils.open_busy()
     
@@ -50,12 +50,12 @@ def exporting_sales(start_date:str , end_date:str, filename:str):
             else:
                 export_busy_reports.transaction_report_selection(report= rep_func)
 
-                endate_str = datetime.strptime(start_date, '%Y-%m-%d').strftime("%d-%m-%Y")
-                startdate_str = datetime.strptime(end_date, '%Y-%m-%d').strftime("%d-%m-%Y")
+                startdate_str = datetime.strptime(start_date, '%Y-%m-%d').strftime("%d-%m-%Y")
+                todate_str = datetime.strptime(end_date, '%Y-%m-%d').strftime("%d-%m-%Y")
                 try:
                     export_busy_reports.list_format(report_type= report, 
-                                    start_date= start_date, 
-                                    end_date= end_date)
+                                    start_date= startdate_str, 
+                                    end_date= todate_str)
                     logger.info(f"Generated data for {comp} and {report} to export successfully...")
                 except Exception as e:
                     logger.critical(f"Data Generation for {comp} and {report} Failed! : {e}")
@@ -75,7 +75,6 @@ def exporting_sales(start_date:str , end_date:str, filename:str):
                 except Exception as e:
                     logger.critical(f"Failed to go back busy home! : {e}")
 
-
         try:    
             busy_utils.change_company()
             time.sleep(5)
@@ -93,44 +92,47 @@ def exporting_sales(start_date:str , end_date:str, filename:str):
     pg.press('enter')
     logger.info("Quit Busy Successfully!")
 
-    receivers = ['shivprasad@kaybeebio.com',  
-                 'sayali@kaybeeexports.com']
-    cc = ['s.gaurav@kaybeeexports.com', 'danish@kaybeeexports.com']
-    attachment_path = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*sales*{filename}.xlsx", recursive=True)
+    if send_email:
+        receivers = ['shivprasad@kaybeebio.com',  
+                    'sayali@kaybeeexports.com']
+        cc = ['s.gaurav@kaybeeexports.com', 'danish@kaybeeexports.com']
+        attachment_path = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*sales*{filename}.xlsx", recursive=True)
 
-    subj_sales = f"KB Companies ['Sales, Sales Voucher and Sales Order'] data of {endate_str}"
-    body_sales = f"Kindly find the attached 'Sales, Sales Voucher and Sales Order' data of {companies} from {startdate_str} to {endate_str}" 
-    attachment_path_sales = []
-    for file in attachment_path:
-        if 'sale' in file:
-            attachment_path_sales.append(file) 
-    if len(attachment_path_sales) != 0:
-        try:
-            email.email_send(reciever=receivers, cc = cc,
-                            subject= subj_sales, 
-                            contents= body_sales, 
-                            attachemnts= attachment_path_sales)
-            logger.info("Attachments (All Sales) emailed successfully... ")
-        except Exception as e:
-            logger.critical(f"Failed to email the attachment for (All Sales)! : {e}")
+        subj_sales = f"KB Companies ['Sales, Sales Voucher and Sales Order'] data of {todate_str}"
+        body_sales = f"Kindly find the attached 'Sales, Sales Voucher and Sales Order' data of {companies} from {startdate_str} to {todate_str}" 
+        attachment_path_sales = []
+        for file in attachment_path:
+            if 'sale' in file:
+                attachment_path_sales.append(file) 
+        if len(attachment_path_sales) != 0:
+            try:
+                email.email_send(reciever=receivers, cc = cc,
+                                subject= subj_sales, 
+                                contents= body_sales, 
+                                attachemnts= attachment_path_sales)
+                logger.info("Attachments (All Sales) emailed successfully... ")
+            except Exception as e:
+                logger.critical(f"Failed to email the attachment for (All Sales)! : {e}")
+        else:
+            logger.critical("No data for (All Sales) exported today")
+
+
+        subj_sales_order = f"KBBIO Sales Order of {todate_str}"
+        attachment_path_sales_order = fr"D:\automated_busy_downloads\comp0005\sales_order\comp0005_sales_order_{filename}.xlsx"
+        body_sales_order = f"Kinldy find the Sales Order of {todate_str}"
+        if attachment_path_sales_order:
+            try:
+                email.email_send(reciever="rajani@kaybeebio.com", cc = "s.gaurav@kaybeeexports.com", 
+                                subject= subj_sales_order, 
+                                contents= body_sales_order, 
+                                attachemnts= attachment_path_sales_order)
+                logger.info("Sales Order emailed successfully... ")
+            except Exception as e:
+                logger.critical(f"Failed to email the attachment for Sales Order! : {e}")
+        else:
+            logger.critical("No data for Sales_Order exported today")
     else:
-        logger.critical("No data for (All Sales) exported today")
-
-
-    subj_sales_order = f"KBBIO Sales Order of {endate_str}"
-    attachment_path_sales_order = fr"D:\automated_busy_downloads\comp0005\sales_order\comp0005_sales_order_{filename}.xlsx"
-    body_sales_order = f"Kinldy find the Sales Order of {endate_str}"
-    if attachment_path_sales_order:
-        try:
-            email.email_send(reciever="rajani@kaybeebio.com", cc = "s.gaurav@kaybeeexports.com", 
-                            subject= subj_sales_order, 
-                            contents= body_sales_order, 
-                            attachemnts= attachment_path_sales_order)
-            logger.info("Sales Order emailed successfully... ")
-        except Exception as e:
-            logger.critical(f"Failed to email the attachment for Sales Order! : {e}")
-    else:
-        logger.critical("No data for Sales_Order exported today")
+        logger.info(f"Busy Sales email not sent as per the argument given.")
 
 
 

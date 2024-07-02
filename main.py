@@ -24,14 +24,17 @@ def tally_to_sql():
 
 
 def busy_sales():
-    
-    file_name = datetime.today().date().strftime('%d-%b-%Y')
-    date1 = (datetime.today().date()-timedelta(days=2)).strftime('%Y-%m-%d')
-    # date1= "2024-06-25"
+    # fromdate_str = (datetime.today().date()-timedelta(days=2)).strftime('%d-%m-%Y')
+    # fromdate_str = '25-06-2024'
+    # todate_str = (datetime.today().date()-timedelta(days=1)).strftime('%d-%m-%Y')
+    file_name = (datetime.today().date()-timedelta(days=1)).strftime('%d-%b-%Y')
+    # date1 = (datetime.today().date()-timedelta(days=2)).strftime('%Y-%m-%d')
+    date1= "2024-06-25"
     date2 = (datetime.today().date()-timedelta(days=1)).strftime('%Y-%m-%d')
     # date2= "2024-06-29"
 
-    main_busy.exporting_sales(start_date= date1, end_date= date2, filename= file_name)
+    main_busy.exporting_sales(start_date= date1, end_date= date2, 
+                              filename= file_name, send_email= False)
     time.sleep(1)
     main_db.delete_busy_sales(startdate= date1, enddate= date2, commit= True)
     main_db.import_busy_sales(filename= file_name)
@@ -46,10 +49,10 @@ def busy_material_masters():
 
 
 def export_import_outstanding_tallydata():
-    dates = [(datetime.today().date() - timedelta(days=1)).strftime("%d-%m-%Y"),
-             (datetime.today().date() - timedelta(days=2)).strftime("%d-%m-%Y"),
-             ]                    #yesterday
-    # dates = ['31-03-2024']
+    # dates = [(datetime.today().date() - timedelta(days=1)).strftime("%d-%m-%Y"),
+    #          (datetime.today().date() - timedelta(days=2)).strftime("%d-%m-%Y"),
+    #          ]                    #yesterday
+    dates = ['30-06-2024', '01-07-2024']
     companies = sorted(list(balance_comp_codes.keys()))
     main_tally.exporting_outstanding_balance(company= companies, dates= dates)
     main_db.import_outstanding_tallydata(dates=dates)
@@ -107,23 +110,26 @@ def reports():
 
 if __name__ == "__main__":
     
-    
+    busy_sales()
+    time.sleep(1)
+    export_import_outstanding_tallydata()
+
     # main_db.rep()
 
     # export_import_outstanding_tallydata()
     # export_import_receivables_tallydata()
     # schedule.every().day.at("18:00").do(export_import_receivables_tallydata)
 
-    schedule.every().day.at("21:00").do(busy_sales)
+    # schedule.every().day.at("21:00").do(busy_sales)
 
-    schedule.every().day.at("03:15").do(export_import_outstanding_tallydata)
+    # schedule.every().day.at("03:15").do(export_import_outstanding_tallydata)
     
-    schedule.every().day.at("00:05").do(busy_material_masters)
+    # schedule.every().day.at("00:05").do(busy_material_masters)
 
-    # schedule.every().day.at("10:00").do(reports)
+    # # schedule.every().day.at("10:00").do(reports)
     
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
+    # while True:
+    #     schedule.run_pending()
+    #     time.sleep(1)
 
 
