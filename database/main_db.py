@@ -195,11 +195,10 @@ def import_tally_data(date):
             # if get_filename(file) == 'items':
             #     importer.import_data('tally_items', excel_data.clean_and_transform(), commit=True)
 
-            
 
-            logger.info(f"{get_filename(file)} and {get_compname(file)} imported into database.. ")
-        else:
-            logger.error(f"{get_filename(file)} and {get_compname(file)} of {file} didn't match the criteria")    
+                logger.info(f"{get_filename(file)} and {get_compname(file)} imported into database.. ")
+            else:
+                logger.error(f"{get_filename(file)} and {get_compname(file)} of {file} didn't match the criteria")    
 
     else:
         logger.critical("No File for today's date found to import in database")

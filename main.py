@@ -12,14 +12,14 @@ from database.sql_connector import db_connector
 
 def tally_to_sql():
     current_date = datetime.today().strftime("%d-%b-%Y")
-    # current_date = 'Apr-24-Jun-24'
-    startdate = (datetime.today().date() - timedelta(days=2)).strftime("%Y-%m-%d")
-    # startdate = '2024-04-01'
+    # current_date = '29-Jun-24'
+    # startdate = (datetime.today().date() - timedelta(days=2)).strftime("%Y-%m-%d")
+    startdate = '2024-06-25'
     endate = (datetime.today().date() - timedelta(days=1)).strftime("%Y-%m-%d")
     # endate = '2024-06-29'
     companies = sorted(list(tally_comp_codes.keys()))
     
-    main_tally.exporting_data(company=companies)
+    main_tally.exporting_data(company=companies, fromdate= startdate, todate= endate, filename= current_date)
     main_db.delete_tally_data(start_date= startdate, end_date= endate, commit=True)
     main_db.import_tally_data(date= current_date)
 

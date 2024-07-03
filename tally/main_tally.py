@@ -7,14 +7,13 @@ from logging_config import logger
 
 
 
-def exporting_data(company):
+def exporting_data(company, fromdate:str, todate:str, filename:str):
     pg.hotkey("win", "d")
     # todays_date = datetime.today().strftime("%d-%b-%Y")
-    todays_date = "Apr-24-Jun-24"
-    # from_date = (datetime.today() - timedelta(days=8)).strftime("%d-%m-%Y")
-    from_date = "01-04-2024"
-    # to_date = datetime.today().strftime("%d-%m-%Y")
-    to_date = "28-06-2024"
+    # todays_date = "29-Jun-24"
+    # # from_date = (datetime.today() - timedelta(days=8)).strftime("%d-%m-%Y")
+    from_date_str = datetime.strptime(fromdate, '%Y-%m-%d').strftime('%d-%m-%Y')
+    to_date_str = datetime.strptime(todate, '%Y-%m-%d').strftime('%d-%m-%Y')
 
     tally_utils.start_tally()
     logger.info("Tally started...")
@@ -25,21 +24,21 @@ def exporting_data(company):
         for rep in list(tally_reports.keys()):
             
             tally_utils.exporting_reports(report= rep, 
-                        from_date= from_date, to_date= to_date,
+                        from_date= from_date_str, to_date= to_date_str,
                         path= fr"D:\automated_tally_downloads\{comp}\{tally_reports[rep]}",
-                        filename= f"{comp}_{tally_reports[rep]}_{todays_date}.xlsx", 
+                        filename= f"{comp}_{tally_reports[rep]}_{filename}.xlsx", 
                         esc= 4)
-            logger.info(f"Exported {tally_reports[rep]} of {comp} of {todays_date}")
+            logger.info(f"Exported {tally_reports[rep]} of {comp} of {filename}")
                 
         tally_utils.accounts()
         tally_utils.export_accounts_data(path= fr"D:\automated_tally_downloads\{comp}\accounts",
-                        filename= f"{comp}_accounts_{todays_date}.xlsx")    
+                        filename= f"{comp}_accounts_{filename}.xlsx")    
 
         time.sleep(2)
         pg.press('esc')
         time.sleep(2)
         pg.press('esc')
-        logger.info(f"Exported accounts of {comp} of {todays_date}")
+        logger.info(f"Exported accounts of {comp} of {filename}")
 
         tally_utils.change_company()
     
