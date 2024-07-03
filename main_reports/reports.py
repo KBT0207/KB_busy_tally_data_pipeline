@@ -718,7 +718,7 @@ class Reports(DatabaseCrud):
         # Convert string dates to datetime.date objects
         fromdate_dt = dt.datetime.strptime(fromdate, '%Y-%m-%d').date()
         todate_dt = dt.datetime.strptime(todate, '%Y-%m-%d').date()
-        previous_dt = fromdate_dt - dt.timedelta(days=1)
+        previous_dt = (fromdate_dt - dt.timedelta(days=1)).strftime('%Y-%m-%d')
         
         # Check if the 'from' date is later than the 'to' date
         if todate_dt < fromdate_dt:
