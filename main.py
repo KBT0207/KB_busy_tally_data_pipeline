@@ -1,5 +1,6 @@
 import time
 import schedule
+import pandas as pd
 from datetime import date, datetime, timedelta
 from database import main_db
 from busy import main_busy
@@ -27,14 +28,14 @@ def busy_sales():
     # fromdate_str = (datetime.today().date()-timedelta(days=2)).strftime('%d-%m-%Y')
     # fromdate_str = '25-06-2024'
     # todate_str = (datetime.today().date()-timedelta(days=1)).strftime('%d-%m-%Y')
-    file_name = (datetime.today().date()-timedelta(days=1)).strftime('%d-%b-%Y')
-    # date1 = (datetime.today().date()-timedelta(days=2)).strftime('%Y-%m-%d')
-    date1= "2024-06-25"
-    date2 = (datetime.today().date()-timedelta(days=1)).strftime('%Y-%m-%d')
+    file_name = datetime.today().date().strftime('%d-%b-%Y')
+    date1 = (datetime.today().date()-timedelta(days=2)).strftime('%Y-%m-%d')
+    # date1= "2024-06-25"
+    date2 = datetime.today().date().strftime('%Y-%m-%d')
     # date2= "2024-06-29"
 
     main_busy.exporting_sales(start_date= date1, end_date= date2, 
-                              filename= file_name, send_email= False)
+                              filename= file_name, send_email= True)
     time.sleep(1)
     main_db.delete_busy_sales(startdate= date1, enddate= date2, commit= True)
     main_db.import_busy_sales(filename= file_name)
@@ -49,10 +50,10 @@ def busy_material_masters():
 
 
 def export_import_outstanding_tallydata():
-    # dates = [(datetime.today().date() - timedelta(days=1)).strftime("%d-%m-%Y"),
-    #          (datetime.today().date() - timedelta(days=2)).strftime("%d-%m-%Y"),
-    #          ]                    #yesterday
-    dates = ['30-06-2024', '01-07-2024']
+    dates = [(datetime.today().date() - timedelta(days=1)).strftime("%d-%m-%Y"),
+            #  (datetime.today().date() - timedelta(days=2)).strftime("%d-%m-%Y"),
+             ]                    #yesterday
+    # dates = ['30-06-2024', '01-07-2024']
     companies = sorted(list(balance_comp_codes.keys()))
     main_tally.exporting_outstanding_balance(company= companies, dates= dates)
     main_db.import_outstanding_tallydata(dates=dates)
@@ -72,6 +73,7 @@ def export_import_receivables_tallydata():
 
 def reports():
     fromdate = datetime.today().date().replace(day=1).strftime('%Y-%m-%d')
+    # fromdate = '2024-06-01'
     todate = (datetime.today().date() - timedelta(days=1)).strftime('%Y-%m-%d')
     
     main_db.dealer_price_validation_report(from_date= fromdate, 
@@ -84,10 +86,16 @@ def reports():
                                        exceptions= None,
                                        )
 
-    main_db.volume_discount_report(dates= [todate], send_email=True, 
+    from_date_str = datetime.strptime(fromdate, '%Y-%m-%d')
+    to_date_str = datetime.strptime(todate, '%Y-%m-%d')
+
+    date_list = pd.date_range(start= from_date_str, end= to_date_str).to_list()
+
+    date_list_str = [date.strftime('%Y-%m-%d') for date in date_list]
+    main_db.volume_discount_report(dates= date_list_str, send_email=True, 
                                    exceptions= ['KAYBEE/001 A'])
 
-    main_db.cash_discount_report(dates= [todate], send_email=True, 
+    main_db.cash_discount_report(dates= date_list_str, send_email=True, 
                                    exceptions= ['KAYBEE/001 A'])
     
     main_db.busy_tally_sales_reco(start_date= fromdate, end_date= todate, send_email= True, 
@@ -103,18 +111,14 @@ def reports():
                                   )
 
     report = Reports(db_connector)
-    report.populate_debtor_balances(fromdate= fromdate, todate= todate, filename= f'Debtors_Balance_{fromdate}-{todate}', 
-                                    to_import= True, to_export= False, commit= True,
+    ref_date = '2024-04-01'
+    report.populate_debtor_balances(fromdate= ref_date, todate= todate, 
+                                    filename= f'Debtors_Balance_{ref_date}-{todate}', 
+                                    to_import= True, to_export= True, commit= True,
                                     )
 
 
 if __name__ == "__main__":
-
-    tally_to_sql()
-
-    # export_import_outstanding_tallydata()
-    # export_import_receivables_tallydata()
-    # schedule.every().day.at("18:00").do(export_import_receivables_tallydata)
 
     # schedule.every().day.at("21:00").do(busy_sales)
 
