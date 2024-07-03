@@ -24,17 +24,16 @@ def tally_to_sql():
 
 
 def busy_sales():
-    # fromdate_str = (datetime.today().date()-timedelta(days=2)).strftime('%d-%m-%Y')
     # fromdate_str = '25-06-2024'
     # todate_str = (datetime.today().date()-timedelta(days=1)).strftime('%d-%m-%Y')
     file_name = (datetime.today().date()-timedelta(days=1)).strftime('%d-%b-%Y')
-    # date1 = (datetime.today().date()-timedelta(days=2)).strftime('%Y-%m-%d')
-    date1= "2024-06-25"
+    date1 = (datetime.today().date()-timedelta(days=2)).strftime('%Y-%m-%d')
+    # date1= "2024-06-25"
     date2 = (datetime.today().date()-timedelta(days=1)).strftime('%Y-%m-%d')
     # date2= "2024-06-29"
 
     main_busy.exporting_sales(start_date= date1, end_date= date2, 
-                              filename= file_name, send_email= False)
+                              filename= file_name, send_email= True)
     time.sleep(1)
     main_db.delete_busy_sales(startdate= date1, enddate= date2, commit= True)
     main_db.import_busy_sales(filename= file_name)
@@ -110,13 +109,12 @@ def reports():
 
 if __name__ == "__main__":
 
-    tally_to_sql()
-
     # export_import_outstanding_tallydata()
     # export_import_receivables_tallydata()
     # schedule.every().day.at("18:00").do(export_import_receivables_tallydata)
 
     # schedule.every().day.at("21:00").do(busy_sales)
+    schedule.every().day.at("02:05").do(tally_to_sql)
 
     # schedule.every().day.at("03:15").do(export_import_outstanding_tallydata)
     
@@ -124,8 +122,8 @@ if __name__ == "__main__":
 
     # # schedule.every().day.at("10:00").do(reports)
     
-    # while True:
-    #     schedule.run_pending()
-    #     time.sleep(1)
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
 
 
