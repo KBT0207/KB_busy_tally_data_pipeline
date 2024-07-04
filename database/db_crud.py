@@ -47,19 +47,23 @@ class DatabaseCrud:
 
         try:
             with self.db_engine.connect() as connection:
-                result = connection.execute(delete_query)
-                deleted_count = result.rowcount
-                logger.info(f"Deleted {deleted_count} rows from '{table_name}' between {start_date} and {end_date}.")
-                if commit:
-                    connection.commit()
-                    logger.info("Transaction committed.")
-                else:
-                    logger.info("Transaction not committed.")
+                transaction = connection.begin()
+                try:
+                    result = connection.execute(delete_query)
+                    deleted_count = result.rowcount
+                    logger.info(f"Deleted {deleted_count} rows from '{table_name}' between {start_date} and {end_date}.")
+                    
+                    if commit:
+                        transaction.commit()
+                        logger.info("Transaction committed.")
+                    else:
+                        transaction.rollback()
+                        logger.info("Transaction not committed.")
+                except SQLAlchemyError as e:
+                    transaction.rollback()
+                    logger.error(f"Error occurred during deletion: {e}")
         except SQLAlchemyError as e:
-            logger.error(f"Error occurred during deletion: {e}")
-        finally:
-            connection.rollback()
-            logger.error("Transaction rolled back due to error.")
+            logger.error(f"Connection error: {e}")
         
 
 

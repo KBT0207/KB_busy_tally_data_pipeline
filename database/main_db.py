@@ -65,7 +65,7 @@ def delete_tally_data(start_date:str, end_date:str, commit:bool):
         if table not in exclude_tables:
             importer.delete_date_range_query(table, start_date= start_date, 
                                              end_date=end_date, commit=commit)
-
+    importer.truncate_table(table_name= 'tally_accounts', commit= commit)
 
 
 
@@ -152,8 +152,6 @@ def import_busy_masters_material():
             if get_filename(file) == "items" and get_compname(file) == "comp0010":
                 importer.import_data('busy_items_agri', excel_data.clean_and_transform(), commit=True)
 
-        else:
-            logger.error(f"{get_filename(file)} and {get_compname(file)} of {file} didn't match the criteria")    
     else:
         logger.critical("No File for today's date found to import in database")
 
@@ -195,10 +193,7 @@ def import_tally_data(date):
             # if get_filename(file) == 'items':
             #     importer.import_data('tally_items', excel_data.clean_and_transform(), commit=True)
 
-
                 logger.info(f"{get_filename(file)} and {get_compname(file)} imported into database.. ")
-            else:
-                logger.error(f"{get_filename(file)} and {get_compname(file)} of {file} didn't match the criteria")    
 
     else:
         logger.critical("No File for today's date found to import in database")
