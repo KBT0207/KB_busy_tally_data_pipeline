@@ -1,5 +1,6 @@
 import glob
 import pandas as pd
+import os
 from datetime import datetime, timedelta
 from database.sql_connector import db_engine, db_connector
 from database.busy_data_processor import BusyDataProcessor, get_filename, get_compname
@@ -201,11 +202,18 @@ def import_tally_data(date):
 
 
 
-def import_outstanding_tallydata(dates:list):    
+def import_outstanding_tallydata(dates: list, monthly: bool):
     Base.metadata.create_all(db_engine)
     for date in dates:
-        tally_files = glob.glob("D:\\automated_tally_downloads\\" + f"**\\*outstanding_{date}.xlsx", recursive=True)
-        if len(tally_files) != 0:
+        if monthly:
+            first_day_of_current_month = datetime.today().replace(day=1)
+            previous_month = (first_day_of_current_month - timedelta(days=1)).strftime('%B-%Y')
+            file_path = os.path.join("D:\\automated_tally_downloads", "**", previous_month, f"*outstanding_{date}.xlsx")
+        else:
+            file_path = os.path.join("D:\\automated_tally_downloads", "**", f"*outstanding_{date}.xlsx")
+        
+        tally_files = glob.glob(file_path, recursive=True)
+        if tally_files:
             for file in tally_files:
                 excel_data = TallyDataProcessor(file)
                 importer = DatabaseCrud(db_connector)

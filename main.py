@@ -49,13 +49,35 @@ def busy_material_masters():
 
 
 def export_import_outstanding_tallydata():
-    dates = [(datetime.today().date() - timedelta(days=1)).strftime("%d-%m-%Y"),
-            #  (datetime.today().date() - timedelta(days=2)).strftime("%d-%m-%Y"),
-             ]                    #yesterday
-    # dates = ['30-06-2024', '01-07-2024']
+    
+    first_day_of_current_month = datetime.today().replace(day=1)
+    last_day_of_previous_month = first_day_of_current_month - timedelta(days=1)
+    first_day_of_previous_month = last_day_of_previous_month.replace(day=1)
+
+    fromdate = first_day_of_previous_month.strftime('%Y-%m-%d')
+    todate = last_day_of_previous_month.strftime('%Y-%m-%d')
+    date_list = pd.date_range(start=fromdate, end=todate).to_list()
+    date_list_str = [date.strftime('%d-%m-%Y') for date in date_list]
+    yesterday = [(datetime.today().date() - timedelta(days=1)).strftime("%d-%m-%Y")]
+
     companies = sorted(list(balance_comp_codes.keys()))
-    main_tally.exporting_outstanding_balance(company= companies, dates= dates)
-    main_db.import_outstanding_tallydata(dates=dates)
+    
+    if datetime.today().day == 10:
+        monthly = True
+        dates = date_list_str
+    else:
+        monthly = False
+        dates = yesterday
+    main_tally.exporting_outstanding_balance(company=companies, dates=dates, monthly=monthly)
+    main_db.import_outstanding_tallydata(dates=dates, monthly = monthly)
+
+
+def scheduled_outstanding_balance():
+    if datetime.today().day != 10:
+        schedule.every().day.at("03:15").do(export_import_outstanding_tallydata)
+    else:
+        schedule.every().day.at("10:30").do(export_import_outstanding_tallydata)
+
 
 
 def export_import_receivables_tallydata():
@@ -85,18 +107,34 @@ def reports():
                                        exceptions= None,
                                        )
 
-    from_date_str = datetime.strptime(fromdate, '%Y-%m-%d')
-    to_date_str = datetime.strptime(todate, '%Y-%m-%d')
+    # from_date_str = datetime.strptime(fromdate, '%Y-%m-%d')
+    # to_date_str = datetime.strptime(todate, '%Y-%m-%d')
 
-    date_list = pd.date_range(start= from_date_str, end= to_date_str).to_list()
 
-    date_list_str = [date.strftime('%Y-%m-%d') for date in date_list]
+    date_list_str = [todate]
     main_db.volume_discount_report(dates= date_list_str, send_email=True, 
                                    exceptions= ['KAYBEE/001 A'])
 
     main_db.cash_discount_report(dates= date_list_str, send_email=True, 
                                    exceptions= ['KAYBEE/001 A'])
     
+
+    report = Reports(db_connector)
+    ref_date = '2024-04-01'
+    report.populate_debtor_balances(fromdate= ref_date, todate= todate, 
+                                    filename= f'Debtors_Balance_{ref_date}-{todate}', 
+                                    to_import= True, to_export= False, commit= True,
+                                    )
+
+
+def reco_reports():
+    fromdate = (datetime.today() - timedelta(days= 9)).strftime('%Y-%m-%d')
+    todate = (datetime.today() - timedelta(days= 3)).strftime('%Y-%m-%d')
+    # date_list = pd.date_range(start= datetime.today() - timedelta(days= 9), 
+    #                           end= datetime.today() - timedelta(days= 3), 
+    #                           ).to_list()
+    # date_list_str = [date.strftime('%Y-%m-%d') for date in date_list]
+
     main_db.busy_tally_sales_reco(start_date= fromdate, end_date= todate, send_email= True, 
                                 #   exceptions= , 
                                   )
@@ -105,35 +143,23 @@ def reports():
                                 #   exceptions= , 
                                   )    
 
-    main_db.salesorder_mitp_reco_report(start_date= fromdate , end_date= todate, send_email= True, 
-                                #   exceptions= , 
-                                  )
-
-    report = Reports(db_connector)
-    ref_date = '2024-04-01'
-    report.populate_debtor_balances(fromdate= ref_date, todate= todate, 
-                                    filename= f'Debtors_Balance_{ref_date}-{todate}', 
-                                    to_import= True, to_export= True, commit= True,
-                                    )
+    # main_db.salesorder_mitp_reco_report(start_date= fromdate , end_date= todate, send_email= True, 
+    #                             #   exceptions= , 
+    #                               )
 
 
 if __name__ == "__main__":
 
-    # export_import_outstanding_tallydata()
-    # export_import_receivables_tallydata()
-    # schedule.every().day.at("18:00").do(export_import_receivables_tallydata)
+    schedule.every().day.at("21:00").do(busy_sales)
 
-    # schedule.every().day.at("21:00").do(busy_sales)
-    schedule.every().day.at("02:05").do(tally_to_sql)
-
-    # schedule.every().day.at("03:15").do(export_import_outstanding_tallydata)
-    
-    # schedule.every().day.at("00:05").do(busy_material_masters)
+    scheduled_outstanding_balance()
+        
+    schedule.every().day.at("00:05").do(busy_material_masters)
 
     # # schedule.every().day.at("10:00").do(reports)
     
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
+    # while True:
+    #     schedule.run_pending()
+    #     time.sleep(1)
 
 

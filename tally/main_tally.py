@@ -1,4 +1,5 @@
 import pyautogui as pg
+import os
 import time
 from tally import tally_utils
 from utils.common_utils import tally_reports
@@ -51,7 +52,7 @@ def exporting_data(company, fromdate:str, todate:str, filename:str):
 
 
 
-def exporting_outstanding_balance(company:list, dates:list):
+def exporting_outstanding_balance(company:list, dates:list, monthly:bool):
     pg.hotkey("win", "d")
     
     tally_utils.start_tally()
@@ -62,11 +63,19 @@ def exporting_outstanding_balance(company:list, dates:list):
         logger.info(f"{comp} selected...")
         
         tally_utils.outstanding_balance()
-        
+        if monthly:
+
+            first_day_of_current_month = datetime.today().replace(day=1)
+            previous_month = (first_day_of_current_month - timedelta(days=1)).strftime('%B-%Y')
+            file_path = fr"D:\automated_tally_downloads\{comp}\outstanding\{previous_month}"
+            if not os.path.exists(file_path):
+                os.makedirs(file_path)
+        else:
+            file_path = fr"D:\automated_tally_downloads\{comp}\outstanding"
         for date in dates:
             tally_utils.change_period_balance(from_date= '01-04-2024', to_date= date)
-            tally_utils.export_balance_data(path= fr"D:\automated_tally_downloads\{comp}\outstanding",
-                            filename= f"{comp}_outstanding_{date}.xlsx")
+            tally_utils.export_balance_data(path= file_path, 
+                                            filename= f"{comp}_outstanding_{date}.xlsx")
             time.sleep(1.5)
 
         tally_utils.back_to_tally_home(times= 3)
