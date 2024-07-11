@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from logging_config import logger
-from database.busy_data_processor import get_compname, get_filename, get_date
+from Database.busy_data_processor import get_compname, get_filename, get_date
 from utils.common_utils import tally_comp_codes, acc_comp_codes, balance_comp_codes, receivables_comp_codes
 
 pd.set_option('future.no_silent_downcasting', True)
