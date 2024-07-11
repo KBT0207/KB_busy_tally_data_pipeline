@@ -2,11 +2,11 @@ import glob
 import pandas as pd
 import os
 from datetime import datetime, timedelta
-from database.sql_connector import db_engine, db_connector
-from database.busy_data_processor import BusyDataProcessor, get_filename, get_compname
-from database.tally_data_processor import TallyDataProcessor
-from database.models.base import Base
-from database.db_crud import DatabaseCrud
+from Database.sql_connector import db_engine, db_connector
+from Database.busy_data_processor import BusyDataProcessor, get_filename, get_compname
+from Database.tally_data_processor import TallyDataProcessor
+from Database.models.base import Base
+from Database.db_crud import DatabaseCrud
 from logging_config import logger
 from utils.common_utils import busy_tables, tally_tables
 from utils.email import email_send
@@ -537,11 +537,8 @@ def salesorder_mitp_reco_report(start_date:str, end_date:str, send_email:bool, e
 def rep():
     Base.metadata.create_all(db_engine)
     r = Reports(db_connector)
-    return r.populate_debtor_balances(fromdate= '2024-04-01', todate= '2024-06-15', to_import= False,
-                                      to_export= True , filename= "test_file", commit= True
-                            # # fromdate= datetime.today().date().replace(day=1).strftime("%Y-%m-%d"), 
-                            # todate= datetime.today().date().strftime("%Y-%m-%d"), 
-                            )
+    return r.intersite_reco(fromdate= '2024-06-01', todate= '2024-06-15') 
+                            
 
 
 def one(path, commit):

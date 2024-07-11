@@ -1,23 +1,25 @@
-from sqlalchemy import insert, distinct, and_, case, func, cast, DECIMAL, select, Numeric, Table, text, MetaData
+from sqlalchemy import insert, distinct, and_, or_, case, func, cast, DECIMAL, select, Numeric, Table, text, MetaData
 from sqlalchemy.exc import SQLAlchemyError
 import pandas as pd
 import numpy as np
 import datetime as dt
 import os
 from xlwings import view
-from database.db_crud import DatabaseCrud
+from Database.db_crud import DatabaseCrud
 from logging_config import logger
 # from utils.email import email_send
-from database.models.busy_models.busy_pricing import BusyPricingKBBIO
-from database.models.busy_models.busy_accounts import (BusyAccounts100x, BusyAccountsAgri, 
+from Database.models.busy_models.busy_pricing import BusyPricingKBBIO
+from Database.models.busy_models.busy_accounts import (BusyAccounts100x, BusyAccountsAgri, 
                                                     BusyAccountsGreenEra, BusyAccountsKBBIO,
-                                                    BusyAccountsNewAge)
-from database.models.busy_models.busy_reports import (SalesKBBIO, SalesOrderKBBIO, SalesReturnKBBIO, MITPKBBIO, MRFPKBBIO)
-from database.models.tally_models.tally_report_models import (TallyAccounts, TallyOutstandingBalance, 
+                                                    BusyAccountsNewAge, )
+from Database.models.busy_models.busy_reports import (SalesKBBIO, SalesOrderKBBIO, SalesReturnKBBIO, MITPKBBIO, MRFPKBBIO)
+from Database.models.tally_models.tally_report_models import (TallyAccounts, TallyOutstandingBalance, 
                                                               TallySales, TallySalesReturn, TallyJournal, 
                                                               TallyPayment, TallyPurchase, TallyPurchaseReturn ,
                                                               TallyReceipts, DebtorsBalance
                                                               )
+
+pd.set_option('display.max_columns', None)
 
 
 class Reports(DatabaseCrud):
@@ -922,3 +924,120 @@ class Reports(DatabaseCrud):
             return logger.critical(f"Outstanding balance of {todate} is not in the database.")
 
         
+
+    def intersite_reco(self, fromdate:str, todate:str, 
+                       exceptions:list = None) -> pd.DataFrame:
+        
+        particulars = {'Kay Bee Bio-Organics Pvt Ltd OD21': 'Khordha', 
+                           'Kay Bee Bio Organics Pvt Ltd MH27': 'Phaltan', 
+                           'Kay Bee Bio-Organics Pvt Ltd KA29': 'Hubli', 
+                           'Kay Bee Bio-Organics Pvt Ltd MP23': 'CNFIndore', 
+                           'Kay Bee Bio-Organics Pvt Ltd TEL36': 'Hyderabad', 
+                           'Kay Bee Bio-Organics Pvt Ltd CG22 New': 'Raipur', 
+                           'Kay Bee Bio-Organics Pvt Ltd RJ08': 'Jaipur', 
+                           'Kay Bee Bio-Organics Pvt Ltd PNB03': 'Bathinda', 
+                           'Kay Bee Bio Organics Pvt Ltd HR06': 'Karnal', 
+                           'Kay Bee Bio-Organics Pvt Ltd UP09': 'Lucknow', 
+                        #    'Kay Bee Exports Phaltan': 'Phaltan', 
+                           'Green Era Agri World Private Limited': 'GE Pune', 
+                        #    'Kay Bee Exports International P Ltd Naga': '', 
+                           'Kay Bee Bio-Organics Pvt Ltd AP37': 'Vijayawada', 
+                           'Kay Bee Agri Solution Pvt Ltd MH27': 'AS Phaltan', 
+                           'Kay Bee Bio-Organics Pvt Ltd GJ24': 'Gujarat', 
+
+                           }
+        excluded_particulars = ['Kay Bee Exports Phaltan', 
+                                'Kay Bee Exports International P Ltd Naga',
+                                    ]
+        
+        def busy_mitp_reco():
+            
+            received_mc = case(
+                        *[(MITPKBBIO.particulars == key, value) for key, value in particulars.items()],
+                                    else_='Unknown'
+                                ).label('Received Material Centre')
+            
+            mitp_query = (self.Session.query(MITPKBBIO.date.label('MITP Date'), 
+                                             MITPKBBIO.voucher_no.label('MITP Voucher No'), 
+                                             MITPKBBIO.particulars.label('MITP Particulars'), 
+                                             MITPKBBIO.item_details.label('MITP Item'), 
+                                             MITPKBBIO.material_centre.label('MITP Material Centre'), 
+                                             MITPKBBIO.alt_qty.label('MITP Qty'), 
+                                             MITPKBBIO.alt_unit.label('MITP Unit'), received_mc, 
+                                            SalesKBBIO.voucher_no.label('Sales Voucher No'))
+                                .outerjoin(SalesKBBIO, 
+                                            MITPKBBIO.voucher_no == SalesKBBIO.dc_no)    
+                                .filter(and_(MITPKBBIO.party_type == 'Inter-Branch'), 
+                                        MITPKBBIO.date.between(fromdate, todate),
+                                        ~MITPKBBIO.particulars.in_(excluded_particulars)))
+            
+            mrfp_query = (self.Session.query(MRFPKBBIO.particulars, 
+                                            MRFPKBBIO.voucher_no, MRFPKBBIO.item_details, 
+                                            MRFPKBBIO.alt_qty, MRFPKBBIO.alt_unit, 
+                                            MRFPKBBIO.material_centre)
+                        .filter(and_(
+                                MRFPKBBIO.date.between(fromdate, todate), 
+                                ~MRFPKBBIO.particulars.in_(excluded_particulars), 
+                                or_(
+                                    MRFPKBBIO.particulars.like('Kay Bee%'),
+                                    MRFPKBBIO.particulars.like('Green Era%')
+                                ))
+                        ))
+            
+            mitp_df = pd.DataFrame(mitp_query)
+            mrfp_df = pd.DataFrame(mrfp_query)
+
+            result_df = mitp_df.merge(mrfp_df, how= 'left', 
+                                      left_on= ['Sales Voucher No',  
+                                                'MITP Item', 'MITP Qty', 'MITP Unit', ], 
+                                      right_on= ['voucher_no', 
+                                                 'item_details', 'alt_qty', 'alt_unit', ])
+            return print(result_df.info())
+        
+        def busy_mrfp_reco():
+
+            received_mc = case(
+                        *[(MITPKBBIO.particulars == key, value) for key, value in particulars.items()],
+                                    else_='Unknown'
+                                ).label('Received Material Centre')
+            
+            mitp_query = (self.Session.query(MITPKBBIO.date.label('MITP Date'), 
+                                             MITPKBBIO.voucher_no.label('MITP Voucher No'), 
+                                             MITPKBBIO.particulars.label('MITP Particulars'), 
+                                             MITPKBBIO.item_details.label('MITP Item'), 
+                                             MITPKBBIO.material_centre.label('MITP Material Centre'), 
+                                             MITPKBBIO.alt_qty.label('MITP Qty'), 
+                                             MITPKBBIO.alt_unit.label('MITP Unit'), received_mc, 
+                                            SalesKBBIO.voucher_no.label('Sales Voucher No'))
+                                .outerjoin(SalesKBBIO, 
+                                            MITPKBBIO.voucher_no == SalesKBBIO.dc_no)    
+                                .filter(and_(MITPKBBIO.date.between(fromdate, todate), 
+                                             MITPKBBIO.party_type == 'Inter-Branch'), 
+                                        ~MITPKBBIO.particulars.in_(excluded_particulars)))
+            
+            mrfp_query = (self.Session.query(MRFPKBBIO.particulars, 
+                                            MRFPKBBIO.voucher_no, MRFPKBBIO.item_details, 
+                                            MRFPKBBIO.alt_qty, MRFPKBBIO.alt_unit, 
+                                            MRFPKBBIO.material_centre)
+                                      .filter(and_(
+                                                MRFPKBBIO.date.between(fromdate, todate), 
+                                                ~MRFPKBBIO.particulars.in_(excluded_particulars), 
+                                                or_(
+                                                    MRFPKBBIO.particulars.like('Kay Bee%'),
+                                                    MRFPKBBIO.particulars.like('Green Era%')
+                                                ))
+                                        ))
+            
+            mitp_df = pd.DataFrame(mitp_query)
+            mrfp_df = pd.DataFrame(mrfp_query)
+
+            result_df = mrfp_df.merge(mitp_df, how= 'left', 
+                                      right_on= ['Sales Voucher No',  
+                                                'MITP Item', 'MITP Qty', 'MITP Unit', ], 
+                                      left_on= ['voucher_no', 
+                                                 'item_details', 'alt_qty', 'alt_unit', ])
+
+            return print(result_df.info())
+
+        busy_mitp_reco()
+        busy_mrfp_reco()    

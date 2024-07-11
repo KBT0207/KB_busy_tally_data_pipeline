@@ -2,12 +2,12 @@ import time
 import schedule
 import pandas as pd
 from datetime import date, datetime, timedelta
-from database import main_db
+from Database import main_db
 from busy import main_busy
 from tally import main_tally
 from utils.common_utils import tally_comp_codes, balance_comp_codes, receivables_comp_codes
 from main_reports.reports import Reports
-from database.sql_connector import db_connector
+from Database.sql_connector import db_connector
 
 
 def tally_to_sql():
@@ -150,11 +150,13 @@ def reco_reports():
 
 if __name__ == "__main__":
 
-    schedule.every().day.at("21:00").do(busy_sales)
+    main_db.rep()
 
-    scheduled_outstanding_balance()
+    # schedule.every().day.at("21:00").do(busy_sales)
+
+    # scheduled_outstanding_balance()
         
-    schedule.every().day.at("00:05").do(busy_material_masters)
+    # schedule.every().day.at("00:05").do(busy_material_masters)
 
     # # schedule.every().day.at("10:00").do(reports)
     

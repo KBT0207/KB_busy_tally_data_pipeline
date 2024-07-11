@@ -20,24 +20,24 @@ def is_process_running(process_name:str) -> bool:
 
 
 
-from database.models.busy_models.busy_reports import (SalesKBBIO, SalesReturnKBBIO, 
+from Database.models.busy_models.busy_reports import (SalesKBBIO, SalesReturnKBBIO, 
                                         SalesOrderKBBIO, MITPKBBIO, MRFPKBBIO,
                                         )
-from database.models.busy_models.busy_accounts import (BusyAccountsKBBIO, 
+from Database.models.busy_models.busy_accounts import (BusyAccountsKBBIO, 
                                         BusyAccounts100x, BusyAccountsAgri,
                                         BusyAccountsGreenEra, BusyAccountsNewAge,
                                         )
-from database.models.busy_models.busy_items import (BusyItemsKBBIO, 
+from Database.models.busy_models.busy_items import (BusyItemsKBBIO, 
                                         BusyItems100x, BusyItemsGreenEra,
                                         BusyItemsAgri, BusyItemsNewAge,
                                         )
-from database.models.tally_models.tally_report_models import (TallySales, TallyPurchase,
+from Database.models.tally_models.tally_report_models import (TallySales, TallyPurchase,
                                         TallyPurchaseReturn, TallySalesReturn,
                                         TallyPayment, TallyReceipts , TallyJournal, 
                                         TallyAccounts, TallyOutstandingBalance, TestTable, 
                                         TallyReceivables, DebtorsBalance
                                         )
-from database.models.busy_models.busy_pricing import (BusyPricingKBBIO,
+from Database.models.busy_models.busy_pricing import (BusyPricingKBBIO,
                                         )
 
 
