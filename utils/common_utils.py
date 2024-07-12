@@ -1,7 +1,8 @@
 """This module contain functions that will used as helper/common functions in the report modules 
 """
 import psutil
-
+import calendar
+from datetime import datetime
 
 def is_process_running(process_name:str) -> bool:
     """This method will check whether a specific process is running or not.
@@ -39,6 +40,45 @@ from Database.models.tally_models.tally_report_models import (TallySales, TallyP
                                         )
 from Database.models.busy_models.busy_pricing import (BusyPricingKBBIO,
                                         )
+
+
+
+def batch_date(month: int, batch: int, year: int = datetime.today().year) -> list:
+    if batch not in [1, 2, 3]:
+        raise ValueError("Batch number must be 1, 2, or 3")
+    
+    # Get the total number of days in the month
+    days_in_month = calendar.monthrange(year, month)[1]
+    
+    # Calculate the size of each batch
+    batch_size = days_in_month // 3
+    remainder = days_in_month % 3
+
+    # Determine the start and end dates for each batch
+    if batch == 1:
+        start_day = 1
+        end_day = batch_size
+    elif batch == 2:
+        start_day = batch_size + 1
+        end_day = 2 * batch_size
+    else:  # batch == 3
+        start_day = 2 * batch_size + 1
+        end_day = days_in_month
+    
+    # If there's a remainder, adjust the batches
+    if remainder > 0:
+        if batch == 1:
+            end_day += 1
+        elif batch == 2:
+            start_day += 1
+            end_day += 1
+        else:  # batch == 3
+            start_day += 2
+    
+    # Generate the list of dates for the batch
+    return [f"{year}-{month:02d}-{day:02d}" for day in range(start_day, end_day + 1)]
+
+
 
 
 busy_tables = {'busy_sales': SalesKBBIO, 'busy_sales_order': SalesOrderKBBIO,

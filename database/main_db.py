@@ -39,18 +39,14 @@ def delete_busy_sales(startdate:str, enddate:str, commit:bool):
 
 
 
-def delete_busy_material():    
+def delete_busy_material(from_date:str, to_date:str):    
     Base.metadata.create_all(db_engine)
 
-    startdate = datetime.now().replace(day=1).strftime("%Y-%m-%d")
-
-    endate = datetime.today().strftime("%Y-%m-%d")
-    
     tables_list = list(busy_tables.keys())
     importer = DatabaseCrud(db_connector)
     for table in tables_list:
         if "mitp" in table or "mrfp" in table:
-            importer.delete_date_range_query(table, start_date=startdate, end_date=endate, commit=True)
+            importer.delete_date_range_query(table, start_date=from_date, end_date= to_date, commit=True)
 
 
 
@@ -72,7 +68,7 @@ def delete_tally_data(start_date:str, end_date:str, commit:bool):
 
 def import_busy_sales(filename:str):    
     Base.metadata.create_all(db_engine)
-
+        
     busy_files = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*sales*{filename}.xlsx", recursive=True)
     if len(busy_files) != 0:
         for file in busy_files:
@@ -96,15 +92,13 @@ def import_busy_sales(filename:str):
 
 
 
-def import_busy_masters_material():
+def import_busy_masters_material(file_name:str):
     Base.metadata.create_all(db_engine)
-    
     # today_date = "17-Apr-2024"
-    today_date = datetime.today().strftime("%d-%b-%Y")
 
-    pattern_master = f"D:\\automated_busy_downloads\\**\\*master*{today_date}.xlsx"
-    pattern_item = f"D:\\automated_busy_downloads\\**\\*items*{today_date}.xlsx"
-    pattern_material = f"D:\\automated_busy_downloads\\**\\*material*{today_date}.xlsx"
+    pattern_master = f"D:\\automated_busy_downloads\\**\\*master*{file_name}.xlsx"
+    pattern_item = f"D:\\automated_busy_downloads\\**\\*items*{file_name}.xlsx"
+    pattern_material = f"D:\\automated_busy_downloads\\**\\*material*{file_name}.xlsx"
 
     busy_files_material = glob.glob(pattern_material, recursive=True)
     busy_files_master = glob.glob(pattern_master, recursive=True)
@@ -222,10 +216,17 @@ def import_outstanding_tallydata(dates: list, monthly: bool):
 
 
 
-def import_receivables_tallydata(dates:list):    
+def import_receivables_tallydata(dates: list, monthly: bool):    
     Base.metadata.create_all(db_engine)
     for date in dates:
-        tally_files = glob.glob("D:\\automated_tally_downloads\\" + f"**\\*receivables_{date}.xlsx", recursive=True)
+        if monthly:
+            first_day_of_current_month = datetime.today().replace(day=1)
+            previous_month = (first_day_of_current_month - timedelta(days=1)).strftime('%B-%Y')
+            file_path = os.path.join("D:\\automated_tally_downloads", "**", previous_month, f"*receivables_{date}.xlsx")
+        else:
+            file_path = os.path.join("D:\\automated_tally_downloads", "**", f"*receivables_{date}.xlsx")
+
+        tally_files = glob.glob(file_path, recursive=True)
         if len(tally_files) != 0:
             for file in tally_files:
                 excel_data = TallyDataProcessor(file)

@@ -137,7 +137,7 @@ def exporting_sales(start_date:str , end_date:str, filename:str, send_email:bool
 
 
 
-def exporting_master_and_material():
+def exporting_master_and_material(from_date:str, to_date:str):
 
     busy_utils.open_busy()
     
@@ -158,15 +158,15 @@ def exporting_master_and_material():
         
             export_busy_reports.transaction_report_selection(report= rep_func)
             #endate = "2024-05-03"
-            startdate = datetime.now().replace(day=1).strftime("%d-%m-%Y")
+            # startdate = 
 
-            endate = datetime.today().strftime("%d-%m-%Y")
+            # endate = datetime.today().strftime("%d-%m-%Y")
             #endate_str = "03-05-2024"
             
             try:
                 export_busy_reports.list_format(report_type= report, 
-                                start_date= startdate, 
-                                end_date= endate)
+                                start_date= from_date, 
+                                end_date= to_date)
                 logger.info(f"Generated data for {comp} and {report} to export successfully...")
             except Exception as e:
                 logger.critical(f"Data Generation for {comp} and {report} Failed! : {e}")
@@ -232,7 +232,7 @@ def exporting_master_and_material():
     #today_date = "03-May-2024"
     receivers = ['shivprasad@kaybeebio.com', 'danish@kaybeeexports.com']
     #receivers = ['s.gaurav@kaybeeexports.com']
-    body_material = f"Kindly find the attached MITP & MRFP data of {companies} from {startdate} to {endate}"
+    body_material = f"Kindly find the attached MITP & MRFP data of {companies} from {from_date} to {to_date}"
     
     attachment_path = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*{curr_date}.xlsx", recursive=True)
 
