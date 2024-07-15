@@ -29,6 +29,7 @@ def tally_to_sql():
         first_day_of_previous_month = last_day_of_previous_month.replace(day=1)
         current_date = f'{startdate}-{endate}'
         # current_date = '29-Jun-24'
+
         startdate = first_day_of_previous_month.strftime("%Y-%m-%d")
         # startdate = '2024-06-25'
         endate = (datetime.today().date() - timedelta(days=1)).strftime("%Y-%m-%d")
@@ -38,6 +39,7 @@ def tally_to_sql():
     main_tally.exporting_data(company=companies, fromdate= startdate, todate= endate, filename= current_date)
     main_db.delete_tally_data(start_date= startdate, end_date= endate, commit=True)
     main_db.import_tally_data(date= current_date)
+
 
 
 def daily_busy_sales():
@@ -194,6 +196,7 @@ def reports():
                                     )
 
 
+
 def reco_reports():
     fromdate = (datetime.today() - timedelta(days= 9)).strftime('%Y-%m-%d')
     todate = (datetime.today() - timedelta(days= 3)).strftime('%Y-%m-%d')
@@ -215,35 +218,29 @@ def reco_reports():
     #                               )
 
 
+
+def testing_1():
+    print('testing func 1')
+
+
+def testing_2():
+    print('testing func 2')
+
+
+
 if __name__ == "__main__":
-
-    # daily_receivables_tallydata()
-
-    # function_name = sys.argv[1] if len(sys.argv) > 1 else None
-    # if function_name:
-    #     if function_name in globals() and callable(globals()[function_name]):
-    #         try:
-    #             logger.info(f"Running function: {function_name}")
-    #             globals()[function_name]()
-    #         except Exception as e:
-    #             logger.error(f"Error running function {function_name}: {e}")
-    #     else:
-    #         logger.error(f"Function '{function_name}' does not exist.")
-
-    # daily_busy_sales()
-
-    # main_db.rep()
-
-    schedule.every().day.at("02:30").do(tally_to_sql)
-
-    schedule.every().day.at("08:30").do(daily_receivables_tallydata)
-        
-    # # schedule.every().day.at("00:05").do(busy_material_masters)
-
-    # # # schedule.every().day.at("10:00").do(reports)
     
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
+    function_name = sys.argv[1] if len(sys.argv) > 1 else None
+    if function_name:
+        if function_name in globals() and callable(globals()[function_name]):
+            try:
+                logger.info(f"Running function: {function_name}")
+                globals()[function_name]()
+            except Exception as e:
+                logger.error(f"Error running function {function_name}: {e}")
+        else:
+            logger.error(f"Function '{function_name}' does not exist.")
+
+
 
 
