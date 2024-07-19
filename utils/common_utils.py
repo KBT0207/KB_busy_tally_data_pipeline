@@ -1,8 +1,9 @@
 """This module contain functions that will used as helper/common functions in the report modules 
 """
-import psutil
 import calendar
 from datetime import datetime
+import psutil
+
 
 def is_process_running(process_name:str) -> bool:
     """This method will check whether a specific process is running or not.
@@ -21,26 +22,25 @@ def is_process_running(process_name:str) -> bool:
 
 
 
-from Database.models.busy_models.busy_reports import (SalesKBBIO, SalesReturnKBBIO, 
-                                        SalesOrderKBBIO, MITPKBBIO, MRFPKBBIO,
-                                        )
-from Database.models.busy_models.busy_accounts import (BusyAccountsKBBIO, 
-                                        BusyAccounts100x, BusyAccountsAgri,
-                                        BusyAccountsGreenEra, BusyAccountsNewAge,
-                                        )
-from Database.models.busy_models.busy_items import (BusyItemsKBBIO, 
-                                        BusyItems100x, BusyItemsGreenEra,
-                                        BusyItemsAgri, BusyItemsNewAge,
-                                        )
-from Database.models.tally_models.tally_report_models import (TallySales, TallyPurchase,
-                                        TallyPurchaseReturn, TallySalesReturn,
-                                        TallyPayment, TallyReceipts , TallyJournal, 
-                                        TallyAccounts, TallyOutstandingBalance, TestTable, 
-                                        TallyReceivables, DebtorsBalance
-                                        )
-from Database.models.busy_models.busy_pricing import (BusyPricingKBBIO,
-                                        )
-
+from Database.models.busy_models.busy_accounts import (BusyAccounts100x,
+                                                       BusyAccountsAgri,
+                                                       BusyAccountsGreenEra,
+                                                       BusyAccountsKBBIO,
+                                                       BusyAccountsNewAge)
+from Database.models.busy_models.busy_items import (BusyItems100x,
+                                                    BusyItemsAgri,
+                                                    BusyItemsGreenEra,
+                                                    BusyItemsKBBIO,
+                                                    BusyItemsNewAge)
+from Database.models.busy_models.busy_pricing import BusyPricingKBBIO
+from Database.models.busy_models.busy_reports import (MITPKBBIO, MRFPKBBIO,
+                                                      SalesKBBIO,
+                                                      SalesOrderKBBIO,
+                                                      SalesReturnKBBIO)
+from Database.models.tally_models.tally_report_models import (
+    DebtorsBalance, TallyAccounts, TallyJournal, TallyOutstandingBalance,
+    TallyPayment, TallyPurchase, TallyPurchaseReturn, TallyReceipts,
+    TallyReceivables, TallySales, TallySalesReturn, TestTable)
 
 
 def batch_date(month: int, batch: int, year: int = datetime.today().year) -> list:

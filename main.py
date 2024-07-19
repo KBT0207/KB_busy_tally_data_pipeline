@@ -1,23 +1,22 @@
-import time
-import schedule
-import pandas as pd
-from datetime import date, datetime, timedelta
-from Database import main_db
-from busy import main_busy
-from tally import main_tally
-from utils.common_utils import tally_comp_codes, balance_comp_codes, receivables_comp_codes
-from utils.common_utils import batch_date
-from main_reports.reports import Reports
-from Database.sql_connector import db_connector
-from Database.db_crud import DatabaseCrud
 import sys
+import time
+from datetime import date, datetime, timedelta
+import calendar
+import pandas as pd
+import schedule
+from busy import main_busy
+from Database import main_db
+from Database.db_crud import DatabaseCrud
+from Database.sql_connector import db_connector
 from logging_config import logger
-
+from main_reports.reports import Reports
+from tally import main_tally
+from utils.common_utils import (balance_comp_codes, batch_date,
+                                receivables_comp_codes, tally_comp_codes)
 
 
 def tally_to_sql():
     if datetime.today().day not in [4, 19]:
-        current_date = datetime.today().strftime("%d-%b-%Y")
         # current_date = '29-Jun-24'
         startdate = (datetime.today().date() - timedelta(days=2)).strftime("%Y-%m-%d")
         # startdate = '2024-06-25'
@@ -27,7 +26,6 @@ def tally_to_sql():
         first_day_of_current_month = datetime.today().replace(day=1)
         last_day_of_previous_month = first_day_of_current_month - timedelta(days=1)
         first_day_of_previous_month = last_day_of_previous_month.replace(day=1)
-        current_date = f'{startdate}-{endate}'
         # current_date = '29-Jun-24'
 
         startdate = first_day_of_previous_month.strftime("%Y-%m-%d")
@@ -35,22 +33,21 @@ def tally_to_sql():
         endate = (datetime.today().date() - timedelta(days=1)).strftime("%Y-%m-%d")
         # endate = '2024-06-29'
     companies = sorted(list(tally_comp_codes.keys()))
+    file_name = f'{startdate}-{endate}'
     
-    main_tally.exporting_data(company=companies, fromdate= startdate, todate= endate, filename= current_date)
+    main_tally.exporting_data(company=companies, fromdate= startdate, todate= endate, filename= file_name)
     main_db.delete_tally_data(start_date= startdate, end_date= endate, commit=True)
-    main_db.import_tally_data(date= current_date)
+    main_db.import_tally_data(date= file_name)
 
 
 
 def daily_busy_sales():
-    # fromdate_str = '25-06-2024'
     # todate_str = (datetime.today().date()-timedelta(days=1)).strftime('%d-%m-%Y')
-    file_name = datetime.today().date().strftime('%d-%b-%Y')
     date1 = (datetime.today().date()-timedelta(days=2)).strftime('%Y-%m-%d')
     # date1= "2024-06-25"
     date2 = datetime.today().date().strftime('%Y-%m-%d')
     # date2= "2024-06-29"
-
+    file_name = f'{date1}-{date2}'
     main_busy.exporting_sales(start_date= date1, end_date= date2, 
                               filename= file_name, send_email= True)
     time.sleep(1)
@@ -60,24 +57,25 @@ def daily_busy_sales():
 
 
 def monthly_busy_sales():
-    first_batch = batch_date(month= datetime.today().month - 1, batch= 1)
-    second_batch = batch_date(month= datetime.today().month - 1, batch= 2)
-    third_batch = batch_date(month= datetime.today().month - 1, batch= 3)
+    previous_month_number = datetime.today().month - 1
+    # first_batch = batch_date(month=  previous_month_number, batch= 1)
+    second_batch = batch_date(month=  previous_month_number, batch= 2)
+    third_batch = batch_date(month= previous_month_number, batch= 3)
     
-    if datetime.today().day == 1:
-        dates = first_batch
-    elif datetime.today().day == 2:
-        dates = second_batch
-    elif datetime.today().day == 3:
-        dates = third_batch
+    batches = [
+        # first_batch, 
+        second_batch, third_batch]
+    
+    for dates in batches:
+        filename = f'{dates[0]} to {dates[-1]}'
 
-    filename = f'{dates[0]}-{dates[-1]}'
-
-    main_busy.exporting_sales(start_date= dates[0], end_date= dates[-1], 
-                              filename= filename, send_email= True)
-    time.sleep(1)
-    main_db.delete_busy_sales(startdate= dates[0], enddate= dates[-1], commit= True)
-    main_db.import_busy_sales(filename= filename)
+        main_busy.exporting_sales(start_date= dates[0], end_date= dates[-1], 
+                                filename= filename, send_email= False)
+        time.sleep(1)
+        main_db.delete_busy_sales(startdate= dates[0], enddate= dates[-1], commit= True)
+        time.sleep(1)
+        main_db.import_busy_sales(filename= filename)
+        time.sleep(1)
 
 
 
@@ -85,12 +83,37 @@ def busy_material_masters():
     fromdate = datetime.now().replace(day=1).strftime("%d-%m-%Y")
     todate = datetime.today().strftime("%d-%m-%Y")
 
-    filename = datetime.today().strftime("%d-%b-%Y")
-    main_busy.exporting_master_and_material(from_date= fromdate, to_date=todate)
+    fromdate_str = datetime.now().replace(day=1).strftime("%Y-%m-%d")
+    todate_str = datetime.today().strftime("%Y-%m-%d")
+    
+    file_name = f'{fromdate_str}-{todate_str}'
+    
+    main_busy.exporting_master_and_material(from_date= fromdate, to_date=todate, filename= file_name, send_email= True)
     time.sleep(1)
-    main_db.delete_busy_material(from_date= fromdate, to_date= todate)
+    main_db.delete_busy_material(from_date= fromdate_str, to_date= todate_str)
     main_db.truncate_busy_masters()
-    main_db.import_busy_masters_material(file_name= filename)
+    main_db.import_busy_masters_material(file_name= file_name)
+
+
+def monthly_material_masters():
+    # Get the first day of the current month
+    first_day_of_current_month = datetime.today().replace(day=1)
+    # Get the last day of the previous month
+    last_day_of_previous_month = first_day_of_current_month - timedelta(days=1)
+    # Get the first day of the previous month
+    first_day_of_previous_month = last_day_of_previous_month.replace(day=1)
+    # Format the dates as dd-mm-yyyy
+    fromdate = first_day_of_previous_month.strftime("%d-%m-%Y")
+    todate = last_day_of_previous_month.strftime("%d-%m-%Y")
+
+    fromdate_str = first_day_of_previous_month.strftime("%Y-%m-%d")
+    todate_str = last_day_of_previous_month.strftime("%Y-%m-%d")
+    file_name = f'{fromdate_str}-{todate_str}'
+    main_busy.exporting_master_and_material(from_date= fromdate, to_date=todate, filename = file_name, send_email= False)
+    time.sleep(1)
+    main_db.delete_busy_material(from_date= fromdate_str, to_date= todate_str)
+    main_db.truncate_busy_masters()
+    main_db.import_busy_masters_material(file_name= file_name)
 
 
 
@@ -105,19 +128,20 @@ def daily_outstanding_tallydata():
 
 
 def monthly_outstanding_tallydata():
-    first_batch = batch_date(month= datetime.today().month - 1, batch= 1)
-    second_batch = batch_date(month= datetime.today().month - 1, batch= 2)
-    third_batch = batch_date(month= datetime.today().month - 1, batch= 3)
+    previous_month_number = datetime.today().month - 1
+    first_batch = batch_date(month= previous_month_number, batch= 1)
+    second_batch = batch_date(month= previous_month_number, batch= 2)
+    third_batch = batch_date(month= previous_month_number, batch= 3)
 
     companies = sorted(list(balance_comp_codes.keys()))
     
-    if datetime.today().day == 1:
+    if datetime.today().day in [1,23]:
         monthly = True
         dates = first_batch
-    elif datetime.today().day == 2:
+    elif datetime.today().day in [2,24]:
         monthly = True
         dates = second_batch
-    elif datetime.today().day == 3:
+    elif datetime.today().day in [3,25]:
         monthly = True
         dates = third_batch
     main_tally.exporting_outstanding_balance(company=companies, dates=dates, monthly=monthly)
@@ -128,30 +152,30 @@ def monthly_outstanding_tallydata():
 
 
 def daily_receivables_tallydata():
-    dates_list = pd.date_range(start= '2024-06-06' , end= '2024-06-12')
-    date_list_str = [d.strftime('%d-%m-%Y') for d in dates_list]
-    # yesterday = [(datetime.today().date() - timedelta(days=1)).strftime("%d-%m-%Y")]
-    # dates = yesterday
+    # dates_list = pd.date_range(start= '2024-07-13', end= '2024-07-17')
+    # date_list_str = [d.strftime('%d-%m-%Y') for d in dates_list]
+    yesterday = [(datetime.today().date() - timedelta(days=1)).strftime("%d-%m-%Y")]
     companies = sorted(list(receivables_comp_codes.keys()))
-    main_tally.exporting_receivables(company= companies, dates= date_list_str)
-    main_db.import_receivables_tallydata(dates= date_list_str, monthly= False)
+    main_tally.exporting_receivables(company= companies, dates= yesterday)
+    main_db.import_receivables_tallydata(dates= yesterday, monthly= False)
 
 
 
 def monthly_receivables_tallydata():
-    first_batch = batch_date(month= datetime.today().month - 1, batch= 1)
-    second_batch = batch_date(month= datetime.today().month - 1, batch= 2)
-    third_batch = batch_date(month= datetime.today().month - 1, batch= 3)
+    previous_month_number = datetime.today().month - 1
+    first_batch = batch_date(month= previous_month_number, batch= 1)
+    second_batch = batch_date(month= previous_month_number, batch= 2)
+    third_batch = batch_date(month= previous_month_number, batch= 3)
 
     companies = sorted(list(receivables_comp_codes.keys()))
     
-    if datetime.today().day == 1:
+    if datetime.today().day in [1,23]:
         monthly = True
         dates = first_batch
-    elif datetime.today().day == 2:
+    elif datetime.today().day in [2,24]:
         monthly = True
         dates = second_batch
-    elif datetime.today().day == 3:
+    elif datetime.today().day in [3,25]:
         monthly = True
         dates = third_batch
     main_tally.exporting_receivables(company=companies, dates=dates, monthly=monthly)
@@ -161,7 +185,7 @@ def monthly_receivables_tallydata():
 
 
 
-def reports():
+def basic_reports():
     fromdate = datetime.today().date().replace(day=1).strftime('%Y-%m-%d')
     # fromdate = '2024-06-01'
     todate = (datetime.today().date() - timedelta(days=1)).strftime('%Y-%m-%d')
@@ -219,16 +243,8 @@ def reco_reports():
 
 
 
-def testing_1():
-    print('testing func 1')
-
-
-def testing_2():
-    print('testing func 2')
-
-
-
 if __name__ == "__main__":
+
     
     function_name = sys.argv[1] if len(sys.argv) > 1 else None
     if function_name:
@@ -240,6 +256,7 @@ if __name__ == "__main__":
                 logger.error(f"Error running function {function_name}: {e}")
         else:
             logger.error(f"Function '{function_name}' does not exist.")
+
 
 
 

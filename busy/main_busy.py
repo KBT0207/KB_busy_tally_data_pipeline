@@ -1,13 +1,13 @@
-import pyautogui as pg
-import time
-import os
 import glob
+import os
+import time
 from datetime import datetime, timedelta
+import pyautogui as pg
+from busy import busy_utils, export_busy_reports
 from dotenv import load_dotenv
-from busy import busy_utils
-from utils import email
 from logging_config import logger
-from busy import export_busy_reports
+from utils import email
+
 
 load_dotenv('.env')
 
@@ -137,7 +137,7 @@ def exporting_sales(start_date:str , end_date:str, filename:str, send_email:bool
 
 
 
-def exporting_master_and_material(from_date:str, to_date:str):
+def exporting_master_and_material(from_date:str, to_date:str, filename:str, send_email:bool):
 
     busy_utils.open_busy()
     
@@ -152,7 +152,7 @@ def exporting_master_and_material(from_date:str, to_date:str):
         except Exception as e:
             logger.critical(f"Logging into Busy of {comp} Failed! : {e}")
             
-        curr_date = datetime.today().strftime("%d-%b-%Y")
+        # curr_date = datetime.today().strftime("%d-%b-%Y")
 
         for rep_func, report in zip(material_dict['trans_list'], material_dict['reports']):
         
@@ -174,7 +174,7 @@ def exporting_master_and_material(from_date:str, to_date:str):
             try:
                 #curr_date = datetime.today().strftime("%d-%b-%Y")
                 busy_utils.export_format(report_type = report, company = comp, 
-                                        filename= f"{comp}_{report}_{curr_date}")
+                                        filename= f"{comp}_{report}_{filename}")
                 logger.info(f"Exported data for {comp} and {report} successfully...")
             except Exception as e:
                 logger.critical(f"Exporting Data for {comp} and {report} Failed! : {e}")
@@ -192,7 +192,7 @@ def exporting_master_and_material(from_date:str, to_date:str):
             export_busy_reports.select_accounts()
             busy_utils.export_format(report_type= "master_accounts", 
                                      company= comp, 
-                                     filename=f"{comp}_master_accounts_{curr_date}")
+                                     filename=f"{comp}_master_accounts_{filename}")
             
             busy_utils.return_to_busy_home(esc=6)
             time.sleep(5)
@@ -205,7 +205,7 @@ def exporting_master_and_material(from_date:str, to_date:str):
             export_busy_reports.select_items()
             busy_utils.export_format(report_type= "items", 
                                             company= comp, 
-                                            filename=f"{comp}_items_{curr_date}")
+                                            filename=f"{comp}_items_{filename}")
                     
             logger.info(f"Items Data for {comp} generated successfully and back to busy home...")
             busy_utils.return_to_busy_home(esc=5)
@@ -229,26 +229,41 @@ def exporting_master_and_material(from_date:str, to_date:str):
     pg.press('enter')
     logger.info("Quit Busy Successfully!")
 
-    #today_date = "03-May-2024"
-    receivers = ['shivprasad@kaybeebio.com', 'danish@kaybeeexports.com']
-    #receivers = ['s.gaurav@kaybeeexports.com']
-    body_material = f"Kindly find the attached MITP & MRFP data of {companies} from {from_date} to {to_date}"
-    
-    attachment_path = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*{curr_date}.xlsx", recursive=True)
+    if send_email:
+        receivers = ['shivprasad@kaybeebio.com', 'danish@kaybeeexports.com', 'rajani@kaybeebio.com']
+        #receivers = ['s.gaurav@kaybeeexports.com']
+        body_material = f"Kindly find the attached MITP & MRFP data of {companies} from {from_date} to {to_date}"
+        
+        attachment_path = glob.glob(f"D:\\automated_busy_downloads\\**\\*{filename}.xlsx", recursive=True)
 
-    subj_material = f"KB Companies ['MITP & MRFP'] data of MTD of {datetime.today().strftime("%B")}"
-    attachment_path_material = []
-    for file in attachment_path:
-        if 'material' in file:
-            attachment_path_material.append(file) 
-    if len(attachment_path_material) != 0:
+        subj_material = f"KB Companies ['MITP & MRFP'] data of MTD of {datetime.today().strftime("%B")}"
+        attachment_path_material = []
+        for file in attachment_path:
+            if 'material' in file:
+                attachment_path_material.append(file) 
+        if len(attachment_path_material) != 0:
+            try:
+                email.email_send(reciever=receivers, cc = "s.gaurav@kaybeeexports.com", 
+                                subject= subj_material, 
+                                contents= body_material, 
+                                attachemnts= attachment_path_material)
+                logger.info("Attachments of MITP & MRFP emailed successfully... ")
+            except Exception as e:
+                logger.critical(f"Failed to email the attachment for (MITP & MRFP)! : {e}")
+
+        else:
+            logger.critical("No data for MITP & MRFP exported today")
+
         try:
-            email.email_send(reciever=receivers, cc = "s.gaurav@kaybeeexports.com", 
-                            subject= subj_material, 
-                            contents= body_material, 
-                            attachemnts= attachment_path_material)
-            logger.info("Attachments of MITP & MRFP emailed successfully... ")
+            subj_masters = f"Masters of KBBIO ({to_date})"
+            body_masters = f"Kindly find the attached Masters data of KBBIO of {to_date}"
+            masters_file = fr"D:\automated_busy_downloads\comp0010\master_accounts\comp0010_master_accounts_{filename}.xlsx"
+            email.email_send(reciever= 'rajani@kaybeebio.com', 
+                            cc = ["s.gaurav@kaybeeexports.com", 'danish@kaybeeexports.com'], 
+                            subject= subj_masters, contents= body_masters, attachemnts= masters_file)
+            logger.info("KBBIO Masters Data emailed successfully... ")
         except Exception as e:
-            logger.critical(f"Failed to email the attachment for (MITP & MRFP)! : {e}")
-    else:
-        logger.critical("No data for MITP & MRFP exported today")
+            logger.critical(f"Failed to email the masters data! : {e}")
+        
+        else:
+            logger.info(f'Emails not done as per the argument given: {send_email}')
