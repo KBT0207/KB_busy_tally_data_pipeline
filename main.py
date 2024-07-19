@@ -1,7 +1,6 @@
 import sys
 import time
 from datetime import date, datetime, timedelta
-import calendar
 import pandas as pd
 import schedule
 from busy import main_busy
@@ -58,24 +57,26 @@ def daily_busy_sales():
 
 def monthly_busy_sales():
     previous_month_number = datetime.today().month - 1
-    # first_batch = batch_date(month=  previous_month_number, batch= 1)
+    first_batch = batch_date(month=  previous_month_number, batch= 1)
     second_batch = batch_date(month=  previous_month_number, batch= 2)
     third_batch = batch_date(month= previous_month_number, batch= 3)
-    
-    batches = [
-        # first_batch, 
-        second_batch, third_batch]
-    
-    for dates in batches:
-        filename = f'{dates[0]} to {dates[-1]}'
 
-        main_busy.exporting_sales(start_date= dates[0], end_date= dates[-1], 
-                                filename= filename, send_email= False)
-        time.sleep(1)
-        main_db.delete_busy_sales(startdate= dates[0], enddate= dates[-1], commit= True)
-        time.sleep(1)
-        main_db.import_busy_sales(filename= filename)
-        time.sleep(1)
+    if datetime.today().day in [1,10,20]:
+        dates = first_batch
+    elif datetime.today().day in [10,11,12]:
+        dates = second_batch
+    elif datetime.today().day in [20,21,22]:
+        dates = third_batch
+
+    filename = f'{dates[0]} to {dates[-1]}'
+
+    main_busy.exporting_sales(start_date= dates[0], end_date= dates[-1], 
+                            filename= filename, send_email= False)
+    time.sleep(1)
+    main_db.delete_busy_sales(startdate= dates[0], enddate= dates[-1], commit= True)
+    time.sleep(1)
+    main_db.import_busy_sales(filename= filename)
+    time.sleep(1)
 
 
 
@@ -223,7 +224,9 @@ def basic_reports():
 
 def reco_reports():
     fromdate = (datetime.today() - timedelta(days= 9)).strftime('%Y-%m-%d')
+    # fromdate = '2024-07-07'
     todate = (datetime.today() - timedelta(days= 3)).strftime('%Y-%m-%d')
+    # todate = '2024-07-13'
     # date_list = pd.date_range(start= datetime.today() - timedelta(days= 9), 
     #                           end= datetime.today() - timedelta(days= 3), 
     #                           ).to_list()
@@ -245,7 +248,6 @@ def reco_reports():
 
 if __name__ == "__main__":
 
-    
     function_name = sys.argv[1] if len(sys.argv) > 1 else None
     if function_name:
         if function_name in globals() and callable(globals()[function_name]):

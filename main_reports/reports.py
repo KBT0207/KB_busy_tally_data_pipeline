@@ -275,7 +275,7 @@ class Reports(DatabaseCrud):
 
         
 
-    def sales_validation(self, fromdate:str, todate:str, exceptions:list) -> pd.DataFrame:
+    def sales_validation(self, fromdate:str, todate:str, exceptions:list) -> str:
         
         def busy_to_tally():
             busy_query = self.Session.query(SalesKBBIO.date, SalesKBBIO.voucher_no, 
@@ -438,15 +438,16 @@ class Reports(DatabaseCrud):
         result_busy_to_tally = busy_to_tally()
         result_tally_to_busy = tally_to_busy()
 
-        file_path = fr'D:\Reports\Sales_Validation\Busy_vs_Tally_Sales_Reco_Month-to-{todate}.xlsx'
+        file_path = fr'D:\Reports\Sales_Reco\Busy-Tally Sales Reco ({fromdate} to {todate}).xlsx'
 
         with pd.ExcelWriter(file_path) as writer:
             result_busy_to_tally.to_excel(writer, sheet_name='Busy Sales', index=False)
             result_tally_to_busy.to_excel(writer, sheet_name='Tally Sales', index=False)
 
+        return file_path
 
 
-    def sales_return_validation(self, fromdate:str, todate:str, exceptions:list) -> pd.DataFrame:
+    def sales_return_validation(self, fromdate:str, todate:str, exceptions:list) -> str:
         
         def busy_to_tally():
             busy_query = self.Session.query(SalesReturnKBBIO.date, SalesReturnKBBIO.voucher_no, 
@@ -637,12 +638,13 @@ class Reports(DatabaseCrud):
         result_busy_to_tally = busy_to_tally()
         result_tally_to_busy = tally_to_busy()
       
-        file_path = fr'D:\Reports\Sales_Return_Validation\Busy_vs_Tally_Sales_Return_Reco_Month-to-{todate}.xlsx'
+        file_path = fr'D:\Reports\Sales_Return_Reco\Busy-Tally Sales Return Reco ({fromdate} to {todate}).xlsx'
 
         with pd.ExcelWriter(file_path) as writer:
             result_busy_to_tally.to_excel(writer, sheet_name='Busy Sales Return', index=False)
             result_tally_to_busy.to_excel(writer, sheet_name='Tally Sales Return', index=False)
-
+        
+        return file_path
 
 
     def salesorder_mitp_reco(self, fromdate:str, todate:str, exceptions:list) -> pd.DataFrame:

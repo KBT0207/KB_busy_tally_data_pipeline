@@ -409,31 +409,29 @@ def cash_discount_report(dates:list, send_email:bool, exceptions:list = None) ->
 def busy_tally_sales_reco(start_date:str, end_date:str, send_email:bool, exceptions:list = None) -> None:
     report = Reports(db_connector)
     try:
-        report.sales_validation(fromdate= start_date, todate= end_date, exceptions= exceptions)
-        logger.info(f"Busy-Tally sales reco from Month to date: {end_date} exported in excel")
-        busy_sales_df = pd.read_excel(fr'D:\Reports\Sales_Validation\Busy_vs_Tally_Sales_Reco_Month-to-{end_date}.xlsx', 
-                                      sheet_name= 'Busy Sales')
-        tally_sales_df = pd.read_excel(fr'D:\Reports\Sales_Validation\Busy_vs_Tally_Sales_Reco_Month-to-{end_date}.xlsx', 
-                                       sheet_name= 'Tally Sales')
+        report_file_path = report.sales_validation(fromdate= start_date, todate= end_date, exceptions= exceptions)
+        logger.info(f"Busy-Tally sales reco of previous week exported in excel")
+        busy_sales_df = pd.read_excel(report_file_path, sheet_name= 'Busy Sales')
+        tally_sales_df = pd.read_excel(report_file_path, sheet_name= 'Tally Sales')
     except Exception as e :
-        logger.critical(f"Error occured: {e} \n\nWhile exporting Busy-Tally sales reco from Month to date: {end_date} in excel format")
+        logger.critical(f"Error occured: {e} \n\nWhile exporting Busy-Tally sales reco from {start_date} to {end_date} in excel format")
     busy_amnt_discrepancy = busy_sales_df.loc[busy_sales_df['amount_diff'] >= 5].shape[0]
     tally_amnt_discrepancy = tally_sales_df.loc[tally_sales_df['amount_diff'] >= 5].shape[0]
     busy_gst_discrepancy = busy_sales_df.loc[busy_sales_df['gst_remark'] == 'Matched'].shape[0]
     tally_gst_discrepancy = tally_sales_df.loc[tally_sales_df['gst_remark'] == 'Matched'].shape[0]
 
     if (busy_amnt_discrepancy > 0) or (tally_amnt_discrepancy > 0) or (busy_gst_discrepancy > 0) or (tally_gst_discrepancy > 0):
-        subject = f"Discrepancy found in Busy-Tally Sales Reco from Month to date: {end_date}"
-        body = f"Greetings All,\nKindly find the Busy-Tally Sales Reco from Month to date: {end_date} attached with discrepancies."
+        subject = f"Discrepancy found in Busy-Tally Sales Reco from {start_date} to {end_date}"
+        body = f"Greetings All,\nKindly find the Busy-Tally Sales Reco from {start_date} to {end_date} attached with discrepancies."
         logger.info(f"Busy-Tally Sales Reco Exported to Excel with discrepancy.")
 
     else:
-        subject = f"No discrepancy found in Busy-Tally Sales Reco from Month to date: {end_date}"
-        body = f"Greetings All,\nKindly find the Busy-Tally Sales Reco from Month to date: {end_date} attached without discrepancies."
+        subject = f"No discrepancy found in Busy-Tally Sales Reco from {start_date} to {end_date}"
+        body = f"Greetings All,\nKindly find the Busy-Tally Sales Reco from {start_date} to {end_date} attached without discrepancies."
         logger.info(f"Busy-Tally Sales Reco Exported to Excel without discrepancy.")
 
     if send_email:
-        attachment = fr"D:\Reports\Sales_Validation\Busy_vs_Tally_Sales_Reco_Month-to-{end_date}.xlsx"
+        attachment = report_file_path
         try:
             receivers = ['shivprasad@kaybeebio.com', 
                         ]
@@ -450,31 +448,29 @@ def busy_tally_sales_reco(start_date:str, end_date:str, send_email:bool, excepti
 def busy_tally_salesreturn_reco(start_date:str, end_date:str, send_email:bool, exceptions:list = None) -> None:
     report = Reports(db_connector)
     try:
-        report.sales_return_validation(fromdate= start_date, todate= end_date, exceptions= exceptions)
-        logger.info(f"Busy-Tally sales return reco from Month to date: {end_date} exported in excel")
-        busy_df = pd.read_excel(fr'D:\Reports\Sales_Return_Validation\Busy_vs_Tally_Sales_Return_Reco_Month-to-{end_date}.xlsx', 
-                                      sheet_name= 'Busy Sales Return')
-        tally_df = pd.read_excel(fr'D:\Reports\Sales_Return_Validation\Busy_vs_Tally_Sales_Return_Reco_Month-to-{end_date}.xlsx', 
-                                       sheet_name= 'Tally Sales Return')
+        report_file_path = report.sales_return_validation(fromdate= start_date, todate= end_date, exceptions= exceptions)
+        logger.info(f"Busy-Tally sales return reco from {start_date} to {end_date} exported in excel")
+        busy_df = pd.read_excel(report_file_path, sheet_name= 'Busy Sales Return')
+        tally_df = pd.read_excel(report_file_path, sheet_name= 'Tally Sales Return')
     except Exception as e :
-        logger.critical(f"Error occured: {e} \n\nWhile exporting Busy-Tally sales return reco from Month to date: {end_date} in excel format")
+        logger.critical(f"Error occured: {e} \n\nWhile exporting Busy-Tally sales return reco from {start_date} to {end_date} in excel format")
     busy_amnt_discrepancy = busy_df.loc[busy_df['amount_diff'] >= 5].shape[0]
     tally_amnt_discrepancy = tally_df.loc[tally_df['amount_diff'] >= 5].shape[0]
     busy_gst_discrepancy = busy_df.loc[busy_df['gst_remark'] == 'Matched'].shape[0]
     tally_gst_discrepancy = tally_df.loc[tally_df['gst_remark'] == 'Matched'].shape[0]
 
     if (busy_amnt_discrepancy > 0) or (tally_amnt_discrepancy > 0) or (busy_gst_discrepancy > 0) or (tally_gst_discrepancy > 0):
-        subject = f"Discrepancy found in Busy-Tally Sales Return Reco from Month to date: {end_date}"
-        body = f"Greetings All,\nKindly find the Busy-Tally Sales Return Reco from Month to date: {end_date} attached with discrepancies."
+        subject = f"Discrepancy found in Busy-Tally Sales Return Reco from {start_date} to {end_date}"
+        body = f"Greetings All,\nKindly find the Busy-Tally Sales Return Reco from {start_date} to {end_date} attached with discrepancies."
         logger.info(f"Busy-Tally Sales Return Reco Exported to Excel with discrepancy.")
 
     else:
-        subject = f"No discrepancy found in Busy-Tally Sales Return Reco from Month to date: {end_date}"
-        body = f"Greetings All,\nKindly find the Busy-Tally Sales Return Reco from Month to date: {end_date} attached without discrepancies."
+        subject = f"No discrepancy found in Busy-Tally Sales Return Reco from {start_date} to {end_date}"
+        body = f"Greetings All,\nKindly find the Busy-Tally Sales Return Reco from {start_date} to {end_date} attached without discrepancies."
         logger.info(f"Busy-Tally Sales Return Reco Exported to Excel without discrepancy.")
 
     if send_email:
-        attachment = fr"D:\Reports\Sales_Return_Validation\Busy_vs_Tally_Sales_Return_Reco_Month-to-{end_date}.xlsx"
+        attachment = report_file_path
         try:
             receivers = ['shivprasad@kaybeebio.com', 
                         ]
