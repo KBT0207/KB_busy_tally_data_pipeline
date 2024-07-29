@@ -93,8 +93,7 @@ def exporting_sales(start_date:str , end_date:str, filename:str, send_email:bool
     logger.info("Quit Busy Successfully!")
 
     if send_email:
-        receivers = ['shivprasad@kaybeebio.com',  
-                    'sayali@kaybeeexports.com']
+        receivers = ['shivprasad@kaybeebio.com', 'sayali@kaybeeexports.com', 'hitesh@kaybeeexports.com']
         cc = ['s.gaurav@kaybeeexports.com', 'danish@kaybeeexports.com']
         attachment_path = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*sales*{filename}.xlsx", recursive=True)
 

@@ -76,7 +76,7 @@ def batch_date(month: int, batch: int, year: int = datetime.today().year) -> lis
             start_day += 2
     
     # Generate the list of dates for the batch
-    return [f"{year}-{month:02d}-{day:02d}" for day in range(start_day, end_day + 1)]
+    return [f"{day:02d}-{month:02d}-{year}" for day in range(start_day, end_day + 1)]
 
 
 

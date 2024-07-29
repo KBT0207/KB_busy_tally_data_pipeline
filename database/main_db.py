@@ -198,21 +198,24 @@ def import_tally_data(date):
 
 def import_outstanding_tallydata(dates: list, monthly: bool):
     Base.metadata.create_all(db_engine)
+
     for date in dates:
         if monthly:
             first_day_of_current_month = datetime.today().replace(day=1)
-            previous_month = (first_day_of_current_month - timedelta(days=1)).strftime('%B-%Y')
-            file_path = os.path.join("D:\\automated_tally_downloads", "**", previous_month, f"*outstanding_{date}.xlsx")
+            previous_month = (first_day_of_current_month - timedelta(days=1)).strftime('%B-%Y')    
+             
+            tally_files = glob.glob(f"D:\\monthly_data\\**\\{previous_month}" + f"**\\*outstanding_{date}.xlsx",  recursive=True)
         else:
-            file_path = os.path.join("D:\\automated_tally_downloads", "**", f"*outstanding_{date}.xlsx")
+            tally_files = glob.glob("D:\\automated_tally_downloads", "**", f"*outstanding_{date}.xlsx")
         
-        tally_files = glob.glob(file_path, recursive=True)
-        if tally_files:
+        # Using glob to search recursively
+        if tally_files:  # Same as checking if len(tally_files) != 0
             for file in tally_files:
                 excel_data = TallyDataProcessor(file)
                 importer = DatabaseCrud(db_connector)
                 if get_filename(file) == 'outstanding':
                     importer.import_data('outstanding_balance', excel_data.clean_and_transform(), commit=True)
+
 
 
 
@@ -222,17 +225,18 @@ def import_receivables_tallydata(dates: list, monthly: bool):
         if monthly:
             first_day_of_current_month = datetime.today().replace(day=1)
             previous_month = (first_day_of_current_month - timedelta(days=1)).strftime('%B-%Y')
-            file_path = os.path.join("D:\\automated_tally_downloads", "**", previous_month, f"*receivables_{date}.xlsx")
+            
+            tally_files = glob.glob(f"D:\\monthly_data\\**\\{previous_month}" + f"**\\*receivables_{date}.xlsx",  recursive=True)
         else:
-            file_path = os.path.join("D:\\automated_tally_downloads", "**", f"*receivables_{date}.xlsx")
+            tally_files = glob.glob("D:\\automated_tally_downloads", "**", f"*receivables_{date}.xlsx")
 
-        tally_files = glob.glob(file_path, recursive=True)
-        if len(tally_files) != 0:
+        if tally_files:
             for file in tally_files:
                 excel_data = TallyDataProcessor(file)
                 importer = DatabaseCrud(db_connector)
                 if get_filename(file) == 'receivables':
                     importer.import_data('tally_receivables', excel_data.clean_and_transform(), commit=True)
+
 
 
 
