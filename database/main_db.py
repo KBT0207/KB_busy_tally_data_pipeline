@@ -206,7 +206,7 @@ def import_outstanding_tallydata(dates: list, monthly: bool):
              
             tally_files = glob.glob(f"D:\\monthly_data\\**\\{previous_month}" + f"**\\*outstanding_{date}.xlsx",  recursive=True)
         else:
-            tally_files = glob.glob("D:\\automated_tally_downloads", "**", f"*outstanding_{date}.xlsx")
+            tally_files = glob.glob(rf"D:\automated_tally_downloads\**\*outstanding_{date}.xlsx", recursive= True)
         
         # Using glob to search recursively
         if tally_files:  # Same as checking if len(tally_files) != 0
@@ -228,8 +228,7 @@ def import_receivables_tallydata(dates: list, monthly: bool):
             
             tally_files = glob.glob(f"D:\\monthly_data\\**\\{previous_month}" + f"**\\*receivables_{date}.xlsx",  recursive=True)
         else:
-            tally_files = glob.glob("D:\\automated_tally_downloads", "**", f"*receivables_{date}.xlsx")
-
+            tally_files = glob.glob(rf"D:\automated_tally_downloads\**\*receivables_{date}.xlsx", recursive= True)
         if tally_files:
             for file in tally_files:
                 excel_data = TallyDataProcessor(file)

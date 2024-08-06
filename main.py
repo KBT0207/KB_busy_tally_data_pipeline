@@ -17,7 +17,7 @@ from utils.common_utils import (balance_comp_codes, batch_date,
 def tally_to_sql():
     if datetime.today().day not in [4, 19]:
         # current_date = '29-Jun-24'
-        startdate = (datetime.today().date() - timedelta(days=2)).strftime("%Y-%m-%d")
+        startdate = (datetime.today().date() - timedelta(days=3)).strftime("%Y-%m-%d")
         # startdate = '2024-06-25'
         endate = (datetime.today().date() - timedelta(days=1)).strftime("%Y-%m-%d")
         # endate = '2024-06-29'
@@ -29,7 +29,7 @@ def tally_to_sql():
 
         startdate = first_day_of_previous_month.strftime("%Y-%m-%d")
         # startdate = '2024-06-25'
-        endate = (datetime.today().date() - timedelta(days=1)).strftime("%Y-%m-%d")
+        endate = (datetime.today().date() - timedelta(days=2)).strftime("%Y-%m-%d")
         # endate = '2024-06-29'
     companies = sorted(list(tally_comp_codes.keys()))
     file_name = f'{startdate} to {endate}'
@@ -68,12 +68,13 @@ def monthly_busy_sales():
     elif datetime.today().day in [3,12,22]:
         dates = third_batch
 
-    filename = f'{dates[0]} to {dates[-1]}'
+    dates_str = [datetime.strptime(d,('%d-%m-%Y')).strftime('%Y-%m-%d') for d in dates]
+    filename = f'{dates_str[0]} to {dates_str[-1]}'
 
-    main_busy.exporting_sales(start_date= dates[0], end_date= dates[-1], 
+    main_busy.exporting_sales(start_date= dates_str[0], end_date= dates_str[-1], 
                             filename= filename, send_email= False)
     time.sleep(1)
-    main_db.delete_busy_sales(startdate= dates[0], enddate= dates[-1], commit= True)
+    main_db.delete_busy_sales(startdate= dates_str[0], enddate= dates_str[-1], commit= True)
     time.sleep(1)
     main_db.import_busy_sales(filename= filename)
     time.sleep(1)
@@ -123,7 +124,7 @@ def monthly_material_masters():
 def daily_outstanding_tallydata():
     current_day = datetime.now().strftime('%A')
     if current_day == 'Monday':
-        yesterday = [(datetime.today().date() - timedelta(days=2)).strftime("%d-%m-%Y"), (datetime.today().date() - timedelta(days=1)).strftime("%d-%m-%Y")]
+        yesterday = [(datetime.today().date() - timedelta(days=2)).strftime("%d-%m-%Y"), (datetime.today().date() - timedelta(days=1)).strftime("%d-%m-%Y"), '02-08-2024']
     else:
         yesterday = [(datetime.today().date() - timedelta(days=1)).strftime("%d-%m-%Y")]
 
@@ -151,7 +152,7 @@ def monthly_outstanding_tallydata():
     elif datetime.today().day in [3,25]:
         monthly = True
         dates = third_batch
-    dates_str = [datetime.strptime(d,('%d-%m-%Y')).strftime('%Y-%m-%d') for d in first_batch]
+    dates_str = [datetime.strptime(d,('%d-%m-%Y')).strftime('%Y-%m-%d') for d in dates]
     monthly = True
     main_tally.exporting_outstanding_balance(company=companies, dates=dates, monthly=monthly)
     db = DatabaseCrud(db_connector)
@@ -200,19 +201,20 @@ def monthly_receivables_tallydata():
 
 
 def basic_reports():
-    fromdate = datetime.today().date().replace(day=1).strftime('%Y-%m-%d')
-    # fromdate = '2024-07-23'
-    todate = (datetime.today().date() - timedelta(days=1)).strftime('%Y-%m-%d')
-    
-    main_db.dealer_price_validation_report(from_date= fromdate, 
-                                           to_date= todate, send_email= True, 
-                                        #    exceptions= salesprice_excluded_invoices,
-                                           )
+    # fromdate = datetime.today().date().replace(day=1).strftime('%Y-%m-%d')
+    fromdate = '2024-07-20'
+    # todate = (datetime.today().date() - timedelta(days=1)).strftime('%Y-%m-%d')
+    todate = '2024-07-29'
 
-    main_db.salesorder_salesman_report(from_date= fromdate, 
-                                       to_date=todate, send_email= True,
-                                       exceptions= None,
-                                       )
+    # main_db.dealer_price_validation_report(from_date= fromdate, 
+    #                                        to_date= todate, send_email= True, 
+    #                                     #    exceptions= salesprice_excluded_invoices,
+    #                                        )
+
+    # main_db.salesorder_salesman_report(from_date= fromdate, 
+    #                                    to_date=todate, send_email= True,
+    #                                    exceptions= None,
+    #                                    )
 
     from_date_str = datetime.strptime(fromdate, '%Y-%m-%d')
     to_date_str = datetime.strptime(todate, '%Y-%m-%d')
@@ -220,10 +222,10 @@ def basic_reports():
     date_list_str = [d.strftime('%Y-%m-%d') for d in dates_list]
 
     # date_list_str = [todate]
-    main_db.volume_discount_report(dates= date_list_str, send_email=True, 
+    main_db.volume_discount_report(dates= date_list_str, send_email=False, 
                                    exceptions= ['KAYBEE/001 A'])
 
-    main_db.cash_discount_report(dates= date_list_str, send_email=True, 
+    main_db.cash_discount_report(dates= date_list_str, send_email=False, 
                                    exceptions= ['KAYBEE/001 A'])
     
 
@@ -261,7 +263,7 @@ def reco_reports():
 
 
 if __name__ == "__main__":
-    
+
     function_name = sys.argv[1] if len(sys.argv) > 1 else None
     if function_name:
         if function_name in globals() and callable(globals()[function_name]):
