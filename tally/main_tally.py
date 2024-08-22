@@ -67,7 +67,7 @@ def exporting_outstanding_balance(company:list, dates:list, monthly:bool):
 
             first_day_of_current_month = datetime.today().replace(day=1)
             previous_month = (first_day_of_current_month - timedelta(days=1)).strftime('%B-%Y')
-            file_path = fr"D:\automated_tally_downloads\{comp}\outstanding\{previous_month}"
+            file_path = fr"D:\monthly_data\{comp}\outstanding\{previous_month}"
             if not os.path.exists(file_path):
                 os.makedirs(file_path)
         else:
@@ -91,7 +91,7 @@ def exporting_outstanding_balance(company:list, dates:list, monthly:bool):
 
 
 
-def exporting_receivables(company:list, dates:list):
+def exporting_receivables(company:list, dates:list, monthly:bool):
     pg.hotkey("win", "d")
     
     tally_utils.start_tally()
@@ -102,10 +102,19 @@ def exporting_receivables(company:list, dates:list):
         logger.info(f"{comp} selected...")
         
         tally_utils.receivables()
+        if monthly:
+
+            first_day_of_current_month = datetime.today().replace(day=1)
+            previous_month = (first_day_of_current_month - timedelta(days=1)).strftime('%B-%Y')
+            file_path = fr"D:\monthly_data\{comp}\receivables\{previous_month}"
+            if not os.path.exists(file_path):
+                os.makedirs(file_path)
+        else:
+            file_path = fr"D:\automated_tally_downloads\{comp}\receivables"
         
         for date in dates:
             tally_utils.change_receivables_period(from_date= '01-04-2024', to_date= date)
-            tally_utils.export_balance_data(path= fr"D:\automated_tally_downloads\{comp}\receivables",
+            tally_utils.export_balance_data(path= fr"D:\monthly_data\{comp}\receivables",
                             filename= f"{comp}_receivables_{date}.xlsx")
             time.sleep(1)
 

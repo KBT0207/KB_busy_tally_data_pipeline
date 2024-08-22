@@ -26,6 +26,7 @@ class BusyAccountsKBBIO(Base):
     contact_person = Column(String(100), nullable=True)
     created_at = Column(DateTime, server_default=func.now())
     salesman = Column(String(100), nullable= True)
+    email = Column(String(150), nullable= True)
 
 
 class BusyAccounts100x(Base):
