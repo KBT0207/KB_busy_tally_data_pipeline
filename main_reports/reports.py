@@ -729,24 +729,19 @@ class Reports(DatabaseCrud):
             return logger.critical(f"fromdate: {fromdate} should not be larger than todate: {todate}")
         
         # Query to fetch busy accounts data
-        busy_acc_query = (self.Session.query(BusyAccountsKBBIO.name, BusyAccountsKBBIO.alias, 
-                                             BusyAccountsKBBIO.parent_group)
+        busy_acc_query = (self.Session.query(BusyAccountsKBBIO.name, BusyAccountsKBBIO.alias)
                         .filter(BusyAccountsKBBIO.alias.isnot(None), 
-                                BusyAccountsKBBIO.parent_group == 'Dealer')
-                        .with_entities(BusyAccountsKBBIO.name, BusyAccountsKBBIO.alias))
+                                BusyAccountsKBBIO.parent_group == 'Dealer'))
 
         # Query to fetch busy sales data
         busy_sales_query = (self.Session.query(SalesKBBIO.dealer_code, 
-                                               cast(func.sum(SalesKBBIO.bill_amt), 
-                                                    DECIMAL(10, 2)).label('busy_sales_amt'))
+                                       cast(func.sum(SalesKBBIO.amount + SalesKBBIO.tax_amt), 
+                                            DECIMAL(10, 2)).label('busy_sales_amt'))
                             .filter(SalesKBBIO.party_type == 'Dealer', 
                                     SalesKBBIO.dealer_code.isnot(None), 
                                     SalesKBBIO.date.between(fromdate, todate))
                             .group_by(SalesKBBIO.dealer_code)
-                            .order_by(SalesKBBIO.dealer_code)
-                            .with_entities(SalesKBBIO.dealer_code, 
-                                           cast(func.sum(SalesKBBIO.bill_amt), 
-                                                DECIMAL(10, 2)).label('busy_sales_amt')))
+                            .order_by(SalesKBBIO.dealer_code))
 
         # Query to fetch tally outstanding balances
         tally_outstanding_query = (self.Session.query(TallyAccounts.alias_code, 
