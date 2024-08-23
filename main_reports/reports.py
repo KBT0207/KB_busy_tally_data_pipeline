@@ -111,10 +111,16 @@ class Reports(DatabaseCrud):
 
             if row['item_category'] == 'Others' and row['total_qty'] < 50:
                 return 'Match' if row['volume_disc'] == 0 else 'Discrepancy'
+            
+            if row['item_category'] == 'Organeem' and row['total_qty'] >= 50:
+                return 'Match' if row['volume_disc'] == 51 else 'Discrepancy'
+            
+            if row['item_category'] == 'Balanstick' and row['total_qty'] >= 250:
+                return 'Match' if row['volume_disc'] >= 36.97 else 'Discrepancy' 
 
             for item_cat, lower, upper, discount in slabs:
                 if row['item_category'] == item_cat and lower <= row['total_qty'] <= upper:
-                    if row['volume_disc'] < discount:
+                    if row['volume_disc'] <= discount:
                         return 'Less Discount'
                     elif row['volume_disc'] == discount:
                         return 'Match'
@@ -123,21 +129,27 @@ class Reports(DatabaseCrud):
                 return 'Match' if row['volume_disc'] == 0 else 'Discrepancy'
             
             if row['item_category'] == 'Organeem' and row['total_qty'] <= 50:
-                return 'Match' if row['volume_disc'] == 0 else 'Discrepancy'
+                    return 'Match' if row['volume_disc'] == 0 else 'Discrepancy'
+            
+                        
 
             return 'Discrepancy'
             
         item_catergory_column = case(
-                                    # (SalesKBBIO.item_details.contains('Organeem'), 'Organeem'),
-                                    (SalesKBBIO.item_details.contains('Granules'), 'Granules'),
-                                    (SalesKBBIO.item_details.contains('Tunner'), 'Tunner'),
-                                else_='Others').label('item_category')
+                                (and_(SalesKBBIO.item_details.contains('Organeem'), SalesKBBIO.discount_perc == 51), 'Organeem'),
+                                (and_(SalesKBBIO.item_details.contains('Balanstick'), SalesKBBIO.discount_perc >= 36.97), 'Balanstick'),
+                                (SalesKBBIO.item_details.contains('Granules'), 'Granules'),
+                                (SalesKBBIO.item_details.contains('Tunner'), 'Tunner'),
+                            else_='Others').label('item_category')
         
         volume_disc = cast(case(
+                            (and_(SalesKBBIO.discount_perc >= 36.90, item_catergory_column == 'Balanstick'), SalesKBBIO.discount_perc),
+                            (and_(SalesKBBIO.discount_perc < 37, item_catergory_column == 'Balanstick'), SalesKBBIO.discount_perc),
                             (and_(SalesKBBIO.discount_perc < 25, item_catergory_column == 'Others'), SalesKBBIO.discount_perc),
                             (and_(SalesKBBIO.discount_perc > 25, item_catergory_column == 'Others'), SalesKBBIO.discount_perc - 25),
                             (and_(SalesKBBIO.discount_perc < 20, item_catergory_column == 'Granules'), SalesKBBIO.discount_perc),
                             (and_(SalesKBBIO.discount_perc > 20, item_catergory_column == 'Granules'), SalesKBBIO.discount_perc - 20),
+                            (and_(SalesKBBIO.discount_perc == 51, item_catergory_column == 'Organeem'), SalesKBBIO.discount_perc),
                         else_=0).label('volume_disc'), DECIMAL(10, 2))
         
         cash_disc = case((SalesKBBIO.discount_perc >= 25, 25), else_= 0).label('cash_disc')
@@ -165,7 +177,6 @@ class Reports(DatabaseCrud):
                                     cast(func.sum(SalesKBBIO.alt_qty).label('total_qty'), Numeric()), 
                                     SalesKBBIO.discount_perc, volume_disc, cash_disc)
                                 
-        # df = pd.read_sql(entity_query.statement, self.Session.bind)
         df = pd.DataFrame(entity_query, columns= ['date', 'particulars', 
                                                   'item_category', 
                                            'total_qty', 'disc_perc',
@@ -953,7 +964,7 @@ class Reports(DatabaseCrud):
                            }
         excluded_particulars = ['Kay Bee Exports Phaltan', 
                                 'Kay Bee Exports International P Ltd Naga',
-                                    ]
+                                ]
         received_mc = case(
                         *[(MITPKBBIO.particulars == key, value) for key, value in particulars.items()],
                                     else_='Unknown'
