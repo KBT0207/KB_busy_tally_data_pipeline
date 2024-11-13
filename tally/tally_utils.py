@@ -36,6 +36,7 @@ def start_tally() -> None:
     
 
 
+
 def select_company(company_code):
     find_img('tally/images/tally_start.png', conf=0.95)
     time.sleep(1)
@@ -47,6 +48,27 @@ def select_company(company_code):
     pg.typewrite(os.getenv('TALLY_PASSWORD'), interval=0.1)
     pg.press('enter')
 
+
+def select_kbe_company(company_code):
+    find_img('tally/images/tally_start.png', conf=0.95)
+    time.sleep(2)
+    try: 
+        data_server = pg.locateOnScreen('tally/images/tally_data_server.png', confidence=0.9)
+        pg.click(data_server)
+        pg.click()
+    except:
+        pass
+    find_img(f'tally/images/kbe_comp_list.png', conf=0.95)
+    time.sleep(1)
+    pg.typewrite(str(company_code), interval=0.2)
+    find_img(f'tally/images/kbe_{company_code}.png', conf=0.95)
+    pg.click()
+    pg.press("enter")
+    find_img('tally/images/tally_username.png')
+    pg.typewrite(os.getenv('TALLY_USERNAME'), interval=0.1)
+    pg.press('enter')
+    pg.typewrite(os.getenv('TALLY_PASSWORD'), interval=0.1)
+    pg.press('enter')
 
 
 def select_report(report_type):
@@ -88,6 +110,16 @@ def change_receivables_period(from_date, to_date):
 
 def change_period_balance(from_date, to_date):
     find_img('tally/images/report_particulars.png')
+    time.sleep(1)
+    pg.hotkey("alt", "f2")
+    pg.typewrite(from_date, interval=0.2)
+    pg.press('enter')
+    pg.typewrite(to_date, interval=0.2)
+    pg.press('enter')
+
+
+def change_kbe_period_balance(from_date, to_date):
+    find_img('tally/images/kbe_outstanding_data.png')
     time.sleep(1)
     pg.hotkey("alt", "f2")
     pg.typewrite(from_date, interval=0.2)
@@ -212,40 +244,50 @@ def export_balance_data(path, filename):
 
 
 
-# def export_receivables_data(path, filename):
-#     find_img('tally/images/remove_line.png')
-#     time.sleep(0.5)
-#     pg.hotkey('ctrl', 'e')
-#     time.sleep(1)
-#     pg.press('c')
-#     time.sleep(1)
-#     pg.press('down')
-#     time.sleep(1)
-#     find_img('tally/images/export_settings.png', conf=0.95 )
-#     time.sleep(1)
-#     pg.click()
-#     time.sleep(0.5)
-#     pg.press('down')
-#     pg.press('enter')
-#     pg.typewrite('excel', interval=0.3)
-#     pg.press('enter')
 
-#     find_img("tally/images/folder_path.png")
-#     pg.click()
-#     pg.press('enter')
-#     pg.typewrite(path, interval=0.2)
-#     pg.press('enter', presses=2, interval=0.4)
+def export_kbe_balance_data(path, filename):
+    find_img('tally/images/remove_line.png')
+    time.sleep(0.5)
+    pg.hotkey('ctrl', 'e')
+    time.sleep(1.5)
+    pg.press('c')
+    time.sleep(1.5)
+    pg.press('down')
+    time.sleep(1)
+    find_img('tally/images/export_settings.png', conf=0.95 )
+    time.sleep(1)
+    pg.click()
+    time.sleep(0.5)
+    pg.press('down')
+    pg.press('enter')
+    pg.typewrite('excel', interval=0.3)
+    pg.press('enter')
+    time.sleep(1.5)
+    try:
+        show_currency = pg.locateOnScreen(image= 'tally/images/show_currency.png', confidence= 0.9)
+        pg.click(show_currency)
+        pg.press('enter')
+        print("changed currency to be yes")
+    except:
+        print('passed')
+        pass
+
+    find_img("tally/images/folder_path.png")
+    pg.click()
+    pg.press('enter')
+    pg.typewrite(path, interval=0.2)
+    pg.press('enter', presses=2, interval=0.4)
     
-#     pg.press('down')
-#     pg.press('enter')
-#     pg.typewrite(filename, interval=0.2)
-#     pg.press('enter')
+    pg.press('down')
+    pg.press('enter')
+    pg.typewrite(filename, interval=0.2)
+    pg.press('enter')
 
-#     pg.hotkey("ctrl", "a")
-#     time.sleep(1)
-#     pg.press('e')
+    pg.hotkey("ctrl", "a")
+    time.sleep(1)
+    pg.press('e')
 
-#     find_img(img='tally/images/remove_line.png', conf=0.95)
+    find_img(img='tally/images/remove_line.png', conf=0.95)
 
 
 
@@ -321,6 +363,20 @@ def outstanding_balance():
     pg.typewrite('name only')
     pg.press('enter')
     pg.hotkey('ctrl', 'a')
+
+
+
+def kbe_outstanding_balance():
+    find_img('tally/images/tally_gateway.png')
+    pg.press('d')
+    time.sleep(1.5)
+    pg.press('s')
+    time.sleep(1.5)
+    pg.press('o')
+    time.sleep(1.5)
+    pg.press('r')
+    time.sleep(1.5)
+
 
 
 def receivables():

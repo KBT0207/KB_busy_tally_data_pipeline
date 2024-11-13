@@ -11,8 +11,7 @@ from logging_config import logger
 from Database.models.busy_models.busy_pricing import BusyPricingKBBIO
 from Database.models.busy_models.busy_accounts import (BusyAccounts100x, BusyAccountsAgri, 
                                                     BusyAccountsGreenEra, BusyAccountsKBBIO,
-                                                    BusyAccountsNewAge)
-from Database.models.busy_models.busy_items import BusyItemsKBBIO
+                                                    BusyAccountsNewAge, )
 from Database.models.busy_models.busy_reports import (SalesKBBIO, SalesOrderKBBIO, SalesReturnKBBIO, MITPKBBIO, MRFPKBBIO)
 from Database.models.tally_models.tally_report_models import (TallyAccounts, TallyOutstandingBalance, 
                                                               TallySales, TallySalesReturn, TallyJournal, 
@@ -20,14 +19,12 @@ from Database.models.tally_models.tally_report_models import (TallyAccounts, Tal
                                                               TallyReceipts, DebtorsBalance
                                                               )
 
-pd.set_option('display.max_columns', 6)  # Show all columns
-pd.set_option('display.width', 0)           # Auto-detect the display width
-# pd.set_option('display.max_colwidth', 30)   # Show full content of each column
+pd.set_option('display.max_columns', None)
 
 
 class Reports(DatabaseCrud):
 
-    def sales_price_validation(self, from_date:str, to_date:str, exceptions:list = None) -> pd.DataFrame:
+    def sales_price_validation(self, from_date:str, to_date:str, effective_date:str, exceptions:list = None) -> pd.DataFrame:
         """This method queries the database to provide busy sales price validation report in a dataframe.  
 
         Args:
@@ -41,7 +38,8 @@ class Reports(DatabaseCrud):
         join_query = self.Session.query(SalesKBBIO, BusyPricingKBBIO).outerjoin(
             BusyPricingKBBIO, and_(
                 SalesKBBIO.party_type == BusyPricingKBBIO.customer_type,
-                SalesKBBIO.item_details == BusyPricingKBBIO.item_name,
+                SalesKBBIO.item_details == BusyPricingKBBIO.item_name, 
+                effective_date == BusyPricingKBBIO.effective_from,
             ))
 
         query = join_query.filter(
@@ -152,8 +150,12 @@ class Reports(DatabaseCrud):
                             (and_(SalesKBBIO.discount_perc == 51, item_catergory_column == 'Organeem'), SalesKBBIO.discount_perc),
                         else_=0).label('volume_disc'), DECIMAL(10, 2))
         
-        cash_disc = case((SalesKBBIO.discount_perc >= 25, 25), else_= 0).label('cash_disc')
-
+        cash_disc = case(
+                    (and_(SalesKBBIO.item_details.contains('Granules'), SalesKBBIO.discount_perc >= 20), 20),
+                    (and_(~SalesKBBIO.item_details.contains('Granules'), SalesKBBIO.discount_perc >= 25), 25),
+                        else_=0
+                    ).label('cash_disc')
+        
         query = self.Session.query(SalesKBBIO.date, SalesKBBIO.voucher_no, SalesKBBIO.alt_qty, 
                                    SalesKBBIO.item_details, SalesKBBIO.particulars, 
                                    SalesKBBIO.discount_perc, item_catergory_column, volume_disc, cash_disc,
@@ -461,6 +463,7 @@ class Reports(DatabaseCrud):
         return file_path
 
 
+
     def sales_return_validation(self, fromdate:str, todate:str, exceptions:list) -> str:
         
         def busy_to_tally():
@@ -659,6 +662,7 @@ class Reports(DatabaseCrud):
             result_tally_to_busy.to_excel(writer, sheet_name='Tally Sales Return', index=False)
         
         return file_path
+
 
 
     def salesorder_mitp_reco(self, fromdate:str, todate:str, exceptions:list) -> pd.DataFrame:
@@ -959,41 +963,33 @@ class Reports(DatabaseCrud):
                            }
         excluded_particulars = ['Kay Bee Exports Phaltan', 
                                 'Kay Bee Exports International P Ltd Naga',
-                                ]
-        received_mc = case(
+                                    ]
+        
+        def busy_mitp_reco():
+            
+            received_mc = case(
                         *[(MITPKBBIO.particulars == key, value) for key, value in particulars.items()],
                                     else_='Unknown'
                                 ).label('Received Material Centre')
-        issued_mc = case(
-                    *[(MRFPKBBIO.particulars == key, value) for key, value in particulars.items()],
-                                else_='Unknown'
-                            ).label('Issued Material Centre')
-
-        mitp_query = (self.Session.query(MITPKBBIO.date.label('MITP Date'), 
+            
+            mitp_query = (self.Session.query(MITPKBBIO.date.label('MITP Date'), 
                                              MITPKBBIO.voucher_no.label('MITP Voucher No'), 
                                              MITPKBBIO.particulars.label('MITP Particulars'), 
                                              MITPKBBIO.item_details.label('MITP Item'), 
-                                             MITPKBBIO.product_group.label('MITP Product Group'), 
                                              MITPKBBIO.material_centre.label('MITP Material Centre'), 
                                              MITPKBBIO.alt_qty.label('MITP Qty'), 
                                              MITPKBBIO.alt_unit.label('MITP Unit'), received_mc, 
                                             SalesKBBIO.voucher_no.label('Sales Voucher No'))
                                 .outerjoin(SalesKBBIO, 
-                                            and_(MITPKBBIO.voucher_no == SalesKBBIO.dc_no,
-                                             MITPKBBIO.alt_qty == SalesKBBIO.alt_qty, 
-                                             MITPKBBIO.item_details == SalesKBBIO.item_details, 
-                                             MITPKBBIO.alt_unit == SalesKBBIO.alt_unit, ))    
+                                            MITPKBBIO.voucher_no == SalesKBBIO.dc_no)    
                                 .filter(and_(MITPKBBIO.party_type == 'Inter-Branch'), 
                                         MITPKBBIO.date.between(fromdate, todate),
                                         ~MITPKBBIO.particulars.in_(excluded_particulars)))
-
-        mrfp_query = (self.Session.query(MRFPKBBIO.date, MRFPKBBIO.particulars, 
-                                        MRFPKBBIO.voucher_no, MRFPKBBIO.item_details, 
-                                        BusyItemsKBBIO.parent_group, MRFPKBBIO.alt_qty, 
-                                        MRFPKBBIO.alt_unit, MRFPKBBIO.material_centre, 
-                                        issued_mc)
-                        .outerjoin(BusyItemsKBBIO, 
-                                    MRFPKBBIO.item_details == BusyItemsKBBIO.name)
+            
+            mrfp_query = (self.Session.query(MRFPKBBIO.particulars, 
+                                            MRFPKBBIO.voucher_no, MRFPKBBIO.item_details, 
+                                            MRFPKBBIO.alt_qty, MRFPKBBIO.alt_unit, 
+                                            MRFPKBBIO.material_centre)
                         .filter(and_(
                                 MRFPKBBIO.date.between(fromdate, todate), 
                                 ~MRFPKBBIO.particulars.in_(excluded_particulars), 
@@ -1002,190 +998,64 @@ class Reports(DatabaseCrud):
                                     MRFPKBBIO.particulars.like('Green Era%')
                                 ))
                         ))
-        
-        mitp_df = pd.DataFrame(mitp_query).sort_values(by=['MITP Date', 'Sales Voucher No', 'MITP Item'])
-        mitp_df['Sales Voucher No'] = mitp_df['Sales Voucher No'].str.replace('-', '').str.lower()
-        mitp_df['MITP Concat'] = (mitp_df['MITP Item'] + mitp_df['MITP Qty'].astype(str) + 
-                                    mitp_df['MITP Material Centre'] + mitp_df['Received Material Centre'])
-        mitp_df.loc[:, 'MITP Concat Number'] = mitp_df.groupby(['MITP Concat']).cumcount() + 1
-
-        mrfp_df = pd.DataFrame(mrfp_query).sort_values(by= ['date', 'voucher_no', 'item_details'])
-        mrfp_df['voucher_no'] = mrfp_df['voucher_no'].str.replace('-', '').str.lower()
-        mrfp_df['MRFP Concat'] = (mrfp_df['item_details'] + mrfp_df['alt_qty'].astype(str) + 
-                                  mrfp_df['Issued Material Centre'] + mrfp_df['material_centre'])
-        mrfp_df.loc[:, 'MRFP Concat Number'] = mrfp_df.groupby(['MRFP Concat']).cumcount() + 1
-
-        mitp_columns = ['MITP Date', 'MITP Voucher No', 'MITP Particulars', 'MITP Item', 
-                        'MITP Product Group', 'MITP Material Centre', 'MITP Qty', 'MITP Unit', 
-                        'Received Material Centre', 'MITP Concat', 'MITP Concat Number']
-        
-        mrfp_columns = ['date', 'particulars', 'voucher_no', 'item_details', 'parent_group', 
-                        'alt_qty', 'alt_unit', 'material_centre', 'Issued Material Centre', 
-                        'MRFP Concat', 'MRFP Concat Number']
-
-        def busy_mitp_reco():
             
-            first_merge = mitp_df.merge(mrfp_df, how= 'outer', 
-                                      left_on= ['Sales Voucher No', 'MITP Item', 'MITP Qty', 
-                                                'Received Material Centre'], 
-                                      right_on= ['voucher_no', 'item_details', 'alt_qty', 
-                                                'material_centre'], 
-                                        indicator= 'Status')
-            
-            first_merge['Status'] = np.where(first_merge['Status'] == 'both', 'Match via Voucher', 'Not Found')
+            mitp_df = pd.DataFrame(mitp_query)
+            mrfp_df = pd.DataFrame(mrfp_query)
 
-            first_result = first_merge.loc[first_merge['Status'] == 'Match via Voucher', 
-                                            mitp_columns + ['Status', 'Sales Voucher No', ]]
-
-            mitp_second_merge_df = (first_merge.loc[first_merge['Status'] != 'Match via Voucher', mitp_columns]
-                                    .dropna(axis=0, how='any', subset=None))
-            mrfp_second_merge_df = (first_merge.loc[first_merge['Status'] != 'Match via Voucher', mrfp_columns]
-                                    .dropna(axis=0, how='any', subset=None))
-
-            second_merge = (mitp_second_merge_df.merge(mrfp_second_merge_df, how= 'outer', 
-                                      left_on= ['MITP Concat', 'MITP Concat Number'], 
-                                      right_on= ['MRFP Concat', 'MRFP Concat Number'], 
-                                        indicator= 'Status'))
-            second_merge['Status'] = np.where(second_merge['Status'] == 'both', 'Second Match', 'Not Found')
-            
-            second_result = second_merge.loc[second_merge['Status'] == 'Second Match', 
-                                         mitp_columns + ['Status']]
-            
-            mitp_third_merge_df = (second_merge.loc[second_merge['Status'] == 'Not Found', 
-                                                            mitp_columns]
-                                    .dropna(axis=0, how='any', subset=None))
-            mitp_product_grouped = (mitp_third_merge_df.groupby(['MITP Date', 'MITP Voucher No', 'MITP Product Group', 
-                                                'Received Material Centre', 'MITP Material Centre'])['MITP Qty']
-                                                   .sum().reset_index())
-            
-            mrfp_third_merge_df = (second_merge.loc[second_merge['Status'] == 'Not Found', 
-                                                            mrfp_columns]
-                                    .dropna(axis=0, how='any', subset=None))
-            mrfp_product_grouped = (mrfp_third_merge_df.groupby(['date', 'voucher_no', 'parent_group', 
-                                                    'Issued Material Centre', 'material_centre'])['alt_qty']
-                                                   .sum().reset_index())
-
-            group_merge = mitp_product_grouped.merge(mrfp_product_grouped, how= 'left', 
-                                                left_on= ['MITP Product Group', 'Received Material Centre', 
-                                                          'MITP Material Centre', 'MITP Qty'], 
-                                                right_on= ['parent_group', 'material_centre', 
-                                                           'Issued Material Centre', 'alt_qty'])
-            group_merge = group_merge[group_merge['MITP Date'] <= group_merge['date']]
-            group_merge['Status'] = 'Third Match'
-
-            third_result = mitp_third_merge_df.merge(group_merge[['MITP Voucher No', 'MITP Product Group', 'Status']], 
-                                                     how= 'left', on= ['MITP Voucher No', 'MITP Product Group'])
-            third_result['Status'] = third_result['Status'].fillna('Not Found')
-
-            result_df = (pd.concat([first_result, second_result, third_result], axis= 0, ignore_index= True)
-                            .sort_values(['MITP Date', 'MITP Voucher No', 'MITP Item'])
-                            .drop(columns= ['MITP Concat', 'MITP Concat Number']))
-
-            return result_df.dropna(how= 'all').drop(columns= 'Sales Voucher No')
+            result_df = mitp_df.merge(mrfp_df, how= 'left', 
+                                      left_on= ['Sales Voucher No',  
+                                                'MITP Item', 'MITP Qty', 'MITP Unit', ], 
+                                      right_on= ['voucher_no', 
+                                                 'item_details', 'alt_qty', 'alt_unit', ])
+            return print(result_df.info())
         
         def busy_mrfp_reco():
 
-            first_merge = (mrfp_df.merge(mitp_df, how= 'outer', 
-                                      right_on= ['Sales Voucher No', 'MITP Item', 'MITP Qty', 
-                                                 'MITP Unit', 'Received Material Centre'], 
-                                      left_on= ['voucher_no', 'item_details', 'alt_qty', 
-                                                'alt_unit', 'material_centre'], 
-                                        indicator= 'Status'))
+            received_mc = case(
+                        *[(MITPKBBIO.particulars == key, value) for key, value in particulars.items()],
+                                    else_='Unknown'
+                                ).label('Received Material Centre')
             
-            first_merge['Status'] = np.where(first_merge['Status'] == 'both', 'Match via Voucher', 'Not Found')
-            first_result =  first_merge.loc[first_merge['Status'] == 'Match via Voucher', 
-                                               mrfp_columns + ['Status', 'Sales Voucher No']]
-
-            mitp_second_merge_df = (first_merge.loc[first_merge['Status'] != 'Match via Voucher', mitp_columns]
-                                    .dropna(axis=0, how='any', subset=None))
-            mrfp_second_merge_df = (first_merge.loc[first_merge['Status'] != 'Match via Voucher', mrfp_columns]
-                                    .dropna(axis=0, how='any', subset=None))
+            mitp_query = (self.Session.query(MITPKBBIO.date.label('MITP Date'), 
+                                             MITPKBBIO.voucher_no.label('MITP Voucher No'), 
+                                             MITPKBBIO.particulars.label('MITP Particulars'), 
+                                             MITPKBBIO.item_details.label('MITP Item'), 
+                                             MITPKBBIO.material_centre.label('MITP Material Centre'), 
+                                             MITPKBBIO.alt_qty.label('MITP Qty'), 
+                                             MITPKBBIO.alt_unit.label('MITP Unit'), received_mc, 
+                                            SalesKBBIO.voucher_no.label('Sales Voucher No'))
+                                .outerjoin(SalesKBBIO, 
+                                            MITPKBBIO.voucher_no == SalesKBBIO.dc_no)    
+                                .filter(and_(MITPKBBIO.date.between(fromdate, todate), 
+                                             MITPKBBIO.party_type == 'Inter-Branch'), 
+                                        ~MITPKBBIO.particulars.in_(excluded_particulars)))
             
-            second_merge = mrfp_second_merge_df.merge(mitp_second_merge_df, how= 'outer', 
-                                      left_on= ['MRFP Concat', 'MRFP Concat Number'], 
-                                      right_on= ['MITP Concat', 'MITP Concat Number'], 
-                                        indicator= 'Status')
+            mrfp_query = (self.Session.query(MRFPKBBIO.particulars, 
+                                            MRFPKBBIO.voucher_no, MRFPKBBIO.item_details, 
+                                            MRFPKBBIO.alt_qty, MRFPKBBIO.alt_unit, 
+                                            MRFPKBBIO.material_centre)
+                                      .filter(and_(
+                                                MRFPKBBIO.date.between(fromdate, todate), 
+                                                ~MRFPKBBIO.particulars.in_(excluded_particulars), 
+                                                or_(
+                                                    MRFPKBBIO.particulars.like('Kay Bee%'),
+                                                    MRFPKBBIO.particulars.like('Green Era%')
+                                                ))
+                                        ))
             
-            second_merge['Status'] = np.where(second_merge['Status'] == 'both', 'Second Match', 'Not Found')
-            
-            second_result = second_merge.loc[second_merge['Status'] == 'Second Match', 
-                                         mrfp_columns + ['Status']]
-            
-            #debug from here..
-            mitp_third_merge_df = (second_merge.loc[second_merge['Status'] == 'Not Found', 
-                                                            mitp_columns]
-                                    .dropna(axis=0, how='any', subset=None))
-            mitp_product_grouped = (mitp_third_merge_df.groupby(['MITP Date', 'MITP Voucher No', 'MITP Product Group', 
-                                                'Received Material Centre', 'MITP Material Centre'])['MITP Qty']
-                                                   .sum().reset_index())
-            
-            mrfp_third_merge_df = (second_merge.loc[second_merge['Status'] == 'Not Found', 
-                                                            mrfp_columns]
-                                    .dropna(axis=0, how='any', subset=None))
-            mrfp_product_grouped = (mrfp_third_merge_df.groupby(['date', 'voucher_no', 'parent_group', 
-                                                    'Issued Material Centre', 'material_centre'])['alt_qty']
-                                                   .sum().reset_index())
+            mitp_df = pd.DataFrame(mitp_query)
+            mrfp_df = pd.DataFrame(mrfp_query)
 
-            group_merge = mrfp_product_grouped.merge(mitp_product_grouped, how= 'left', 
-                                                right_on= ['MITP Product Group', 'Received Material Centre', 
-                                                          'MITP Material Centre', 'MITP Qty'], 
-                                                left_on= ['parent_group', 'material_centre', 
-                                                           'Issued Material Centre', 'alt_qty'])
-            group_merge = group_merge[group_merge['MITP Date'] <= group_merge['date']]
-            group_merge['Status'] = 'Third Match'
+            result_df = mrfp_df.merge(mitp_df, how= 'left', 
+                                      right_on= ['Sales Voucher No',  
+                                                'MITP Item', 'MITP Qty', 'MITP Unit', ], 
+                                      left_on= ['voucher_no', 
+                                                 'item_details', 'alt_qty', 'alt_unit', ])
 
-            third_result = mrfp_third_merge_df.merge(group_merge[['voucher_no', 'parent_group', 'Status']], 
-                                                     how= 'left', on= ['voucher_no', 'parent_group'])
-            third_result['Status'] = third_result['Status'].fillna('Not Found')
+            return print(result_df.info())
 
-            result_df = (pd.concat([first_result, second_result, third_result], axis= 0, ignore_index= True)
-                         .sort_values(['date', 'voucher_no', 'item_details'])
-                         .drop(columns= ['MRFP Concat', 'MRFP Concat Number']))
+        busy_mitp_reco()
+        busy_mrfp_reco()    
 
-            return result_df.dropna(how= 'all').drop(columns= 'Sales Voucher No')
 
-        
-        file_path = fr'D:\Reports\Intersite_Reco_{fromdate} to {todate}.xlsx'
 
-        with pd.ExcelWriter(file_path, engine='xlsxwriter') as writer:
-            busy_mitp_reco().to_excel(writer, sheet_name= 'MITP', index= False)
-            busy_mrfp_reco().to_excel(writer, sheet_name= 'MRFP', index= False)
-            mitp_reco = busy_mitp_reco().loc[busy_mitp_reco()['Status'] == 'Not Found'].dropna(how= 'all')
-
-            mrfp_reco = busy_mrfp_reco().loc[busy_mrfp_reco()['Status'] == 'Not Found'].dropna(how= 'all')
-            mc_list = ['Khordha', 'Hubli', 'Lucknow', 'Raipur', 'Phaltan', 'Hyderabad', 
-                    'CNFIndore', 'Karnal', 'Jaipur', 'Bathinda', 'GE Pune', 
-                    'AS Phaltan', 'Gujarat', 'Vijayawada']
-
-            for mc in mc_list:
-                mitp_group = mitp_reco[mitp_reco['MITP Material Centre'] == mc].dropna(how='all')
-                mitp_group['Remark'] = ''
-                mrfp_group = mrfp_reco[mrfp_reco['material_centre'] == mc].dropna(how='all')
-                mrfp_group['Remark'] = ''
-                mrfp_group = mrfp_group[['date', 'voucher_no', 'particulars', 'item_details', 'parent_group', 
-                                         'material_centre', 'alt_qty', 'alt_unit', 'Issued Material Centre', 
-                                         'Status', 'Remark']]
-
-                if mitp_group.empty and mrfp_group.empty:
-                    continue  # Skip writing if both groups are empty
-
-                startrow = 0 # Starting row for writing data
-                worksheet = writer.book.add_worksheet(mc)  
-                if not mitp_group.empty:
-                    worksheet = writer.sheets[mc]
-                    mitp_header = f'Material Issued to Party by {mc} not received / Intransit / Entry not in Busy by other Site'
-                    worksheet.merge_range(startrow, 0, startrow, len(mitp_group.columns)-1, mitp_header )  # Write MITP header
-                    startrow += 1  # Move to the next row after header
-                    mitp_group.to_excel(writer, sheet_name=mc, index=False, startrow=startrow)
-                    startrow += len(mitp_group) + 2  # Move to next row after MITP data plus 2 rows for spacing
-
-                # Write MRFP data
-                if not mrfp_group.empty:
-                    worksheet = writer.sheets[mc]
-                    mrfp_header = f'Material Received by {mc} but not Issued by other Site'
-                    worksheet.merge_range(startrow,0, startrow, len(mrfp_group.columns)-1, mrfp_header)  # Write MRFP header
-                    startrow += 1  # Move to the next row after header
-                    mrfp_group.to_excel(writer, sheet_name=mc, index=False, startrow=startrow)
-
-                # worksheet.autofit() 
-               

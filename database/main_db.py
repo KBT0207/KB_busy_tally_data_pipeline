@@ -2,23 +2,25 @@ import glob
 import pandas as pd
 import os
 from datetime import datetime, timedelta
-from Database.sql_connector import db_engine, db_connector
+from Database.sql_connector import kbbio_engine, kbbio_connector, kbe_engine, kbe_connector
 from Database.busy_data_processor import BusyDataProcessor, get_filename, get_compname
 from Database.tally_data_processor import TallyDataProcessor
-from Database.models.base import Base
+from Database.models.base import KBBIOBase, KBEBase
 from Database.db_crud import DatabaseCrud
 from logging_config import logger
 from utils.common_utils import busy_tables, tally_tables
 from utils.email import email_send
 from main_reports.reports import Reports
+from Database.tally_data_processor import get_exchange_rate_in_inr
+
 
 
 
 def truncate_busy_masters():    
-    Base.metadata.create_all(db_engine)    
+    KBBIOBase.metadata.create_all(kbbio_engine)    
 
     tables_list = list(busy_tables.keys())
-    importer = DatabaseCrud(db_connector)
+    importer = DatabaseCrud(kbbio_connector)
     for table in tables_list:
         if "acc" in table or "items" in table:
             importer.truncate_table(table_name=table, commit=True)
@@ -28,10 +30,10 @@ def truncate_busy_masters():
 
 def delete_busy_sales(startdate:str, enddate:str, commit:bool):   
     if startdate <= enddate:
-        Base.metadata.create_all(db_engine)
+        KBBIOBase.metadata.create_all(kbbio_engine)
 
         busy_sales_table = ['busy_sales', 'busy_sales_order', 'busy_sales_return']
-        importer = DatabaseCrud(db_connector)
+        importer = DatabaseCrud(kbbio_connector)
         for table in busy_sales_table:
             importer.delete_date_range_query(table, start_date= startdate, end_date=enddate, commit=commit)
     else:
@@ -40,10 +42,10 @@ def delete_busy_sales(startdate:str, enddate:str, commit:bool):
 
 
 def delete_busy_material(from_date:str, to_date:str):    
-    Base.metadata.create_all(db_engine)
+    KBBIOBase.metadata.create_all(kbbio_engine)
 
     tables_list = list(busy_tables.keys())
-    importer = DatabaseCrud(db_connector)
+    importer = DatabaseCrud(kbbio_connector)
     for table in tables_list:
         if "mitp" in table or "mrfp" in table:
             importer.delete_date_range_query(table, start_date=from_date, end_date= to_date, commit=True)
@@ -52,10 +54,10 @@ def delete_busy_material(from_date:str, to_date:str):
 
 
 def delete_tally_data(start_date:str, end_date:str, commit:bool):    
-    Base.metadata.create_all(db_engine)
+    KBBIOBase.metadata.create_all(kbbio_engine)
 
     tables_list = list(tally_tables.keys())
-    importer = DatabaseCrud(db_connector)
+    importer = DatabaseCrud(kbbio_connector)
     
     exclude_tables = ['tally_accounts', 'outstanding_balance', 'tally_receivables']
     for table in tables_list:
@@ -67,13 +69,13 @@ def delete_tally_data(start_date:str, end_date:str, commit:bool):
 
 
 def import_busy_sales(filename:str):    
-    Base.metadata.create_all(db_engine)
+    KBBIOBase.metadata.create_all(kbbio_engine)
         
     busy_files = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*sales*{filename}.xlsx", recursive=True)
     if len(busy_files) != 0:
         for file in busy_files:
             excel_data = BusyDataProcessor(file)
-            importer = DatabaseCrud(db_connector)
+            importer = DatabaseCrud(kbbio_connector)
             if get_filename(file) == 'sales':
                 importer.import_data('busy_sales', excel_data.clean_and_transform(), commit=True)
     
@@ -93,7 +95,7 @@ def import_busy_sales(filename:str):
 
 
 def import_busy_masters_material(file_name:str):
-    Base.metadata.create_all(db_engine)
+    KBBIOBase.metadata.create_all(kbbio_engine)
     # today_date = "17-Apr-2024"
 
     pattern_master = f"D:\\automated_busy_downloads\\**\\*master*{file_name}.xlsx"
@@ -105,11 +107,10 @@ def import_busy_masters_material(file_name:str):
     busy_files_item = glob.glob(pattern_item, recursive=True)
 
     busy_files = busy_files_master + busy_files_item + busy_files_material
-
     if len(busy_files) != 0:
         for file in busy_files:
             excel_data = BusyDataProcessor(file)
-            importer = DatabaseCrud(db_connector)
+            importer = DatabaseCrud(kbbio_connector)
 
             if get_filename(file) == 'material_issued_to_party':
                 importer.import_data('busy_mitp', excel_data.clean_and_transform(), commit=True)
@@ -154,13 +155,13 @@ def import_busy_masters_material(file_name:str):
 
 
 def import_tally_data(date):    
-    Base.metadata.create_all(db_engine)
+    KBBIOBase.metadata.create_all(kbbio_engine)
     
     tally_files = glob.glob("D:\\automated_tally_downloads\\" + f"**\\*{date}.xlsx", recursive=True)
     if len(tally_files) != 0:
         for file in tally_files:
             excel_data = TallyDataProcessor(file)
-            importer = DatabaseCrud(db_connector)
+            importer = DatabaseCrud(kbbio_connector)
             if get_filename(file) == 'sales':
                 importer.import_data('tally_sales', excel_data.clean_and_transform(), commit=True)
     
@@ -197,7 +198,7 @@ def import_tally_data(date):
 
 
 def import_outstanding_tallydata(dates: list, monthly: bool):
-    Base.metadata.create_all(db_engine)
+    KBBIOBase.metadata.create_all(kbbio_engine)
 
     for date in dates:
         if monthly:
@@ -212,15 +213,32 @@ def import_outstanding_tallydata(dates: list, monthly: bool):
         if tally_files:  # Same as checking if len(tally_files) != 0
             for file in tally_files:
                 excel_data = TallyDataProcessor(file)
-                importer = DatabaseCrud(db_connector)
+                importer = DatabaseCrud(kbbio_connector)
                 if get_filename(file) == 'outstanding':
                     importer.import_data('outstanding_balance', excel_data.clean_and_transform(), commit=True)
 
 
 
+def import_kbe_outstanding_tallydata(dates: list):
+    KBEBase.metadata.create_all(kbe_engine)
+
+    for date in dates:
+        tally_files = glob.glob(rf"D:\automated_kbe_downloads\**\*kbe_outstanding_{date}.xlsx", recursive= True)
+        
+        # Using glob to search recursively
+        if tally_files: 
+            for file in tally_files:
+                excel_data = TallyDataProcessor(file)
+                importer = DatabaseCrud(kbe_connector)
+                if get_filename(file) == 'kbe_outstanding':
+                    importer.import_data('outstanding_balance', excel_data.clean_and_transform(), commit=True)
+        else:
+            print("No KBE Outstanding Files")
+
+
 
 def import_receivables_tallydata(dates: list, monthly: bool):    
-    Base.metadata.create_all(db_engine)
+    KBBIOBase.metadata.create_all(kbbio_engine)
     for date in dates:
         if monthly:
             first_day_of_current_month = datetime.today().replace(day=1)
@@ -232,14 +250,14 @@ def import_receivables_tallydata(dates: list, monthly: bool):
         if tally_files:
             for file in tally_files:
                 excel_data = TallyDataProcessor(file)
-                importer = DatabaseCrud(db_connector)
+                importer = DatabaseCrud(kbbio_connector)
                 if get_filename(file) == 'receivables':
                     importer.import_data('tally_receivables', excel_data.clean_and_transform(), commit=True)
 
 
 
 
-def dealer_price_validation_report(from_date:str, to_date:str, send_email:bool, exceptions:list = None) -> None:
+def dealer_price_validation_report(from_date:str, to_date:str, effective_date:str, send_email:bool, exceptions:list = None) -> None:
     """Generated dealer price validation report as per the arguments.
 
     Args:
@@ -248,9 +266,10 @@ def dealer_price_validation_report(from_date:str, to_date:str, send_email:bool, 
         send_email (bool): when False only excel file with report get generated. True if you want to send email with the excel file.
         exceptions (list, optional): Takes in Sales Voucher Number which you want to be excluded from the report. Defaults to None.
     """
-    reports = Reports(db_connector)
+    reports = Reports(kbbio_connector)
     
-    validation_df = reports.sales_price_validation(from_date= from_date, to_date= to_date, exceptions= exceptions)
+    validation_df = reports.sales_price_validation(from_date= from_date, to_date= to_date, 
+                                                   effective_date= effective_date, exceptions= exceptions)
     
     counts = len(validation_df)
     if counts != 0:
@@ -286,9 +305,8 @@ def dealer_price_validation_report(from_date:str, to_date:str, send_email:bool, 
 
 
 
-
 def salesorder_salesman_report(from_date:str, to_date:str, send_email:bool, exceptions:list = None) -> None:
-    reports = Reports(db_connector)
+    reports = Reports(kbbio_connector)
     
     validation_df = reports.salesman_order_validation(from_date= from_date, to_date= to_date, exceptions= exceptions)
     
@@ -333,7 +351,7 @@ def volume_discount_report(dates:list, send_email:bool, exceptions:list = None) 
             name = f'of {date_range[0]}'
         return name
     
-    reports = Reports(db_connector)
+    reports = Reports(kbbio_connector)
     
     validation_df = reports.volume_discount_validation(dates= dates, exceptions= exceptions)
     # return view(validation_df)
@@ -376,7 +394,7 @@ def cash_discount_report(dates:list, send_email:bool, exceptions:list = None) ->
             name = f'of {date_range[0]}'
         return name
     
-    reports = Reports(db_connector)
+    reports = Reports(kbbio_connector)
     # from xlwings import view
     validation_df = reports.cash_discount_validation(dates= dates, exceptions= exceptions)
     # return print(validation_df)
@@ -410,7 +428,7 @@ def cash_discount_report(dates:list, send_email:bool, exceptions:list = None) ->
 
 
 def busy_tally_sales_reco(start_date:str, end_date:str, send_email:bool, exceptions:list = None) -> None:
-    report = Reports(db_connector)
+    report = Reports(kbbio_connector)
     try:
         report_file_path = report.sales_validation(fromdate= start_date, todate= end_date, exceptions= exceptions)
         logger.info(f"Busy-Tally sales reco of previous week exported in excel")
@@ -449,7 +467,7 @@ def busy_tally_sales_reco(start_date:str, end_date:str, send_email:bool, excepti
 
 
 def busy_tally_salesreturn_reco(start_date:str, end_date:str, send_email:bool, exceptions:list = None) -> None:
-    report = Reports(db_connector)
+    report = Reports(kbbio_connector)
     try:
         report_file_path = report.sales_return_validation(fromdate= start_date, todate= end_date, exceptions= exceptions)
         logger.info(f"Busy-Tally sales return reco from {start_date} to {end_date} exported in excel")
@@ -489,7 +507,7 @@ def busy_tally_salesreturn_reco(start_date:str, end_date:str, send_email:bool, e
 
 
 def salesorder_mitp_reco_report(start_date:str, end_date:str, send_email:bool, exceptions:list = None) -> None:
-    reports = Reports(db_connector)
+    reports = Reports(kbbio_connector)
     salesorder_df = reports.salesorder_mitp_reco(fromdate= start_date, todate= end_date, exceptions= exceptions)
     salesorder_df.to_excel(fr"D:\Reports\SalesOrder_MITP_Reco\SalesOrder-MITP-Reco-Month-to-{end_date}.xlsx", index= False)
     
@@ -520,59 +538,37 @@ def salesorder_mitp_reco_report(start_date:str, end_date:str, send_email:bool, e
 
 
 
-
-# def import_tally_accounts():
-#     path = r'D:\automated_tally_downloads\10007\accounts\10007_accounts_21-May-2024.xlsx'
-#     db_crud = DatabaseCrud(db_connector)
-#     tally = TallyDataProcessor(path)
-#     data = tally.clean_and_transform()
-#     db_crud.import_unmatched_data(df=data, commit=True)
+def update_exchange_rate(dates: list):
+    currency_list = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'HKD', 'THB', 'SGD']
     
-    # db_crud.import_unmatched_data(df=data, commit=False)
-#     db_crud = DatabaseCrud(db_connector)
-#     data = db_crud.import_unmatched_data(df=df, commit=commit)
-#     print(data)
-
-
-def rep():
-    Base.metadata.create_all(db_engine)
-    r = Reports(db_connector)
-    return r.intersite_reco(fromdate= '2024-06-01', todate= '2024-06-15') 
-                            
-
-
-def one(path, commit):
-    Base.metadata.create_all(db_engine)
-
-    import pandas as pd
-    import numpy as np
-    xl = BusyDataProcessor(excel_file_path= path)
-    data = xl.clean_and_transform()
-
-    from xlwings import view
-    importer = DatabaseCrud(db_connector)
-    importer.import_data( df= data, table_name= 'busy_acc_kbbio', commit=commit)
-    # importer.test_import_data(table_name= 'busy_sales', 
-    #                                 df= data, commit=commit)
-    # view(data)
-
-
-def balance(path):
-    # Base.metadata.create_all(db_engine)
+    KBEBase.metadata.create_all(kbe_engine)
+    logger.info(f'Update exchange rate table for {dates}')
     
-    importer = TallyDataProcessor(excel_file_path=path)
-    df = importer.clean_and_transform()
-    from xlwings import view
-    view(df)
+    exchange_rate_records = []
+    for dte in dates:
+        for currency in currency_list:
+            rate = get_exchange_rate_in_inr(currency, dte).get("rate")
+            date_rate = get_exchange_rate_in_inr(currency, dte).get("date")
+            if rate is not None:
+                exchange_rate_records.append({"date": date_rate, "currency": currency, 
+                                                "exchange_rate": rate,
+                })
+    if exchange_rate_records:
+        df_exchange_rates = pd.DataFrame(exchange_rate_records)
+        df_exchange_rates = df_exchange_rates.drop_duplicates(subset= ['date', 'currency', 'exchange_rate'])
+        
+        db_crud = DatabaseCrud(kbe_connector)
+        db_crud.delete_date_range_query(table_name= 'exchange_rate', 
+                                            start_date= date_rate, end_date= date_rate, 
+                                            commit= True)
 
-# def delete_one(commit):
-#     # Base.metadata.create_all(db_engine)
-#     acc_file = r"D:\tally_accounts\10001_accounts_testing.xlsx"
-#     xl = TallyDataProcessor(excel_file_path= acc_file)
-#     df = xl.clean_and_transform()
-#     df = df.fillna("NA")
-#     df = df.drop(columns='material_centre', axis=1)
-#     # print(df.head(10))
-#     importer = DatabaseCrud(db_connector)
-#     importer.test_delete(table_name='test_table', start_date= '2024-05-20 17:47:00' , end_date= '2024-05-20 17:49:00', commit=commit)
+        db_crud.import_data(table_name= 'exchange_rate', df= df_exchange_rates, commit= True)
+        logger.info(logger.info(f'Data imported for {set(df_exchange_rates['date'].to_list())}'))
+
+
+
+
+    
+
+
 

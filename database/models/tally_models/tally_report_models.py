@@ -1,9 +1,9 @@
 from sqlalchemy import Column, Integer, String, DECIMAL, Float, Date, DateTime, BigInteger, func
-from Database.models.base import Base
+from Database.models.base import KBBIOBase
 
 
 
-class TallySales(Base):
+class TallySales(KBBIOBase):
     __tablename__ = 'tally_sales'
 
     id = Column(Integer, primary_key= True, autoincrement= True, index= True)
@@ -18,7 +18,7 @@ class TallySales(Base):
 
 
 
-class TallySalesReturn(Base):
+class TallySalesReturn(KBBIOBase):
     __tablename__ = 'tally_sales_return'
 
     id = Column(Integer, primary_key= True, autoincrement= True, index= True)
@@ -33,7 +33,7 @@ class TallySalesReturn(Base):
 
 
 
-class TallyPurchase(Base):
+class TallyPurchase(KBBIOBase):
     __tablename__ = 'tally_purchase'
 
     id = Column(Integer, primary_key= True, autoincrement= True, index= True)
@@ -48,7 +48,7 @@ class TallyPurchase(Base):
 
 
 
-class TallyPurchaseReturn(Base):
+class TallyPurchaseReturn(KBBIOBase):
     __tablename__ = 'tally_purchase_return'
 
     id = Column(Integer, primary_key= True, autoincrement= True, index= True)
@@ -63,7 +63,7 @@ class TallyPurchaseReturn(Base):
 
 
 
-class TallyPayment(Base):
+class TallyPayment(KBBIOBase):
     __tablename__ = 'tally_payments'
 
     id = Column(Integer, primary_key= True, autoincrement= True, index= True)
@@ -78,7 +78,7 @@ class TallyPayment(Base):
 
 
 
-class TallyReceipts(Base):
+class TallyReceipts(KBBIOBase):
     __tablename__ = 'tally_receipts'
 
     id = Column(Integer, primary_key= True, autoincrement= True, index= True)
@@ -93,7 +93,7 @@ class TallyReceipts(Base):
 
 
 
-class TallyJournal(Base):
+class TallyJournal(KBBIOBase):
     __tablename__ = 'tally_journal'
 
     id = Column(Integer, primary_key= True, autoincrement= True, index= True)
@@ -108,7 +108,7 @@ class TallyJournal(Base):
 
 
 
-class TallyAccounts(Base):
+class TallyAccounts(KBBIOBase):
     __tablename__ = 'tally_accounts'
 
     id = Column(Integer, primary_key= True, autoincrement= True, index= True)
@@ -126,7 +126,7 @@ class TallyAccounts(Base):
 
 
 
-class TallyItems(Base):
+class TallyItems(KBBIOBase):
     __tablename__ = 'tally_items'
 
     id = Column(Integer, primary_key= True, autoincrement= True, index= True)
@@ -141,7 +141,7 @@ class TallyItems(Base):
 
 
 
-class TallyOutstandingBalance(Base):
+class TallyOutstandingBalance(KBBIOBase):
     __tablename__ = 'outstanding_balance'
 
     id = Column(Integer, primary_key= True, autoincrement= True, index= True)
@@ -154,7 +154,7 @@ class TallyOutstandingBalance(Base):
 
 
 
-class TallyReceivables(Base):
+class TallyReceivables(KBBIOBase):
     __tablename__ = 'tally_receivables'
 
     id = Column(Integer, primary_key= True, autoincrement= True, index= True)
@@ -171,7 +171,7 @@ class TallyReceivables(Base):
 
 
 
-class DebtorsBalance(Base):
+class DebtorsBalance(KBBIOBase):
     __tablename__ = 'debtors_balance'
 
     id = Column(Integer, primary_key= True, autoincrement= True, index= True)
@@ -191,7 +191,7 @@ class DebtorsBalance(Base):
 
 
 
-class TestTable(Base):
+class TestTable(KBBIOBase):
     __tablename__ = 'test_table'
 
     id = Column(Integer, primary_key= True, autoincrement= True, index= True)

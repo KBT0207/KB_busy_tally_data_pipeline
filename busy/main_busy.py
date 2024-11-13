@@ -12,7 +12,9 @@ from utils import email
 load_dotenv('.env')
 
 
-companies = ['comp0005', 'comp0010', 'comp0011', 'comp0014', 'comp0015']
+companies = [
+    'comp0005', 
+             'comp0010', 'comp0011', 'comp0014', 'comp0015']
 
 sales_dict = {'trans_list': [export_busy_reports.select_sales_list, 
                                    export_busy_reports.select_salesreturn_list, 
@@ -66,7 +68,7 @@ def exporting_sales(start_date:str , end_date:str, filename:str, send_email:bool
                     logger.info(f"Exported data for {comp} and {report} successfully...")
                 except Exception as e:
                     logger.critical(f"Exporting Data for {comp} and {report} Failed! : {e}")
-
+    
                 try:
                     busy_utils.return_to_busy_home(esc=3)
                     time.sleep(5)
@@ -88,12 +90,12 @@ def exporting_sales(start_date:str , end_date:str, filename:str, send_email:bool
     busy_utils.find_img(img='busy/images/quit_at_login.png')
     pg.click()
     time.sleep(5)
-    pg.press('e')
+    pg.press('e')   
     pg.press('enter')
     logger.info("Quit Busy Successfully!")
 
     if send_email:
-        receivers = ['shivprasad@kaybeebio.com', 'sayali@kaybeeexports.com', 'hitesh@kaybeeexports.com']
+        receivers = ['shilpa@kaybeeexports.com', 'yerunkar.pradnya@kaybeeexports.com', 'sayali@kaybeeexports.com', 'hitesh@kaybeeexports.com']
         cc = ['s.gaurav@kaybeeexports.com', 'danish@kaybeeexports.com']
         attachment_path = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*sales*{filename}.xlsx", recursive=True)
 
@@ -121,7 +123,7 @@ def exporting_sales(start_date:str , end_date:str, filename:str, send_email:bool
         body_sales_order = f"Kinldy find the Sales Order of {todate_str}"
         if attachment_path_sales_order:
             try:
-                email.email_send(reciever="rajani@kaybeebio.com", cc = "s.gaurav@kaybeeexports.com", 
+                email.email_send(reciever="rajani@kaybeebio.com", cc = ["s.gaurav@kaybeeexports.com", "pranjal@kaybeebio.com"],
                                 subject= subj_sales_order, 
                                 contents= body_sales_order, 
                                 attachemnts= attachment_path_sales_order)
@@ -256,8 +258,8 @@ def exporting_master_and_material(from_date:str, to_date:str, filename:str, send
         try:
             subj_masters = f"Masters of KBBIO ({to_date})"
             body_masters = f"Kindly find the attached Masters data of KBBIO of {to_date}"
-            masters_file = fr"D:\automated_busy_downloads\comp0010\master_accounts\comp0010_master_accounts_{filename}.xlsx"
-            email.email_send(reciever= 'rajani@kaybeebio.com', 
+            masters_file = fr"D:\automated_busy_downloads\comp0005\master_accounts\comp0005_master_accounts_{filename}.xlsx"
+            email.email_send(reciever= ['rajani@kaybeebio.com', 'pranjal@kaybeebio.com'], 
                             cc = ["s.gaurav@kaybeeexports.com", 'danish@kaybeeexports.com'], 
                             subject= subj_masters, contents= body_masters, attachemnts= masters_file)
             logger.info("KBBIO Masters Data emailed successfully... ")

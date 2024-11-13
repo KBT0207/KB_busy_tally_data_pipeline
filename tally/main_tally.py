@@ -128,3 +128,68 @@ def exporting_receivables(company:list, dates:list, monthly:bool):
     time.sleep(2)
     pg.press('y')
     logger.info("Tally closed ...")
+
+
+
+
+def exporting_kbe_outstanding(company:list, dates:list):
+    pg.hotkey("win", "d")
+    
+    tally_utils.start_tally()
+    logger.info("Tally started...")
+
+    for comp in company:
+        tally_utils.select_kbe_company(company_code= comp)
+        logger.info(f"{comp} selected...")
+        
+        tally_utils.kbe_outstanding_balance()
+        file_path = fr"D:\automated_kbe_downloads\{comp}\outstanding"
+
+        for date in dates:
+            tally_utils.change_kbe_period_balance(from_date= '01-04-2024', to_date= date)
+            tally_utils.export_kbe_balance_data(path= file_path, 
+                                            filename= f"{comp}_kbe_outstanding_{date}.xlsx")
+            time.sleep(1.5)
+
+        tally_utils.back_to_tally_home(times= 4)
+        logger.info(f"Exported outstanding balance of {comp} of {date}")
+
+        tally_utils.change_company()
+    
+    time.sleep(2)
+    pg.press('esc')
+    time.sleep(2)
+    pg.press('y')
+    logger.info("Tally closed ...")
+
+
+
+
+
+def exporting_kbe_accounts(company, filename:str):
+    pg.hotkey("win", "d")
+
+    tally_utils.start_tally()
+    logger.info("Tally started...")
+
+    for comp in company:
+        tally_utils.select_kbe_company(company_code= comp)
+        logger.info(f"{comp} selected...")
+
+        tally_utils.accounts()
+        tally_utils.export_accounts_data(path= fr"D:\automated_kbe_downloads\{comp}\accounts",
+                        filename= f"{comp}_kbe_accounts_{filename}.xlsx")    
+
+        time.sleep(2)
+        pg.press('esc')
+        time.sleep(2)
+        pg.press('esc')
+        logger.info(f"Exported accounts of {comp} of {filename}")
+
+        tally_utils.change_company()
+    
+    time.sleep(2)
+    pg.press('esc')
+    time.sleep(2)
+    pg.press('y')
+    logger.info("Tally closed ...")

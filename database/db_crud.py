@@ -10,8 +10,7 @@ from Database.models.busy_models.busy_accounts import (BusyAccounts100x, BusyAcc
 from Database.models.busy_models.busy_reports import SalesKBBIO, SalesOrderKBBIO
 from sqlalchemy.exc import SQLAlchemyError
 from Database.models.tally_models.tally_report_models import TallyAccounts, DebtorsBalance
-
-
+from Database.models.kbe_models.export_models import KBEAccounts
 
 class DatabaseCrud:
     def __init__(self, db_connector) -> None:
@@ -223,7 +222,100 @@ class DatabaseCrud:
                 logger.critical(f"Unknown error occurred: {e}")
         else:
             logger.info(f"No new data to import in the database.")
+
         
+
+    def import_kbe_accounts_data(self, df:pd.DataFrame, commit:bool):
+        
+        df['ledger_name'] = df['ledger_name'].str.title()
+
+        df_material_centre = df["material_centre"][1]
+        
+        accounts = self.Session.query(KBEAccounts.ledger_name, KBEAccounts.under, 
+                                      KBEAccounts.material_centre,                                 
+                                            ).filter(KBEAccounts.material_centre == df_material_centre)
+        
+        df_accounts = pd.DataFrame(accounts, columns=['ledger_name', 'under', 'material_centre'],)
+        
+        df_accounts['ledger_name'] = df_accounts['ledger_name'].str.title()
+        
+        if not df_accounts.empty:
+            new_data = df.merge(df_accounts, how= 'left', on= ['ledger_name', 'under', 'material_centre'], indicator=True)
+            new_data = (new_data.loc[new_data['_merge']=='left_only', 
+                                    ['ledger_name', 'under', 'opening_balance', 'material_centre', 
+                                        'alias_code', 'credit_days',
+                                        ]])
+            new_data['alias_code'] = new_data['alias_code'].where(pd.notna(new_data['alias_code']), None)
+        else: 
+            new_data = df
+        
+        if not new_data.empty: 
+            values = new_data.to_dict('records')
+            insert_stmt = insert(KBEAccounts).values(values)
+            try:
+                with self.db_engine.connect() as connection:
+                    result = connection.execute(insert_stmt)
+                    logger.info(f"{result.rowcount} rows inserted into tally_accounts.")
+                    if commit:
+                        connection.commit()
+                        logger.info(f"Inserted {result.rowcount} rows into tally_accounts.")
+                    else:
+                        connection.rollback()
+                        logger.info(f"Transaction rollback successfully without any errors as commit was given False.")
+            except SQLAlchemyError as e:
+                logger.critical(f"Error inserting data into tally_accounts: {e}")
+                connection.rollback()
+                logger.error(f"Rolling back changes in tally_accounts due to import error.")
+            except Exception as e:
+                logger.critical(f"Unknown error occurred: {e}")
+        else:
+            logger.info(f"No new data to import in the database.")
+        
+
+
+    def clean_kbe_accounts_data(self, df:pd.DataFrame, commit:bool):
+            
+            df['ledger_name'] = df['ledger_name'].str.title()
+
+            df_material_centre = df["material_centre"][1]
+            
+            accounts = (self.Session.query(KBEAccounts.id, KBEAccounts.ledger_name, KBEAccounts.under, 
+                                        KBEAccounts.material_centre)
+                                    .filter(KBEAccounts.material_centre == df_material_centre))
+            
+            df_accounts = pd.DataFrame(accounts, columns=['id', 'ledger_name', 'under', 'material_centre'],)
+            
+            df_accounts['ledger_name'] = df_accounts['ledger_name'].str.title()
+            
+            if not df.empty:
+                new_data = df_accounts.merge(df, how= 'left', on= ['ledger_name', 'under', 'material_centre'], indicator=True)
+                new_data = new_data.loc[new_data['_merge']=='left_only', ['id', 'ledger_name']]
+    
+            if not new_data.empty: 
+                id_to_delete = new_data['id'].to_list()
+
+                delete_query = delete(KBEAccounts).where(KBEAccounts.id.in_(id_to_delete))
+
+                try:
+                    with self.db_engine.connect() as connection:
+                        transaction = connection.begin()
+                        try:
+                            result = connection.execute(delete_query)
+                            deleted_count = result.rowcount
+                            logger.info(f"Deleted {deleted_count} rows from KBEAccounts of ids {id_to_delete}.")
+                            
+                            if commit:
+                                transaction.commit()
+                                logger.info("Transaction committed.")
+                            else:
+                                transaction.rollback()
+                                logger.info("Transaction not committed.")
+                        except SQLAlchemyError as e:
+                            transaction.rollback()
+                            logger.error(f"Error occurred during deletion: {e}")
+                except SQLAlchemyError as e:
+                    logger.error(f"Connection error: {e}")
+
 
 
     def manual_import_data(self, table_name:str, df: pd.DataFrame, commit: bool) -> None:

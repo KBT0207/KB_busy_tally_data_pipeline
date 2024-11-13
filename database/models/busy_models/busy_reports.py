@@ -1,11 +1,11 @@
 from sqlalchemy import MetaData, Column, Integer, String, Date, BigInteger, Float, DateTime, func
-from Database.models.base import Base
+from Database.models.base import KBBIOBase
 
 
 metadata = MetaData()
 
 
-class SalesKBBIO(Base):
+class SalesKBBIO(KBBIOBase):
     __tablename__ = 'busy_sales'
 
     id = Column(Integer, primary_key= True, autoincrement= True, index= True)
@@ -47,7 +47,7 @@ class SalesKBBIO(Base):
     created_at = Column(DateTime, server_default=func.now())
 
 
-class SalesReturnKBBIO(Base):
+class SalesReturnKBBIO(KBBIOBase):
     __tablename__ = 'busy_sales_return'
 
     id = Column(Integer, primary_key= True, index= True, autoincrement=True)
@@ -89,7 +89,7 @@ class SalesReturnKBBIO(Base):
 
 
 
-class SalesOrderKBBIO(Base):
+class SalesOrderKBBIO(KBBIOBase):
     __tablename__ = 'busy_sales_order'
 
     id = Column(Integer, primary_key= True, index= True, autoincrement= True)
@@ -113,7 +113,7 @@ class SalesOrderKBBIO(Base):
 
 
 
-class MITPKBBIO(Base):
+class MITPKBBIO(KBBIOBase):
     __tablename__ = 'busy_mitp'
 
     id = Column(Integer, primary_key= True, index= True, autoincrement=True)
@@ -148,7 +148,7 @@ class MITPKBBIO(Base):
 
 
 
-class MRFPKBBIO(Base):
+class MRFPKBBIO(KBBIOBase):
     __tablename__ = 'busy_mrfp'
 
     id = Column(Integer, primary_key= True, index= True, autoincrement=True)

@@ -1,9 +1,9 @@
 from sqlalchemy import Column, Integer, String, BigInteger, Float, DateTime, func
-from Database.models.base  import Base
+from Database.models.base  import KBBIOBase
 
 
 
-class BusyAccountsKBBIO(Base):
+class BusyAccountsKBBIO(KBBIOBase):
     __tablename__ = 'busy_acc_kbbio'
 
     id = Column(Integer, primary_key= True, autoincrement= True, index= True)
@@ -29,7 +29,7 @@ class BusyAccountsKBBIO(Base):
     email = Column(String(150), nullable= True)
 
 
-class BusyAccounts100x(Base):
+class BusyAccounts100x(KBBIOBase):
     __tablename__ = 'busy_acc_100x'
 
     id = Column(Integer, primary_key= True, autoincrement= True, index= True)
@@ -54,7 +54,7 @@ class BusyAccounts100x(Base):
 
 
 
-class BusyAccountsGreenEra(Base):
+class BusyAccountsGreenEra(KBBIOBase):
     __tablename__ = 'busy_acc_greenera'
 
     id = Column(Integer, primary_key= True, autoincrement= True, index= True)
@@ -79,7 +79,7 @@ class BusyAccountsGreenEra(Base):
 
 
 
-class BusyAccountsAgri(Base):
+class BusyAccountsAgri(KBBIOBase):
     __tablename__ = 'busy_acc_agri'
 
     id = Column(Integer, primary_key= True, autoincrement= True, index= True)
@@ -104,7 +104,7 @@ class BusyAccountsAgri(Base):
 
 
 
-class BusyAccountsNewAge(Base):
+class BusyAccountsNewAge(KBBIOBase):
     __tablename__ = 'busy_acc_newage'
 
     id = Column(Integer, primary_key= True, autoincrement= True, index= True)

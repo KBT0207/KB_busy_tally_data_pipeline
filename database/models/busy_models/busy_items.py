@@ -1,9 +1,9 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, func
-from Database.models.base import Base
+from Database.models.base import KBBIOBase
 
 
 
-class BusyItemsKBBIO(Base):
+class BusyItemsKBBIO(KBBIOBase):
     __tablename__ = 'busy_items_kbbio'
 
     id = Column(Integer, primary_key= True, autoincrement= True, index= True)
@@ -17,7 +17,7 @@ class BusyItemsKBBIO(Base):
 
 
 
-class BusyItems100x(Base):
+class BusyItems100x(KBBIOBase):
     __tablename__ = 'busy_items_100x'
 
     id = Column(Integer, primary_key= True, autoincrement= True, index= True)
@@ -31,7 +31,7 @@ class BusyItems100x(Base):
 
 
 
-class BusyItemsNewAge(Base):
+class BusyItemsNewAge(KBBIOBase):
     __tablename__ = 'busy_items_newage'
 
     id = Column(Integer, primary_key= True, autoincrement= True, index= True)
@@ -45,7 +45,7 @@ class BusyItemsNewAge(Base):
 
 
 
-class BusyItemsAgri(Base):
+class BusyItemsAgri(KBBIOBase):
     __tablename__ = 'busy_items_agri'
 
     id = Column(Integer, primary_key= True, autoincrement= True, index= True)
@@ -59,7 +59,7 @@ class BusyItemsAgri(Base):
 
 
 
-class BusyItemsGreenEra(Base):
+class BusyItemsGreenEra(KBBIOBase):
     __tablename__ = 'busy_items_greenera'
 
     id = Column(Integer, primary_key= True, autoincrement= True, index= True)

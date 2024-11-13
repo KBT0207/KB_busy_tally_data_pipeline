@@ -14,18 +14,18 @@ pg.PAUSE = 1.0
 
 
 def select_transaction():
+    transaction = pg.moveTo(250, 30, duration=0.3) 
     location = None
     while location == None:
         try:
-            location = pg.locateOnScreen('busy/images/busy_transactions.png', confidence= 0.9)
-            pg.click(location)    
+            location = pg.locateOnScreen('busy/images/trans_check.png', confidence= 0.9)
         except Exception:
-            try:
-                location = pg.locateOnScreen('busy/images/busy_sel_transactions.png', confidence= 0.9)
-            except Exception:
-                pass
-
-
+            pg.click(transaction)
+            time.sleep(1) 
+            pass
+    busy_utils.find_img('busy/images/trans_check.png', conf= 0.9)
+    time.sleep(2)
+    
 
 def select_masters():
     location = None
@@ -125,134 +125,76 @@ def select_items():
 
 
 def select_sales_list():
-    try:
-        sales = pg.locateOnScreen('busy/images/busy_sales.PNG', confidence=0.95)
-        pg.moveTo(sales)
-        pg.click() 
-        pg.press('l')
-    except:
+    location = None
+    while location == None:
         try:
-            pg.locateOnScreen('busy/images/busy_sel_sales.png', confidence=0.95)
+            location = pg.locateOnScreen('busy/images/busy_sales.png', confidence=0.9)
+            pg.click(location)
+            pg.press('down')
+            pg.press('down')
             pg.press('enter')
-            time.sleep(0.2)
-            pg.press('l')
-        except:
-            try:
-                down = pg.locateOnScreen('busy/images/busy_down_sales.png',confidence=0.95)
-                pg.doubleClick(down)
-                time.sleep(0.4)
-                pg.press("l")
-            except:
-                pass
-
-
+        except Exception:
+            time.sleep(2)
+            pass
+            
 
 def select_mitp_list():
-    try:
-        sales = pg.locateOnScreen('busy/images/mitp.PNG', confidence=0.99)
-        pg.moveTo(sales)
-        pg.click() 
-        pg.press('down')
-        pg.press('down')
-        pg.press('enter')
-    except:
+    location = None
+    while location == None:
         try:
-            pg.locateOnScreen('busy/images/sel_mitp.png', confidence=0.95)
+            location = pg.locateOnScreen('busy/images//mitp.png', confidence=0.9)
+            pg.click(location)
+            pg.press('down')
+            pg.press('down')
             pg.press('enter')
-            time.sleep(0.2)
-            pg.press('l')
-            pg.press("enter")
-        except:
-            try:
-                down = pg.locateOnScreen('busy/images/down_mitp.png', confidence=0.95)
-                pg.click(down)
-                pg.click()
-                time.sleep(0.4)
-                pg.press("l")
-            except:
-                pass
-
+        except Exception:
+            time.sleep(2)
+            pass
 
 
 def select_salesreturn_list():
-    try:
-        sales = pg.locateOnScreen('busy/images/salesreturn.PNG', confidence=0.99)
-        pg.moveTo(sales)
-        pg.click() 
-        pg.press('down')
-        pg.press('down')
-        pg.press('enter')
-    except:
+    location = None
+    while location == None:
         try:
-            pg.locateOnScreen('busy/images/sel_salesreturn.png', confidence=0.95)
+            location = pg.locateOnScreen('busy/images/salesreturn.png', confidence=0.9)
+            pg.click(location)
+            pg.press('down')
+            pg.press('down')
             pg.press('enter')
-            time.sleep(0.2)
-            pg.press('l')
-            pg.press("enter")
-        except:
-            try:
-                down = pg.locateOnScreen('busy/images/down_salesreturn.png', confidence=0.95)
-                pg.click(down)
-                pg.click()
-                time.sleep(0.4)
-                pg.press("l")
-            except:
-                pass
-
+        except Exception:
+            time.sleep(2)
+            pass
+    
 
 
 def select_mrfp_list():
-    try:
-        sales = pg.locateOnScreen('busy/images/mrfp.PNG', confidence=0.99)
-        pg.moveTo(sales)
-        pg.click() 
-        pg.press('down')
-        pg.press('down')
-        pg.press('enter')
-    except:
+    location = None
+    while location == None:
         try:
-            pg.locateOnScreen('busy/images/sel_mrfp.png', confidence=0.95)
+            location = pg.locateOnScreen('busy/images/mrfp.png', confidence=0.9)
+            pg.click(location)
+            pg.press('down')
+            pg.press('down')
             pg.press('enter')
-            time.sleep(0.2)
-            pg.press('l')
-            pg.press("enter")
-        except:
-            try:
-                down = pg.locateOnScreen('busy/images/down_mrfp.png', confidence=0.95)
-                pg.click(down)
-                pg.click()
-                time.sleep(0.4)
-                pg.press("l")
-            except:
-                pass
+        except Exception:
+            time.sleep(2)
+            pass
 
-
+    
 
 def select_salesorder_list():
-    try:
-        sales = pg.locateOnScreen('busy/images/salesorder.png', confidence=0.99)
-        pg.moveTo(sales)
-        pg.click() 
-        pg.press('down')
-        pg.press('down')
-        pg.press('enter')
-    except:
+    location = None
+    while location == None:
         try:
-            pg.locateOnScreen('busy/images/sel_salesorder.png', confidence=0.95)
+            location = pg.locateOnScreen('busy/images/salesorder.png', confidence=0.9)
+            pg.click(location)
+            pg.press('down')
+            pg.press('down')
             pg.press('enter')
-            time.sleep(0.2)
-            pg.press('l')
-            pg.press("enter")
-        except:
-            try:
-                down = pg.locateOnScreen('busy/images/down_salesorder.png', confidence=0.95)
-                pg.click(down)
-                pg.click()
-                time.sleep(0.4)
-                pg.press("l")
-            except:
-                pass
-
+        except Exception:
+            time.sleep(2)
+            pass
+  
 
 
 def list_format(report_type, start_date, end_date):
@@ -324,7 +266,7 @@ def list_format(report_type, start_date, end_date):
 
 
 def transaction_report_selection(report):
-    time.sleep(10)
+    time.sleep(5)
     select_transaction()
     report()
     

@@ -5,20 +5,25 @@ import pandas as pd
 from busy import main_busy
 from Database import main_db
 from Database.db_crud import DatabaseCrud
-from Database.sql_connector import db_connector
+from Database.sql_connector import kbbio_connector
 from logging_config import logger
 from main_reports.reports import Reports
 from tally import main_tally
 from utils.common_utils import (balance_comp_codes, batch_date,
-                                receivables_comp_codes, tally_comp_codes)
+                                receivables_comp_codes, tally_comp_codes, 
+                                kbe_outstanding_comp_codes, )
+from Database.models.base import KBBIOBase, KBEBase
+from Database.sql_connector import kbbio_engine, kbbio_connector, kbe_engine, kbe_connector
+from utils.common_utils import kbe_outstanding_comp_codes
+from glob import glob 
+from Database.tally_data_processor import TallyDataProcessor
 
-
-
+ 
 def tally_to_sql():
     if datetime.today().day not in [4, 19]:
         # current_date = '29-Jun-24'
         startdate = (datetime.today().date() - timedelta(days=3)).strftime("%Y-%m-%d")
-        # startdate = '2024-06-25'
+        # startdate = '2024-10-05'
         endate = (datetime.today().date() - timedelta(days=1)).strftime("%Y-%m-%d")
         # endate = '2024-06-29'
     else:
@@ -43,9 +48,9 @@ def tally_to_sql():
 def daily_busy_sales():
     # todate_str = (datetime.today().date()-timedelta(days=1)).strftime('%d-%m-%Y')
     date1 = (datetime.today().date()-timedelta(days=2)).strftime('%Y-%m-%d')
-    # date1= "2024-06-25"
+    # date1= "2024-10-30"
     date2 = datetime.today().date().strftime('%Y-%m-%d')
-    # date2= "2024-06-29"
+    # date2= "2024-10-02"
     file_name = f'{date1} to {date2}'
     main_busy.exporting_sales(start_date= date1, end_date= date2, 
                               filename= file_name, send_email= True)
@@ -68,6 +73,7 @@ def monthly_busy_sales():
     elif datetime.today().day in [3,12,22]:
         dates = third_batch
 
+    # dates = second_batch
     dates_str = [datetime.strptime(d,('%d-%m-%Y')).strftime('%Y-%m-%d') for d in dates]
     filename = f'{dates_str[0]} to {dates_str[-1]}'
 
@@ -83,18 +89,20 @@ def monthly_busy_sales():
 
 def busy_material_masters():
     fromdate = datetime.now().replace(day=1).strftime("%d-%m-%Y")
+
     todate = datetime.today().strftime("%d-%m-%Y")
 
-    fromdate_str = datetime.now().replace(day=1).strftime("%Y-%m-%d")
-    todate_str = datetime.today().strftime("%Y-%m-%d")
+    fromdate_str = datetime.strptime(fromdate, "%d-%m-%Y").strftime("%Y-%m-%d")
+    todate_str = datetime.strptime(todate, "%d-%m-%Y").strftime("%Y-%m-%d")
     
-    file_name = f'{fromdate_str} to {todate_str}'
+    file_name = f'{fromdate_str} to {todate_str}-{datetime.today().strftime("%Y-%m-%d")}'
     
     main_busy.exporting_master_and_material(from_date= fromdate, to_date=todate, filename= file_name, send_email= True)
     time.sleep(1)
     main_db.delete_busy_material(from_date= fromdate_str, to_date= todate_str)
     main_db.truncate_busy_masters()
     main_db.import_busy_masters_material(file_name= file_name)
+
 
 
 def monthly_material_masters():
@@ -123,14 +131,22 @@ def monthly_material_masters():
 
 def daily_outstanding_tallydata():
     current_day = datetime.now().strftime('%A')
-    if current_day == 'Monday':
-        yesterday = [(datetime.today().date() - timedelta(days=2)).strftime("%d-%m-%Y"), (datetime.today().date() - timedelta(days=1)).strftime("%d-%m-%Y"), '02-08-2024']
+    if current_day == 'Tuesday':
+        yesterday = [(datetime.today().date() - timedelta(days=2)).strftime("%d-%m-%Y"), (datetime.today().date() - timedelta(days=1)).strftime("%d-%m-%Y")]
     else:
         yesterday = [(datetime.today().date() - timedelta(days=1)).strftime("%d-%m-%Y")]
+        # yesterday = ['18-08-2024', '19-08-2024', '20-08-2024']
 
     companies = sorted(list(balance_comp_codes.keys()))
     dates = yesterday
+    # dates = ['02-11-2024']
     main_tally.exporting_outstanding_balance(company=companies, dates=dates, monthly=False)
+    importer = DatabaseCrud(kbbio_connector)
+    
+    #imp
+    dates_str = [datetime.strptime(date, "%d-%m-%Y") for date in yesterday]  
+
+    importer.delete_date_range_query('outstanding_balance', start_date=dates_str[0].strftime("%Y-%m-%d"), end_date= dates_str[-1].strftime("%Y-%m-%d"), commit=True)
     main_db.import_outstanding_tallydata(dates=dates, monthly = False)
 
 
@@ -152,10 +168,11 @@ def monthly_outstanding_tallydata():
     elif datetime.today().day in [3,25]:
         monthly = True
         dates = third_batch
+    # dates = ['22-07-2024']
     dates_str = [datetime.strptime(d,('%d-%m-%Y')).strftime('%Y-%m-%d') for d in dates]
     monthly = True
     main_tally.exporting_outstanding_balance(company=companies, dates=dates, monthly=monthly)
-    db = DatabaseCrud(db_connector)
+    db = DatabaseCrud(kbbio_connector)
     db.delete_date_range_query(table_name= 'outstanding_balance', start_date= dates_str[0], end_date= dates_str[-1], commit= True)
     main_db.import_outstanding_tallydata(dates=dates, monthly = monthly)
 
@@ -163,7 +180,7 @@ def monthly_outstanding_tallydata():
 
 def daily_receivables_tallydata():
     current_day = datetime.now().strftime('%A')
-    if current_day == 'Monday':
+    if current_day == 'Tuesday':
         yesterday = [(datetime.today().date() - timedelta(days=2)).strftime("%d-%m-%Y"), (datetime.today().date() - timedelta(days=1)).strftime("%d-%m-%Y")]
     else:
         yesterday = [(datetime.today().date() - timedelta(days=1)).strftime("%d-%m-%Y")]
@@ -194,27 +211,27 @@ def monthly_receivables_tallydata():
         monthly = True
         dates = third_batch
     main_tally.exporting_receivables(company=companies, dates=dates, monthly=monthly)
-    db = DatabaseCrud(db_connector)
+    db = DatabaseCrud(kbbio_connector)
     db.delete_date_range_query(table_name= 'tally_receivables', start_date= dates[0], end_date= dates[-1], commit= True)
     main_db.import_receivables_tallydata(dates=dates, monthly = monthly)
 
 
 
 def basic_reports():
-    # fromdate = datetime.today().date().replace(day=1).strftime('%Y-%m-%d')
-    fromdate = '2024-07-20'
-    # todate = (datetime.today().date() - timedelta(days=1)).strftime('%Y-%m-%d')
-    todate = '2024-07-29'
+    fromdate = datetime.today().date().replace(day=1).strftime('%Y-%m-%d')
+    # fromdate = '2024-09-09'
+    todate = (datetime.today().date() - timedelta(days=1)).strftime('%Y-%m-%d')
+    # todate = '2024-08-22'
 
-    # main_db.dealer_price_validation_report(from_date= fromdate, 
-    #                                        to_date= todate, send_email= True, 
-    #                                     #    exceptions= salesprice_excluded_invoices,
-    #                                        )
+    main_db.dealer_price_validation_report(from_date= fromdate, 
+                                           to_date= todate, send_email= True, effective_date= '2024-08-01',
+                                        #    exceptions= salesprice_excluded_invoices,
+                                           )
 
-    # main_db.salesorder_salesman_report(from_date= fromdate, 
-    #                                    to_date=todate, send_email= True,
-    #                                    exceptions= None,
-    #                                    )
+    main_db.salesorder_salesman_report(from_date= fromdate, 
+                                       to_date=todate, send_email= True,
+                                       exceptions= None,
+                                       )
 
     from_date_str = datetime.strptime(fromdate, '%Y-%m-%d')
     to_date_str = datetime.strptime(todate, '%Y-%m-%d')
@@ -229,41 +246,59 @@ def basic_reports():
                                    exceptions= ['KAYBEE/001 A'])
     
 
-    report = Reports(db_connector)
+    report = Reports(kbbio_connector)
     ref_date = '2024-04-01'
     report.populate_debtor_balances(fromdate= ref_date, todate= todate, 
                                     filename= f'Debtors_Balance_{ref_date}-{todate}', 
-                                    to_import= True, to_export= False, commit= True,
+                                    to_import= True, to_export= True, commit= True,
                                     )
 
 
 
-def reco_reports():
-    fromdate = (datetime.today() - timedelta(days= 9)).strftime('%Y-%m-%d')
-    # fromdate = '2024-07-07'
-    todate = (datetime.today() - timedelta(days= 3)).strftime('%Y-%m-%d')
-    # todate = '2024-07-13'
-    # date_list = pd.date_range(start= datetime.today() - timedelta(days= 9), 
-    #                           end= datetime.today() - timedelta(days= 3), 
-    #                           ).to_list()
-    # date_list_str = [date.strftime('%Y-%m-%d') for date in date_list]
+def exchange_rate_updation():
+    main_db.update_exchange_rate(dates= [datetime.today().strftime('%Y-%m-%d')])
 
-    main_db.busy_tally_sales_reco(start_date= fromdate, end_date= todate, send_email= True, 
-                                #   exceptions= , 
-                                  )
 
-    main_db.busy_tally_salesreturn_reco(start_date= fromdate , end_date= todate, send_email= True, 
-                                #   exceptions= , 
-                                  )    
 
-    # main_db.salesorder_mitp_reco_report(start_date= fromdate , end_date= todate, send_email= True, 
-    #                             #   exceptions= , 
-    #                               )
+def export_import_kbe_outstanding():
+    today = [(datetime.today().date()).strftime("%d-%m-%Y")]
+    # yesterday = ['18-08-2024', '19-08-2024', '20-08-2024']
+
+    companies = sorted(list(kbe_outstanding_comp_codes.keys()))
+    dates = today
+    # dates = ['11-11-2024']
+    
+    main_tally.exporting_kbe_outstanding(company=companies, dates=dates)
+    importer = DatabaseCrud(kbe_connector)
+    KBEBase.metadata.create_all(kbe_engine)
+    importer.truncate_table('outstanding_balance', commit=True)
+
+    main_db.import_kbe_outstanding_tallydata(dates=dates)
+
+
+
+def kbe_accounts_operations():
+    today = datetime.today().strftime('%Y-%m-%d')
+    # today = '2024-11-11'
+    main_tally.exporting_kbe_accounts(company= kbe_outstanding_comp_codes.keys(), filename= today)
+
+    db_crud = DatabaseCrud(kbe_connector)
+    accounts_file = glob(rf"D:\automated_kbe_downloads\**\*kbe_accounts_{today}.xlsx", recursive= True)
+    if accounts_file:
+        for acc_file in accounts_file:
+            clean_df = TallyDataProcessor(excel_file_path= acc_file)
+            db_crud.import_kbe_accounts_data(df= clean_df.clean_and_transform(), commit= True)
+            db_crud.clean_kbe_accounts_data(df= clean_df.clean_and_transform(), commit= True)
+    else:
+        logger.info(f"No files for account exported/found for {today}")
+
+
 
 
 
 if __name__ == "__main__":
 
+    
     function_name = sys.argv[1] if len(sys.argv) > 1 else None
     if function_name:
         if function_name in globals() and callable(globals()[function_name]):

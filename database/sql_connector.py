@@ -69,13 +69,21 @@ USERNAME = os.getenv('DB_USERNAME')
 PASSWORD = os.getenv('DB_PASSWORD')
 HOST = os.getenv('DB_HOST')
 PORT = os.getenv('DB_PORT')
-DATABASE = os.getenv('DATABASE')
+KBBIO_DATABASE = os.getenv('KBBIO_DATABASE')
+
+KBE_DATABASE = os.getenv('KBE_DATABASE')
 
 
-db_connector = DatabaseConnector(USERNAME, PASSWORD, HOST, PORT, DATABASE)
-db_engine = db_connector.engine
+kbbio_connector = DatabaseConnector(USERNAME, PASSWORD, HOST, PORT, KBBIO_DATABASE)
+kbbio_engine = kbbio_connector.engine
 
-db_connection = db_engine.connect()
+kbbio_connection = kbbio_engine.connect()
+
+
+kbe_connector = DatabaseConnector(USERNAME, PASSWORD, HOST, PORT, KBE_DATABASE)
+kbe_engine = kbe_connector.engine
+
+kbe_connection = kbe_engine.connect()
 
 # Check autocommit status using the connection
 

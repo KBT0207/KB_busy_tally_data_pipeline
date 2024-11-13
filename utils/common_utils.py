@@ -42,6 +42,8 @@ from Database.models.tally_models.tally_report_models import (
     TallyPayment, TallyPurchase, TallyPurchaseReturn, TallyReceipts,
     TallyReceivables, TallySales, TallySalesReturn, TestTable)
 
+from Database.models.kbe_models.export_models import KBEOutstanding, ExchangeRate, KBEAccounts
+
 
 def batch_date(month: int, batch: int, year: int = datetime.today().year) -> list:
     if batch not in [1, 2, 3]:
@@ -100,13 +102,13 @@ tally_tables = {"tally_sales": TallySales, "tally_sales_return": TallySalesRetur
                 "tally_receivables": TallyReceivables, "debtors_balance": DebtorsBalance, 
                }
 
-
+kbe_tables = {"outstanding_balance": KBEOutstanding, "exchange_rate": ExchangeRate, "tally_accounts": KBEAccounts }
 
 other_tables = {"busy_pricing_kbbio": BusyPricingKBBIO, "test_table": TestTable,
                }
 
 
-tables = {**busy_tables, **tally_tables, **other_tables}
+tables = {**busy_tables, **tally_tables, **other_tables, **kbe_tables}
 
 
 tally_reports = {
@@ -172,7 +174,7 @@ acc_comp_codes = {
 
 balance_comp_codes = {
                     10001: "Pune",
-                    10002: "Baner" , 
+                    # 10002: "Baner" , 
                     10003: "Indore",
                     # 10004: "Jejuri",
                     10005: "Nashik", 
@@ -193,6 +195,17 @@ balance_comp_codes = {
                     10023: "NA Hubli", 
                     20001: "Phaltan", 
                     }
+
+
+kbe_outstanding_comp_codes = {
+                    10000: "KBFruit",
+                    10001: "Frex",
+                    10003: "Orbit",
+                    10004: "KBAgro",
+                    10005: "KBEIPL", 
+                    12022: "KBE",                     
+                    92021: "KBVeg", 
+                            }
 
 
 receivables_comp_codes = {
