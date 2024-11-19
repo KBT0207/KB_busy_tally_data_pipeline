@@ -34,9 +34,8 @@ from Database.models.busy_models.busy_items import (BusyItems100x,
                                                     BusyItemsNewAge)
 from Database.models.busy_models.busy_pricing import BusyPricingKBBIO
 from Database.models.busy_models.busy_reports import (MITPKBBIO, MRFPKBBIO,
-                                                      SalesKBBIO,
-                                                      SalesOrderKBBIO,
-                                                      SalesReturnKBBIO)
+                                                      SalesKBBIO, SalesOrderKBBIO, SalesReturnKBBIO, 
+                                                      Production, StockJournal, StockTransfer )
 from Database.models.tally_models.tally_report_models import (
     DebtorsBalance, TallyAccounts, TallyJournal, TallyOutstandingBalance,
     TallyPayment, TallyPurchase, TallyPurchaseReturn, TallyReceipts,
@@ -89,10 +88,10 @@ busy_tables = {'busy_sales': SalesKBBIO, 'busy_sales_order': SalesOrderKBBIO,
           "busy_acc_kbbio": BusyAccountsKBBIO,
           "busy_acc_100x": BusyAccounts100x, "busy_acc_agri": BusyAccountsAgri,
           "busy_acc_greenera": BusyAccountsGreenEra, "busy_acc_newage": BusyAccountsNewAge,
-          "busy_items_kbbio": BusyItemsKBBIO, "busy_items_100x": BusyItems100x, 
-          "busy_items_agri": BusyItemsAgri, "busy_items_greenera": BusyItemsGreenEra, 
-          "busy_items_newage": BusyItemsNewAge,
-        }
+          "busy_items_kbbio": BusyItemsKBBIO, "busy_items_100x": BusyItems100x,  "busy_items_agri": BusyItemsAgri,
+          "busy_items_greenera": BusyItemsGreenEra, "busy_items_newage": BusyItemsNewAge, 
+          "production": Production, "busy_stock_transfer": StockTransfer, "busy_stock_journal": StockJournal, 
+          }
 
 
 tally_tables = {"tally_sales": TallySales, "tally_sales_return": TallySalesReturn, 
@@ -170,6 +169,7 @@ acc_comp_codes = {
                     10023: "NA Hubli", 
                     20001: "Phaltan", 
                     }
+
 
 
 balance_comp_codes = {

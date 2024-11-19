@@ -1,6 +1,6 @@
 import pandas as pd
 from sqlalchemy.orm import scoped_session, sessionmaker
-from sqlalchemy import insert, delete, and_, func, cast, select, Numeric, Table, text, MetaData
+from sqlalchemy import insert, delete, and_, func, cast, select, Numeric, Table, text, MetaData, desc
 from logging_config import logger
 from utils.common_utils import tables
 from Database.models.busy_models.busy_pricing import BusyPricingKBBIO
@@ -10,7 +10,8 @@ from Database.models.busy_models.busy_accounts import (BusyAccounts100x, BusyAcc
 from Database.models.busy_models.busy_reports import SalesKBBIO, SalesOrderKBBIO
 from sqlalchemy.exc import SQLAlchemyError
 from Database.models.tally_models.tally_report_models import TallyAccounts, DebtorsBalance
-from Database.models.kbe_models.export_models import KBEAccounts
+from Database.models.kbe_models.export_models import KBEAccounts, ExchangeRate
+
 
 class DatabaseCrud:
     def __init__(self, db_connector) -> None:
@@ -373,6 +374,12 @@ class DatabaseCrud:
 
 
 
-
-
+    def get_exchange_rate_from_db(self, currency: str) -> float | int:
+        # Query for the most recent rate for the specified currency
+        rate = (self.Session.query(ExchangeRate.exchange_rate)
+                              .filter(ExchangeRate.currency == currency)
+                              .order_by(desc(ExchangeRate.date))
+                              .first())
+        
+        return rate[0] if rate else 0
 

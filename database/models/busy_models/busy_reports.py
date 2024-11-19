@@ -174,3 +174,77 @@ class MRFPKBBIO(KBBIOBase):
     igst_amt = Column(Float, nullable=False, default= 0)
     narration = Column(String(255), nullable= True)
     created_at = Column(DateTime, server_default=func.now())
+
+
+
+class StockTransfer(KBBIOBase):
+    _tablename_ = 'busy_stock_transfer'
+
+    id = Column(Integer, primary_key= True, index= True, autoincrement=True)
+    date = Column(Date, nullable= False)
+    voucher_no = Column(String(255), nullable= False, index=True)
+    material_from = Column(String(255), nullable= False)
+    material_to = Column(String(255), nullable= False)
+    item_details = Column(String(255), nullable= True)
+    batch_no = Column(String(255), nullable= True)
+    batch_qty = Column(Float, nullable= True)
+    mfg_date =  Column(String(10), nullable= True)
+    exp_date =  Column(String(10), nullable= True)
+    main_qty = Column(Float, nullable= False)
+    main_unit = Column(String(255), nullable= False)
+    main_price = Column(Float, nullable= False) 
+    alt_qty = Column(Float, nullable= False)
+    alt_unit = Column(String(255), nullable= False)
+    alt_price = Column(Float, nullable= False)
+    amount = Column(Float, nullable=False) 
+    transporter = Column(String(255), nullable= True)
+    created_at = Column(DateTime, server_default=func.now())
+
+
+
+class StockJournal(KBBIOBase):
+    _tablename_ = 'busy_stock_journal'
+
+    id = Column(Integer, primary_key= True, index= True, autoincrement=True)
+    date = Column(Date, nullable= False)
+    voucher_no = Column(String(255), nullable= False, index=True)
+    material_centre = Column(String(255), nullable= False)
+    item_details = Column(String(255), nullable= True)
+    batch_no = Column(String(255), nullable= True)
+    mfg_date =  Column(String(10), nullable= True)
+    exp_date =  Column(String(10), nullable= True)
+    generated_qty = Column(Float, nullable= False)
+    generated_unit = Column(String(255))
+    generated_price = Column(Float, nullable= False) 
+    generated_amount = Column(Float, nullable=False)
+    consumed_qty = Column(Float, nullable= False)
+    consumed_unit = Column(String(255))
+    consumed_price = Column(Float, nullable= False) 
+    consumed_amount = Column(Float, nullable=False) 
+    created_at = Column(DateTime, server_default=func.now())
+
+
+
+class Production(KBBIOBase):
+    _tablename_ = 'production'
+
+    id = Column(Integer, primary_key= True, index= True, autoincrement=True)
+    date = Column(Date, nullable= False)
+    voucher_no = Column(String(255), nullable= False, index=True)
+    item_details = Column(String(255), nullable= True)
+    batch_no = Column(String(255), nullable= True)
+    batch_qty = Column(Float, nullable= True)
+    mfg_date =  Column(String(10), nullable= True)
+    exp_date =  Column(String(10), nullable= True)
+    generated_qty = Column(Float, nullable= False)
+    generated_unit = Column(String(255))
+    generated_price = Column(Float, nullable= False) 
+    generated_amount = Column(Float, nullable=False)
+    material_centre = Column(String(255), nullable= False)
+    consumed_qty = Column(Float, nullable= False)
+    consumed_unit = Column(String(255))
+    consumed_price = Column(Float, nullable= False) 
+    consumed_amount = Column(Float, nullable=False) 
+    created_at = Column(DateTime, server_default=func.now())
+
+

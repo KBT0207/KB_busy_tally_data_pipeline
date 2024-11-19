@@ -48,9 +48,9 @@ def tally_to_sql():
 def daily_busy_sales():
     # todate_str = (datetime.today().date()-timedelta(days=1)).strftime('%d-%m-%Y')
     date1 = (datetime.today().date()-timedelta(days=2)).strftime('%Y-%m-%d')
-    # date1= "2024-10-30"
+    # date1= "2024-11-11"
     date2 = datetime.today().date().strftime('%Y-%m-%d')
-    # date2= "2024-10-02"
+    # date2= "2024-11-13"
     file_name = f'{date1} to {date2}'
     main_busy.exporting_sales(start_date= date1, end_date= date2, 
                               filename= file_name, send_email= True)
@@ -266,7 +266,7 @@ def export_import_kbe_outstanding():
 
     companies = sorted(list(kbe_outstanding_comp_codes.keys()))
     dates = today
-    # dates = ['11-11-2024']
+    # dates = ['14-11-2024']
     
     main_tally.exporting_kbe_outstanding(company=companies, dates=dates)
     importer = DatabaseCrud(kbe_connector)
@@ -294,11 +294,20 @@ def kbe_accounts_operations():
 
 
 
+def import_salesorder():
+    from Database.busy_data_processor import BusyDataProcessor
+    process = BusyDataProcessor("D:\jovo\comp0000_sales_order_23-24.xlsx")
+    df = process.clean_and_transform()
+    
+    db_crud = DatabaseCrud(kbbio_connector)
+    db_crud.import_data(table_name= 'busy_sales_order', df= df, commit= True)
+
+
 
 
 if __name__ == "__main__":
 
-    
+
     function_name = sys.argv[1] if len(sys.argv) > 1 else None
     if function_name:
         if function_name in globals() and callable(globals()[function_name]):

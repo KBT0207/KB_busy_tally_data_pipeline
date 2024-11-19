@@ -6,6 +6,8 @@ from utils.common_utils import tally_comp_codes, acc_comp_codes, balance_comp_co
 import requests
 import openpyxl
 from typing import Optional
+from Database.sql_connector import kbbio_engine, kbbio_connector, kbe_engine, kbe_connector
+from datetime import datetime
 
 pd.set_option('future.no_silent_downcasting', True)
 
@@ -213,27 +215,35 @@ def apply_outstanding_balance_transformation(file_path, material_centre_name) ->
 
 def get_exchange_rate_in_inr(currency_code, date=None) -> dict | None:
     if date:
-        api_url = f"https://api.frankfurter.app/{date}?base={currency_code}&symbols=INR"  # Replace with your actual API URL
+        api_url = f"https://api.frankfurter.app/{date}?base={currency_code}&symbols=INR"
     else:
-        api_url = f"https://api.frankfurter.app/latest?base={currency_code}&symbols=INR"  # Latest rate
+        api_url = f"https://api.frankfurter.app/latest?base={currency_code}&symbols=INR"
 
     try:
         response = requests.get(api_url)
-        response.raise_for_status()  # Raise an error for bad responses
+        response.raise_for_status()
         rates = response.json()
         
         # Extract rate and date
-        rate = rates.get('rates', {}).get('INR')
-        rate_date = rates.get('date')  # Fetch date from response
+        if currency_code == 'INR':
+            rate = 1
+            rate_date = date if date else datetime.today().strftime('%Y-%m-%d')
+        else:
+            rate = rates.get('rates', {}).get('INR')
+            rate_date = rates.get('date')
 
-        if rate is not None and (date == rate_date or date is None):
-        # Return a dictionary with rate and date if `date` is None
-            return {"rate": rate, "date": rate_date} 
-        if rate is not None and (date != rate_date or date is None):
-            return {"rate": rate, "date": rate_date} 
+        # Return rate and date only if rate is successfully retrieved
+        if rate is not None:
+            return {"rate": rate, "date": rate_date}
+        
     except requests.RequestException as e:
+        # Log the exception if needed and return None
+        logger.error(f"Failed to fetch exchange rate for {currency_code} on {date}: {e}")
         return None
-    
+
+
+
+
 
 
 def get_currency_code(format_string: str) -> str:
@@ -248,7 +258,7 @@ def get_currency_code(format_string: str) -> str:
     """
     # Handle empty or invalid input
     if not format_string or not isinstance(format_string, str):
-        return 'INR'  # Default currency if format is invalid
+        return 'INR' 
 
     # Remove the number format part and quotes
     cleaned_format = format_string.replace('"0.00"', '').replace('"', '')
@@ -325,6 +335,7 @@ def apply_kbe_outstanding_transformation(file_path, material_centre_name) -> pd.
 
     # Clean up the "particulars" column
     df["particulars"] = df["particulars"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
+    df["voucher_no"] = df["voucher_no"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
 
     df["currency"] = df['excel_row'].map(formats_dict)
     
@@ -335,7 +346,10 @@ def apply_kbe_outstanding_transformation(file_path, material_centre_name) -> pd.
     if material_centre_name == 92021:
         df["currency"] = 'GBP'
 
-    df["exchange_rate"] = df["currency"].apply(lambda x: (get_exchange_rate_in_inr(x) or {}).get("rate", 0)).fillna(0)
+    from Database.db_crud import DatabaseCrud
+    db_crud = DatabaseCrud(kbe_connector)
+    
+    df["exchange_rate"] = df["currency"].apply(lambda x: db_crud.get_exchange_rate_from_db(x)).fillna(0)
 
 # Calculate amount in INR by multiplying amount by exchange_rate
     df["amount_in_INR"] = (df["amount"] * df["exchange_rate"]).round(2)    

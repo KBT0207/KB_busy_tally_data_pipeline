@@ -12,7 +12,7 @@ from utils.common_utils import busy_tables, tally_tables
 from utils.email import email_send
 from main_reports.reports import Reports
 from Database.tally_data_processor import get_exchange_rate_in_inr
-
+import requests
 
 
 
@@ -256,6 +256,33 @@ def import_receivables_tallydata(dates: list, monthly: bool):
 
 
 
+def import_busy_stock(filename:str):    
+    KBBIOBase.metadata.create_all(kbbio_engine)
+        
+    busy_files = glob.glob("D:\\automated_busy_downloads\\" + f"*\\*stock{filename}.xlsx", recursive=True) + \
+                 glob.glob(f"D:\\automated_busy_downloads\\*\\*production{filename}.xlsx", recursive=True)
+    
+    if len(busy_files) != 0:
+        for file in busy_files:
+            excel_data = BusyDataProcessor(file)
+            importer = DatabaseCrud(kbe_connector)
+            if get_filename(file) == 'stock_transfer':
+                importer.import_data('busy_stock_transfer', excel_data.clean_and_transform(), commit=True)
+    
+            if get_filename(file) == 'stock_journal':
+                importer.import_data('busy_stock_journal', excel_data.clean_and_transform(), commit=True)
+
+            if get_filename(file) == 'production':
+                importer.import_data('production', excel_data.clean_and_transform(), commit=True)
+
+            else:
+                logger.error(f"{get_filename(file)} and {get_compname(file)} of {file} didn't match the criteria")    
+
+    else:
+        logger.critical("No File for today's date found to import in database")
+
+
+
 
 def dealer_price_validation_report(from_date:str, to_date:str, effective_date:str, send_email:bool, exceptions:list = None) -> None:
     """Generated dealer price validation report as per the arguments.
@@ -466,6 +493,7 @@ def busy_tally_sales_reco(start_date:str, end_date:str, send_email:bool, excepti
             logger.critical(f"Failed to email the Busy-Tally Sales Reco Report: {e}")
 
 
+
 def busy_tally_salesreturn_reco(start_date:str, end_date:str, send_email:bool, exceptions:list = None) -> None:
     report = Reports(kbbio_connector)
     try:
@@ -538,33 +566,76 @@ def salesorder_mitp_reco_report(start_date:str, end_date:str, send_email:bool, e
 
 
 
+def get_latest_date_from_api() -> str | None:
+    """
+    Fetch the latest available date from the exchange rate API using a sample currency.
+    Returns the latest date as a string.
+    """
+    try:
+        # Use a sample currency to get the latest date, e.g., "USD"
+        api_url = "https://api.frankfurter.app/latest?base=USD&symbols=INR"
+        response = requests.get(api_url)
+        response.raise_for_status()
+        latest_data = response.json()
+        
+        # Extract the date
+        latest_date = latest_data.get("date")
+        return latest_date
+
+    except requests.RequestException as e:
+        logger.error(f"Failed to fetch the latest date from API: {e}")
+        return None
+
 def update_exchange_rate(dates: list):
-    currency_list = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'HKD', 'THB', 'SGD']
+    currency_list = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'HKD', 'THB', 'SGD', 'INR']
     
     KBEBase.metadata.create_all(kbe_engine)
     logger.info(f'Update exchange rate table for {dates}')
     
     exchange_rate_records = []
+    
+    # Retrieve the latest date from the API for INR entries
+    latest_date = get_latest_date_from_api()
+    if not latest_date:
+        logger.error("Failed to retrieve the latest date; cannot update exchange rates.")
+        return
+    
     for dte in dates:
         for currency in currency_list:
-            rate = get_exchange_rate_in_inr(currency, dte).get("rate")
-            date_rate = get_exchange_rate_in_inr(currency, dte).get("date")
-            if rate is not None:
-                exchange_rate_records.append({"date": date_rate, "currency": currency, 
-                                                "exchange_rate": rate,
+            if currency == 'INR':
+                # Add INR record with rate 1 and the latest date from the API
+                exchange_rate_records.append({
+                    "date": latest_date,
+                    "currency": "INR",
+                    "exchange_rate": 1
                 })
+            else:
+                # Fetch rate and date for other currencies
+                rate_info = get_exchange_rate_in_inr(currency, dte)
+                if rate_info:
+                    rate = rate_info.get("rate", 0)
+                    date_rate = rate_info.get("date")
+                    
+                    exchange_rate_records.append({
+                        "date": date_rate,
+                        "currency": currency,
+                        "exchange_rate": rate
+                    })
+    
     if exchange_rate_records:
         df_exchange_rates = pd.DataFrame(exchange_rate_records)
-        df_exchange_rates = df_exchange_rates.drop_duplicates(subset= ['date', 'currency', 'exchange_rate'])
+        df_exchange_rates = df_exchange_rates.drop_duplicates(subset=['date', 'currency', 'exchange_rate'])
         
         db_crud = DatabaseCrud(kbe_connector)
-        db_crud.delete_date_range_query(table_name= 'exchange_rate', 
-                                            start_date= date_rate, end_date= date_rate, 
-                                            commit= True)
-
-        db_crud.import_data(table_name= 'exchange_rate', df= df_exchange_rates, commit= True)
-        logger.info(logger.info(f'Data imported for {set(df_exchange_rates['date'].to_list())}'))
-
+        db_crud.delete_date_range_query(
+            table_name='exchange_rate', 
+            start_date=latest_date, 
+            end_date=latest_date, 
+            commit=True
+        )
+        
+        db_crud.import_data(table_name='exchange_rate', df=df_exchange_rates, commit=True)
+        logger.info(f"Data imported for {set(df_exchange_rates['date'].to_list())}")
 
 
 
