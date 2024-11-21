@@ -178,7 +178,7 @@ class MRFPKBBIO(KBBIOBase):
 
 
 class StockTransfer(KBBIOBase):
-    _tablename_ = 'busy_stock_transfer'
+    __tablename__ = 'busy_stock_transfer'
 
     id = Column(Integer, primary_key= True, index= True, autoincrement=True)
     date = Column(Date, nullable= False)
@@ -203,7 +203,7 @@ class StockTransfer(KBBIOBase):
 
 
 class StockJournal(KBBIOBase):
-    _tablename_ = 'busy_stock_journal'
+    __tablename__ = 'busy_stock_journal'
 
     id = Column(Integer, primary_key= True, index= True, autoincrement=True)
     date = Column(Date, nullable= False)
@@ -226,7 +226,7 @@ class StockJournal(KBBIOBase):
 
 
 class Production(KBBIOBase):
-    _tablename_ = 'production'
+    __tablename__ = 'production'
 
     id = Column(Integer, primary_key= True, index= True, autoincrement=True)
     date = Column(Date, nullable= False)
