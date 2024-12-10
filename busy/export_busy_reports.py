@@ -164,7 +164,35 @@ def select_salesreturn_list():
         except Exception:
             time.sleep(2)
             pass
-    
+
+
+def select_purchase_list():
+    location = None
+    while location == None:
+        try:
+            location = pg.locateOnScreen('busy/images/busy_purchase.png', confidence=0.9)
+            pg.click(location)
+            pg.press('down')
+            pg.press('down')
+            pg.press('enter')
+        except Exception:
+            time.sleep(2)
+            pass
+
+
+def select_purchase_return_list():
+    location = None
+    while location == None:
+        try:
+            location = pg.locateOnScreen('busy/images/busy_purchase_return.png', confidence=0.9)
+            pg.click(location)
+            pg.press('down')
+            pg.press('down')
+            pg.press('enter')
+        except Exception:
+            time.sleep(2)
+            pass
+
 
 
 def select_mrfp_list():
@@ -195,6 +223,48 @@ def select_salesorder_list():
             time.sleep(2)
             pass
   
+
+def select_stock_transfer_list():
+    location = None
+    while location == None:
+        try:
+            location = pg.locateOnScreen('busy/images/stock_transfer.png', confidence=0.9)
+            pg.click(location)
+            pg.press('down')
+            pg.press('down')
+            pg.press('enter')
+        except Exception:
+            time.sleep(2)
+            pass
+
+
+def select_stock_journal_list():
+    location = None
+    while location == None:
+        try:
+            location = pg.locateOnScreen('busy/images/stock_journal.png', confidence=0.9)
+            pg.click(location)
+            pg.press('down')
+            pg.press('down')
+            pg.press('enter')
+        except Exception:
+            time.sleep(2)
+            pass
+
+
+def select_production_list():
+    location = None
+    while location == None:
+        try:
+            location = pg.locateOnScreen('busy/images/production.png', confidence=0.9)
+            pg.click(location)
+            pg.press('down')
+            pg.press('down')
+            pg.press('enter')
+        except Exception:
+            time.sleep(2)
+            pass
+
 
 
 def list_format(report_type, start_date, end_date):
@@ -262,6 +332,112 @@ def list_format(report_type, start_date, end_date):
     pg.press('enter')
 
     pg.press('enter')  
+
+
+
+def purchase_list_format(start_date, end_date):
+    busy_utils.find_img('busy/images/list_image.png')
+    time.sleep(1)
+    
+    #format name
+    pg.typewrite('new', interval=0.2)    
+    pg.press('enter')
+
+    pg.typewrite("a")
+    pg.press("backspace")               #select branch
+    time.sleep(0.3)
+    pg.press('enter')
+
+    pg.typewrite("a")
+    pg.press("backspace")              #voucher series
+    time.sleep(0.3)
+    pg.press('enter')
+
+    pg.typewrite("all")               #salesman range
+    time.sleep(0.3)
+    pg.press('enter')
+
+    pg.typewrite(start_date)          #start date
+    pg.press('enter')
+
+    pg.typewrite(end_date)            #end date
+    pg.press('enter')
+
+    pg.typewrite('name')             #account to be shown
+    pg.press('enter')
+
+    pg.typewrite('both')            #report to be shown in
+    pg.press('enter')
+
+    pg.typewrite('name')           #item to be shown in 
+    pg.press('enter')
+    
+    pg.typewrite('y')           #show material centre namne 
+    pg.press('enter')
+
+    pg.typewrite('y')           #show value of items 
+    pg.press('enter')
+
+    pg.typewrite('n')           #show batch details 
+    pg.press('enter')
+
+    pg.typewrite('y')           #show party TIN/GSTIN no 
+    pg.press('enter')
+
+    pg.typewrite('n')           #show report notes in column 
+    pg.press('enter')
+
+    pg.press('enter')  
+
+
+
+def stock_list_format(report_type, start_date, end_date):
+    busy_utils.find_img('busy/images/list_image.png')
+    time.sleep(1)
+    
+    pg.typewrite('new')    
+    pg.press('enter')
+
+    pg.typewrite("a")
+    pg.press("backspace")               #select branch
+    time.sleep(0.3)
+    pg.press('enter')
+
+    pg.typewrite("a")
+    pg.press("backspace")              #voucher series
+    time.sleep(0.3)
+    pg.press('enter')
+
+    pg.typewrite(start_date)          #start date
+    pg.press('enter')
+
+    pg.typewrite(end_date)            #end date
+    pg.press('enter')
+
+    pg.typewrite('both')            #report to be shown in
+    pg.press('enter')
+
+    pg.typewrite('name')           #item to be shown in 
+    pg.press('enter')
+    
+    if report_type != 'stock_transfer':
+        pg.typewrite('y')           #show material centre namne 
+        pg.press('enter')
+    else:
+        pass
+    
+    pg.typewrite('y')           #show value of items 
+    pg.press('enter')
+
+    pg.typewrite('n')           #show batch details 
+    pg.press('enter')
+
+    pg.typewrite('n')           #show report notes in column 
+    pg.press('enter')
+
+    pg.press('enter')
+
+
 
 
 

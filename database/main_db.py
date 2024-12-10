@@ -27,12 +27,36 @@ def truncate_busy_masters():
     
 
 
-
 def delete_busy_sales(startdate:str, enddate:str, commit:bool):   
     if startdate <= enddate:
         KBBIOBase.metadata.create_all(kbbio_engine)
 
         busy_sales_table = ['busy_sales', 'busy_sales_order', 'busy_sales_return']
+        importer = DatabaseCrud(kbbio_connector)
+        for table in busy_sales_table:
+            importer.delete_date_range_query(table, start_date= startdate, end_date=enddate, commit=commit)
+    else:
+        logger.critical(f"Start date: {startdate} should be equal or greater than end date: {enddate}.")
+
+
+def delete_busy_purchase(startdate:str, enddate:str, commit:bool):   
+    if startdate <= enddate:
+        KBBIOBase.metadata.create_all(kbbio_engine)
+
+        busy_sales_table = ['busy_purchase', 'busy_purchase_order']
+        importer = DatabaseCrud(kbbio_connector)
+        for table in busy_sales_table:
+            importer.delete_date_range_query(table, start_date= startdate, end_date=enddate, commit=commit)
+    else:
+        logger.critical(f"Start date: {startdate} should be equal or greater than end date: {enddate}.")
+
+
+
+def delete_busy_stock(startdate:str, enddate:str, commit:bool):   
+    if startdate <= enddate:
+        KBBIOBase.metadata.create_all(kbbio_engine)
+
+        busy_sales_table = ['busy_stock_transfer', 'busy_stock_journal', 'production']
         importer = DatabaseCrud(kbbio_connector)
         for table in busy_sales_table:
             importer.delete_date_range_query(table, start_date= startdate, end_date=enddate, commit=commit)
@@ -91,6 +115,27 @@ def import_busy_sales(filename:str):
     else:
         logger.critical("No File for today's date found to import in database")        
 
+
+
+def import_busy_purchase(filename:str):    
+    KBBIOBase.metadata.create_all(kbbio_engine)
+        
+    busy_files = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*purchase*{filename}.xlsx", recursive=True)
+    if len(busy_files) != 0:
+        for file in busy_files:
+            excel_data = BusyDataProcessor(file)
+            importer = DatabaseCrud(kbbio_connector)
+            if get_filename(file) == 'purchase':
+                importer.import_data('busy_purchase', excel_data.clean_and_transform(), commit=True)
+    
+            if get_filename(file) == 'purchase_return':
+                importer.import_data('busy_purchase_return', excel_data.clean_and_transform(), commit=True)
+
+            else:
+                logger.error(f"{get_filename(file)} and {get_compname(file)} of {file} didn't match the criteria")    
+
+    else:
+        logger.critical("No File for today's date found to import in database")        
 
 
 
@@ -259,13 +304,14 @@ def import_receivables_tallydata(dates: list, monthly: bool):
 def import_busy_stock(filename:str):    
     KBBIOBase.metadata.create_all(kbbio_engine)
         
-    busy_files = glob.glob("D:\\automated_busy_downloads\\" + f"*\\*stock{filename}.xlsx", recursive=True) + \
-                 glob.glob(f"D:\\automated_busy_downloads\\*\\*production{filename}.xlsx", recursive=True)
+    busy_files = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*stock_transfer_{filename}.xlsx", recursive=True) + \
+                 glob.glob("D:\\automated_busy_downloads\\" + f"**\\*production_{filename}.xlsx", recursive=True) + \
+                 glob.glob("D:\\automated_busy_downloads\\" + f"**\\*stock_journal_{filename}.xlsx", recursive=True)
     
     if len(busy_files) != 0:
         for file in busy_files:
             excel_data = BusyDataProcessor(file)
-            importer = DatabaseCrud(kbe_connector)
+            importer = DatabaseCrud(kbbio_connector)
             if get_filename(file) == 'stock_transfer':
                 importer.import_data('busy_stock_transfer', excel_data.clean_and_transform(), commit=True)
     

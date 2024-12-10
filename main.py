@@ -18,14 +18,16 @@ from utils.common_utils import kbe_outstanding_comp_codes
 from glob import glob 
 from Database.tally_data_processor import TallyDataProcessor
 
- 
+
+
 def tally_to_sql():
     if datetime.today().day not in [4, 19]:
         # current_date = '29-Jun-24'
         startdate = (datetime.today().date() - timedelta(days=3)).strftime("%Y-%m-%d")
-        # startdate = '2024-10-05'
+        # startdate = '2024-10-01'
         endate = (datetime.today().date() - timedelta(days=1)).strftime("%Y-%m-%d")
         # endate = '2024-06-29'
+        
     else:
         first_day_of_current_month = datetime.today().replace(day=1)
         last_day_of_previous_month = first_day_of_current_month - timedelta(days=1)
@@ -60,30 +62,60 @@ def daily_busy_sales():
 
 
 
-def monthly_busy_sales():
-    previous_month_number = datetime.today().month - 1
-    first_batch = batch_date(month=  previous_month_number, batch= 1)
-    second_batch = batch_date(month=  previous_month_number, batch= 2)
-    third_batch = batch_date(month= previous_month_number, batch= 3)
-
-    if datetime.today().day in [1,10,20]:
-        dates = first_batch
-    elif datetime.today().day in [2,11,21]:
-        dates = second_batch
-    elif datetime.today().day in [3,12,22]:
-        dates = third_batch
-
-    # dates = second_batch
-    dates_str = [datetime.strptime(d,('%d-%m-%Y')).strftime('%Y-%m-%d') for d in dates]
-    filename = f'{dates_str[0]} to {dates_str[-1]}'
-
-    main_busy.exporting_sales(start_date= dates_str[0], end_date= dates_str[-1], 
-                            filename= filename, send_email= False)
+def daily_busy_purchase():
+    # todate_str = (datetime.today().date()-timedelta(days=1)).strftime('%d-%m-%Y')
+    date1 = (datetime.today().date()-timedelta(days=2)).strftime('%Y-%m-%d')
+    # date1= "2024-11-11"
+    date2 = datetime.today().date().strftime('%Y-%m-%d')
+    # date2= "2024-11-13"
+    file_name = f'{date1} to {date2}'
+    main_busy.exporting_purchase(start_date= date1, end_date= date2, 
+                              filename= file_name)
     time.sleep(1)
-    main_db.delete_busy_sales(startdate= dates_str[0], enddate= dates_str[-1], commit= True)
+    main_db.delete_busy_purchase(startdate= date1, enddate= date2, commit= True)
+    main_db.import_busy_purchase(filename= file_name)
+
+
+
+def daily_busy_stock():
+    # todate_str = (datetime.today().date()-timedelta(days=1)).strftime('%d-%m-%Y')
+    date1 = (datetime.today().date()-timedelta(days=2)).strftime('%Y-%m-%d')
+    # date1= "2024-11-20"
+    date2 = datetime.today().date().strftime('%Y-%m-%d')
+    # date2= "2024-12-03"
+    file_name = f'{date1} to {date2}'
+    main_busy.exporting_stock(start_date= date1, end_date= date2, 
+                              filename= file_name)
     time.sleep(1)
-    main_db.import_busy_sales(filename= filename)
-    time.sleep(1)
+    main_db.delete_busy_stock(startdate= date1, enddate= date2, commit= True)
+    main_db.import_busy_stock(filename= file_name)
+
+
+
+# def monthly_busy_sales():
+#     previous_month_number = datetime.today().month - 1
+#     first_batch = batch_date(month=  previous_month_number, batch= 1)
+#     second_batch = batch_date(month=  previous_month_number, batch= 2)
+#     third_batch = batch_date(month= previous_month_number, batch= 3)
+
+#     if datetime.today().day in [1,10,20]:
+#         dates = first_batch
+#     elif datetime.today().day in [2,11,21]:
+#         dates = second_batch
+#     elif datetime.today().day in [3,12,22]:
+#         dates = third_batch
+
+#     # dates = second_batch
+#     dates_str = [datetime.strptime(d,('%d-%m-%Y')).strftime('%Y-%m-%d') for d in dates]
+#     filename = f'{dates_str[0]} to {dates_str[-1]}'
+
+#     main_busy.exporting_sales(start_date= dates_str[0], end_date= dates_str[-1], 
+#                             filename= filename, send_email= False)
+#     time.sleep(1)
+#     main_db.delete_busy_sales(startdate= dates_str[0], enddate= dates_str[-1], commit= True)
+#     time.sleep(1)
+#     main_db.import_busy_sales(filename= filename)
+#     time.sleep(1)
 
 
 
@@ -139,7 +171,7 @@ def daily_outstanding_tallydata():
 
     companies = sorted(list(balance_comp_codes.keys()))
     dates = yesterday
-    # dates = ['02-11-2024']
+    # dates = ['01-12-2024']
     main_tally.exporting_outstanding_balance(company=companies, dates=dates, monthly=False)
     importer = DatabaseCrud(kbbio_connector)
     
@@ -293,14 +325,6 @@ def kbe_accounts_operations():
         logger.info(f"No files for account exported/found for {today}")
 
 
-
-def import_salesorder():
-    from Database.busy_data_processor import BusyDataProcessor
-    process = BusyDataProcessor("D:\jovo\comp0000_sales_order_23-24.xlsx")
-    df = process.clean_and_transform()
-    
-    db_crud = DatabaseCrud(kbbio_connector)
-    db_crud.import_data(table_name= 'busy_sales_order', df= df, commit= True)
 
 
 

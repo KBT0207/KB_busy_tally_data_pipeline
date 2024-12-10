@@ -35,7 +35,7 @@ from Database.models.busy_models.busy_items import (BusyItems100x,
 from Database.models.busy_models.busy_pricing import BusyPricingKBBIO
 from Database.models.busy_models.busy_reports import (MITPKBBIO, MRFPKBBIO,
                                                       SalesKBBIO, SalesOrderKBBIO, SalesReturnKBBIO, 
-                                                      Production, StockJournal, StockTransfer )
+                                                      Production, StockJournal, StockTransfer, PurchaseKBBIO, PurchaseReturnKBBIO )
 from Database.models.tally_models.tally_report_models import (
     DebtorsBalance, TallyAccounts, TallyJournal, TallyOutstandingBalance,
     TallyPayment, TallyPurchase, TallyPurchaseReturn, TallyReceipts,
@@ -82,16 +82,15 @@ def batch_date(month: int, batch: int, year: int = datetime.today().year) -> lis
 
 
 
-busy_tables = {'busy_sales': SalesKBBIO, 'busy_sales_order': SalesOrderKBBIO,
-          'busy_sales_return': SalesReturnKBBIO, "busy_mitp": MITPKBBIO,
-          "busy_mrfp": MRFPKBBIO, 
-          "busy_acc_kbbio": BusyAccountsKBBIO,
-          "busy_acc_100x": BusyAccounts100x, "busy_acc_agri": BusyAccountsAgri,
-          "busy_acc_greenera": BusyAccountsGreenEra, "busy_acc_newage": BusyAccountsNewAge,
-          "busy_items_kbbio": BusyItemsKBBIO, "busy_items_100x": BusyItems100x,  "busy_items_agri": BusyItemsAgri,
-          "busy_items_greenera": BusyItemsGreenEra, "busy_items_newage": BusyItemsNewAge, 
-          "production": Production, "busy_stock_transfer": StockTransfer, "busy_stock_journal": StockJournal, 
-          }
+busy_tables = {'busy_sales': SalesKBBIO, 'busy_sales_order': SalesOrderKBBIO, 'busy_sales_return': SalesReturnKBBIO, 
+               "busy_mitp": MITPKBBIO, "busy_mrfp": MRFPKBBIO, 
+                "busy_acc_kbbio": BusyAccountsKBBIO, "busy_acc_100x": BusyAccounts100x, "busy_acc_agri": BusyAccountsAgri,
+                "busy_acc_greenera": BusyAccountsGreenEra, "busy_acc_newage": BusyAccountsNewAge, 
+                "busy_items_kbbio": BusyItemsKBBIO, "busy_items_100x": BusyItems100x,  "busy_items_agri": BusyItemsAgri,
+                "busy_items_greenera": BusyItemsGreenEra, "busy_items_newage": BusyItemsNewAge, 
+                "production": Production, "busy_stock_transfer": StockTransfer, "busy_stock_journal": StockJournal, 
+                "busy_purchase": PurchaseKBBIO, "busy_purchase_return": PurchaseReturnKBBIO, 
+            }
 
 
 tally_tables = {"tally_sales": TallySales, "tally_sales_return": TallySalesReturn, 

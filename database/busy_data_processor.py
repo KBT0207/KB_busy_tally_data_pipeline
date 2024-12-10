@@ -130,10 +130,85 @@ def apply_sales_return_transformation(file_path:str, top_row:int) -> pd.DataFram
 
     df["mfg_date"] = pd.to_datetime(df["mfg_date"]).dt.strftime("%b-%Y")
     df["exp_date"] = pd.to_datetime(df["exp_date"]).dt.strftime("%b-%Y")
+
+    return df
+
+
+
+def apply_purchase_transformation(file_path:str, top_row:int) -> pd.DataFrame:
+    try:
+        df =  pd.read_excel(file_path,skiprows= top_row, skipfooter= 2)
+    except FileNotFoundError as e:
+        logger.warning(f"Excel File not found in the given {file_path}: {e}")
+    if df.empty:
+        logger.warning(f"Empty Excel File of {get_compname(file_path)} and report {get_filename(file_path)}")
+        return None
     
-    # df["main_qty"] = df["main_qty"].fillna(0)
-    # df["alt_qty"] = df["alt_qty"].fillna(0)
-    # df["alt_price"] = df["alt_price"].fillna(0)
+    columns_ffill = ["Date", "Vch/Bill No", "Party Type", "Material Centre", "Particulars", "State"]
+    df.loc[:, columns_ffill] = df[columns_ffill].ffill()
+
+    columns_fillna_with_0 = ["Discount %", "Discount Amount", "Tax Amount", "Bill Amount"]
+    df.loc[:,columns_fillna_with_0] = df[columns_fillna_with_0].fillna(0)
+
+    columns_conditional_ffill = ["Dealer Code", "TIN/GSTIN No.", "E Invoice", 
+                                 "GRN No", "GRN Date.",
+                                 "Sales Order No", "Sales Order Date", 
+                                 "E Way Bill No", "Transporter Name"]
+    
+    for column in columns_conditional_ffill:
+        vch_to_dc = df[["Vch/Bill No", column]].dropna().set_index('Vch/Bill No')[column].to_dict()
+        df.loc[:, column] = df['Vch/Bill No'].map(vch_to_dc)
+    
+    df.columns = df.columns.str.lower().str.replace(" ", "_").str.replace(".", "")
+    df = df.rename(columns= {"vch/bill_no": "voucher_no", "tin/gstin_no": "gst_no",
+                             "qty": "main_qty", "unit": "main_unit", "price": "main_price",
+                             "qty1": "alt_qty", "unit1": "alt_unit", "price1": "alt_price", 
+                             "discount_%": "discount_perc", "bill_amount": "bill_amt", "tax_amount": "tax_amt", 
+                             "e-invoice": "e_invoice", "e_way_bill_no": "e_way_bill", 
+                             "discount_amount": "discount_amt", 
+                             })
+
+    df["mfg_date"] = pd.to_datetime(df["mfg_date"]).dt.strftime("%b-%Y")
+    df["exp_date"] = pd.to_datetime(df["exp_date"]).dt.strftime("%b-%Y")
+
+    return df
+
+
+
+def apply_purchase_return_transformation(file_path:str, top_row:int) -> pd.DataFrame:
+    try:
+        df =  pd.read_excel(file_path,skiprows= top_row, skipfooter= 2)
+    except FileNotFoundError as e:
+        logger.warning(f"Excel File not found in the given {file_path}: {e}")
+    if df.empty:
+        logger.warning(f"Empty Excel File of {get_compname(file_path)} and report {get_filename(file_path)}")
+        return None
+    
+    columns_ffill = ["Date", "Vch/Bill No", "Party Type", "Material Centre", "Particulars", "State"]
+    df.loc[:, columns_ffill] = df[columns_ffill].ffill()
+
+    columns_fillna_with_0 = ["Disc %", "Disc Amt", "Tax Amount", "Bill Amount"]
+    df.loc[:,columns_fillna_with_0] = df[columns_fillna_with_0].fillna(0)
+
+    columns_conditional_ffill = ["Dealer Code", "TIN/GSTIN No.", "E-Invoice", 
+                                 "GRN No.", "GRN Date", "E-Way Bill No.", ]
+    
+    for column in columns_conditional_ffill:
+        vch_to_dc = df[["Vch/Bill No", column]].dropna().set_index('Vch/Bill No')[column].to_dict()
+        df.loc[:, column] = df['Vch/Bill No'].map(vch_to_dc)
+    
+    df = df.rename(columns= {"Exp.Date": "exp_date"})
+
+    df.columns = df.columns.str.lower().str.replace(" ", "_").str.replace(".", "")
+    df = df.rename(columns= {"vch/bill_no": "voucher_no", "tin/gstin_no": "gst_no",
+                             "qty": "main_qty", "unit": "main_unit", "price": "main_price",
+                             "qty1": "alt_qty", "unit1": "alt_unit", "price1": "alt_price", 
+                             "disc_%": "discount_perc", "bill_amount": "bill_amt", "disc_amt": "discount_amt",
+                             "tax_amount": "tax_amt", "e-invoice": "e_invoice", "e-way_bill_no": "e_way_bill", 
+                             })
+
+    df["mfg_date"] = pd.to_datetime(df["mfg_date"]).dt.strftime("%b-%Y")
+    df["exp_date"] = pd.to_datetime(df["exp_date"]).dt.strftime("%b-%Y")
 
     return df
 
@@ -371,6 +446,18 @@ class BusyDataProcessor:
 
         if get_filename(self.excel_file_path) == "sales_order" :
             df = apply_sales_order_transformation(self.excel_file_path, top_row= 3)
+
+        if get_filename(self.excel_file_path) == "purchase" and get_compname(self.excel_file_path) != "comp0014" :
+            df = apply_purchase_transformation(self.excel_file_path, top_row= 3)
+
+        if get_filename(self.excel_file_path) == "purchase" and get_compname(self.excel_file_path) == "comp0014" :
+            df = apply_purchase_transformation(self.excel_file_path, top_row= 5)
+
+        if get_filename(self.excel_file_path) == "purchase_return" and get_compname(self.excel_file_path) != "comp0014" :
+            df = apply_purchase_return_transformation(self.excel_file_path, top_row= 3)
+
+        if get_filename(self.excel_file_path) == "purchase_return" and get_compname(self.excel_file_path) == "comp0014" :
+            df = apply_purchase_return_transformation(self.excel_file_path, top_row= 5)
 
         if get_filename(self.excel_file_path) == "material_issued_to_party" and get_compname(self.excel_file_path) != "comp0014" :
             df = apply_material_issued_to_party_transformation(self.excel_file_path, top_row= 3)
