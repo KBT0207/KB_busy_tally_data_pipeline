@@ -43,6 +43,14 @@ from Database.models.tally_models.tally_report_models import (
 
 from Database.models.kbe_models.export_models import KBEOutstanding, ExchangeRate, KBEAccounts
 
+from Database.models.trackwick.trackwick_models import (TrackwickEmployees, TrackwickSubDealerLiquidationTasks, 
+                                                        TrackwickFarmerLiquidationTasks, TrackwickDealerCollectionTasks, 
+                                                        TrackwickDealerSalesOrderTasks, TrackwickFeedbackTasks, 
+                                                        TrackwickCarTravelExpenses, TrackwickBikeTravelExpenses, 
+                                                        TrackwickOtherTravelExpenses, 
+                                                        )
+
+
 
 def batch_date(month: int, batch: int, year: int = datetime.today().year) -> list:
     if batch not in [1, 2, 3]:
@@ -105,8 +113,19 @@ kbe_tables = {"outstanding_balance": KBEOutstanding, "exchange_rate": ExchangeRa
 other_tables = {"busy_pricing_kbbio": BusyPricingKBBIO, "test_table": TestTable,
                }
 
+trackwick_tables = {"trackwick_employees": TrackwickEmployees, 
+                    'trackwick_sub_dealer_liquidation_tasks': TrackwickSubDealerLiquidationTasks, 
+                    'trackwick_farmer_liquidation_tasks': TrackwickFarmerLiquidationTasks, 
+                    'trackwick_dealer_collection_tasks': TrackwickDealerCollectionTasks, 
+                    'trackwick_dealer_sales_order_tasks': TrackwickDealerSalesOrderTasks, 
+                    'trackwick_feedback_tasks': TrackwickFeedbackTasks, 
+                    "trackwick_car_travel_expense": TrackwickCarTravelExpenses, 
+                    "trackwick_bike_travel_expense": TrackwickBikeTravelExpenses, 
+                    "trackwick_other_travel_expense": TrackwickOtherTravelExpenses, 
+                    }
 
-tables = {**busy_tables, **tally_tables, **other_tables, **kbe_tables}
+
+tables = {**busy_tables, **tally_tables, **other_tables, **kbe_tables, **trackwick_tables}
 
 
 tally_reports = {
@@ -170,7 +189,6 @@ acc_comp_codes = {
                     }
 
 
-
 balance_comp_codes = {
                     10001: "Pune",
                     # 10002: "Baner" , 
@@ -230,3 +248,6 @@ receivables_comp_codes = {
                     10023: "NA Hubli", 
                     20001: "Phaltan", 
                     }
+
+
+

@@ -1,6 +1,6 @@
 import pandas as pd
 from logging_config import logger
-
+    
 
 def get_filename(path:str):
     return path.split("\\")[-1].split("_", maxsplit=1)[-1].rsplit("_", 1)[:-1][0]

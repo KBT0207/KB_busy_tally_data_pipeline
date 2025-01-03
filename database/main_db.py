@@ -51,7 +51,6 @@ def delete_busy_purchase(startdate:str, enddate:str, commit:bool):
         logger.critical(f"Start date: {startdate} should be equal or greater than end date: {enddate}.")
 
 
-
 def delete_busy_stock(startdate:str, enddate:str, commit:bool):   
     if startdate <= enddate:
         KBBIOBase.metadata.create_all(kbbio_engine)
@@ -64,7 +63,6 @@ def delete_busy_stock(startdate:str, enddate:str, commit:bool):
         logger.critical(f"Start date: {startdate} should be equal or greater than end date: {enddate}.")
 
 
-
 def delete_busy_material(from_date:str, to_date:str):    
     KBBIOBase.metadata.create_all(kbbio_engine)
 
@@ -73,8 +71,6 @@ def delete_busy_material(from_date:str, to_date:str):
     for table in tables_list:
         if "mitp" in table or "mrfp" in table:
             importer.delete_date_range_query(table, start_date=from_date, end_date= to_date, commit=True)
-
-
 
 
 def delete_tally_data(start_date:str, end_date:str, commit:bool):    
@@ -92,9 +88,9 @@ def delete_tally_data(start_date:str, end_date:str, commit:bool):
 
 
 
-def import_busy_sales(filename:str):    
+def import_busy_sales(filename:str):
     KBBIOBase.metadata.create_all(kbbio_engine)
-        
+    
     busy_files = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*sales*{filename}.xlsx", recursive=True)
     if len(busy_files) != 0:
         for file in busy_files:
@@ -198,7 +194,6 @@ def import_busy_masters_material(file_name:str):
 
 
 
-
 def import_tally_data(date):    
     KBBIOBase.metadata.create_all(kbbio_engine)
     
@@ -238,7 +233,6 @@ def import_tally_data(date):
 
     else:
         logger.critical("No File for today's date found to import in database")
-
 
 
 
@@ -326,7 +320,6 @@ def import_busy_stock(filename:str):
 
     else:
         logger.critical("No File for today's date found to import in database")
-
 
 
 
@@ -631,6 +624,7 @@ def get_latest_date_from_api() -> str | None:
     except requests.RequestException as e:
         logger.error(f"Failed to fetch the latest date from API: {e}")
         return None
+
 
 def update_exchange_rate(dates: list):
     currency_list = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'HKD', 'THB', 'SGD', 'INR']

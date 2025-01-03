@@ -330,18 +330,27 @@ def kbe_accounts_operations():
 
 
 if __name__ == "__main__":
+    from xlwings import view
+    from trackwick import main_trackwick
+    from trackwick import api_data
 
+    today = '2025-01-01'
 
-    function_name = sys.argv[1] if len(sys.argv) > 1 else None
-    if function_name:
-        if function_name in globals() and callable(globals()[function_name]):
-            try:
-                logger.info(f"Running function: {function_name}")
-                globals()[function_name]()
-            except Exception as e:
-                logger.error(f"Error running function {function_name}: {e}")
-        else:
-            logger.error(f"Function '{function_name}' does not exist.")
+    main_trackwick.import_dealer_collection_tasks()
+
+    # print(api_data.api_bike_travel_expense(start_date= today, 
+    #                                         end_date= today).info())
+
+    # function_name = sys.argv[1] if len(sys.argv) > 1 else None
+    # if function_name:
+    #     if function_name in globals() and callable(globals()[function_name]):
+    #         try:
+    #             logger.info(f"Running function: {function_name}")
+    #             globals()[function_name]()
+    #         except Exception as e:
+    #             logger.error(f"Error running function {function_name}: {e}")
+    #     else:
+    #         logger.error(f"Function '{function_name}' does not exist.")
 
 
 
