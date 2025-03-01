@@ -1,5 +1,5 @@
 from sqlalchemy import MetaData, Column, Integer, String, Date, BigInteger, Float, DateTime, func
-from Database.models.base import KBBIOBase
+from database.models.base import KBBIOBase
 
 
 metadata = MetaData()
@@ -46,8 +46,6 @@ class SalesKBBIO(KBBIOBase):
     narration = Column(String(255), nullable= True)
     created_at = Column(DateTime, server_default=func.now())
 
-
-
 class SalesReturnKBBIO(KBBIOBase):
     __tablename__ = 'busy_sales_return'
 
@@ -88,8 +86,6 @@ class SalesReturnKBBIO(KBBIOBase):
     narration = Column(String(255), nullable= True)
     created_at = Column(DateTime, server_default=func.now())
 
-
-
 class SalesOrderKBBIO(KBBIOBase):
     __tablename__ = 'busy_sales_order'
 
@@ -111,8 +107,6 @@ class SalesOrderKBBIO(KBBIOBase):
     salesman = Column(String(255), nullable= True)
     salesman_id = Column(String(255), nullable= True)
     created_at = Column(DateTime, server_default=func.now())
-
-
 
 class PurchaseKBBIO(KBBIOBase):
     __tablename__ = 'busy_purchase'
@@ -153,8 +147,6 @@ class PurchaseKBBIO(KBBIOBase):
     discount_amt = Column(Float, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
 
-
-
 class PurchaseReturnKBBIO(KBBIOBase):
     __tablename__ = 'busy_purchase_return'
 
@@ -191,8 +183,6 @@ class PurchaseReturnKBBIO(KBBIOBase):
     discount_amt = Column(Float, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
 
-
-
 class MITPKBBIO(KBBIOBase):
     __tablename__ = 'busy_mitp'
 
@@ -226,8 +216,6 @@ class MITPKBBIO(KBBIOBase):
     transporter = Column(String(255), nullable= True)
     created_at = Column(DateTime, server_default=func.now())
 
-
-
 class MRFPKBBIO(KBBIOBase):
     __tablename__ = 'busy_mrfp'
 
@@ -255,8 +243,6 @@ class MRFPKBBIO(KBBIOBase):
     narration = Column(String(255), nullable= True)
     created_at = Column(DateTime, server_default=func.now())
 
-
-
 class StockTransfer(KBBIOBase):
     __tablename__ = 'busy_stock_transfer'
 
@@ -280,8 +266,6 @@ class StockTransfer(KBBIOBase):
     transporter = Column(String(255), nullable= True)
     created_at = Column(DateTime, server_default=func.now())
 
-
-
 class StockJournal(KBBIOBase):
     __tablename__ = 'busy_stock_journal'
 
@@ -302,8 +286,6 @@ class StockJournal(KBBIOBase):
     consumed_price = Column(Float, nullable= False) 
     consumed_amount = Column(Float, nullable=False) 
     created_at = Column(DateTime, server_default=func.now())
-
-
 
 class Production(KBBIOBase):
     __tablename__ = 'production'
@@ -326,5 +308,3 @@ class Production(KBBIOBase):
     consumed_price = Column(Float, nullable= False) 
     consumed_amount = Column(Float, nullable=False) 
     created_at = Column(DateTime, server_default=func.now())
-
-

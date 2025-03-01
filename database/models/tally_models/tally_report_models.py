@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, DECIMAL, Float, Date, DateTime, BigInteger, func
-from Database.models.base import KBBIOBase
+from database.models.base import KBBIOBase
 
 
 

@@ -9,7 +9,7 @@ import yagmail
 load_dotenv(".env")
 
 
-yag = yagmail.SMTP("Jovo@kaybeebio.com", 
+yag = yagmail.SMTP("vivekkumar@kaybeeexports.com", 
                    os.getenv('SENDER_EMAIL_PASSWORD')) 
 # Adding Content and sending it 
 

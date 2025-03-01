@@ -2,16 +2,16 @@ import glob
 import pandas as pd
 import os
 from datetime import datetime, timedelta
-from Database.sql_connector import kbbio_engine, kbbio_connector, kbe_engine, kbe_connector
-from Database.busy_data_processor import BusyDataProcessor, get_filename, get_compname
-from Database.tally_data_processor import TallyDataProcessor
-from Database.models.base import KBBIOBase, KBEBase
-from Database.db_crud import DatabaseCrud
+from database.sql_connector import kbbio_engine, kbbio_connector
+from database.busy_data_processor import BusyDataProcessor, get_filename, get_compname
+from database.tally_data_processor import TallyDataProcessor
+from database.models.base import KBBIOBase, KBEBase
+from database.db_crud import DatabaseCrud
 from logging_config import logger
-from utils.common_utils import busy_tables, tally_tables
+from utils.common_utils import busy_tables, tally_tables , busyrm_tables
 from utils.email import email_send
 from main_reports.reports import Reports
-from Database.tally_data_processor import get_exchange_rate_in_inr
+from database.tally_data_processor import get_exchange_rate_in_inr
 import requests
 
 
@@ -19,7 +19,7 @@ import requests
 def truncate_busy_masters():    
     KBBIOBase.metadata.create_all(kbbio_engine)    
 
-    tables_list = list(busy_tables.keys())
+    tables_list = list(busyrm_tables.keys())
     importer = DatabaseCrud(kbbio_connector)
     for table in tables_list:
         if "acc" in table or "items" in table:
@@ -43,9 +43,9 @@ def delete_busy_purchase(startdate:str, enddate:str, commit:bool):
     if startdate <= enddate:
         KBBIOBase.metadata.create_all(kbbio_engine)
 
-        busy_sales_table = ['busy_purchase', 'busy_purchase_order']
+        busyrm_purchase_table = ['busyrm_purchase', 'busyrm_purchase_order','busyrm_purchase_return']
         importer = DatabaseCrud(kbbio_connector)
-        for table in busy_sales_table:
+        for table in busyrm_purchase_table:
             importer.delete_date_range_query(table, start_date= startdate, end_date=enddate, commit=commit)
     else:
         logger.critical(f"Start date: {startdate} should be equal or greater than end date: {enddate}.")
@@ -55,22 +55,23 @@ def delete_busy_stock(startdate:str, enddate:str, commit:bool):
     if startdate <= enddate:
         KBBIOBase.metadata.create_all(kbbio_engine)
 
-        busy_sales_table = ['busy_stock_transfer', 'busy_stock_journal', 'production']
+        busyrm_purchase_table = ['busyrm_stock_transfer', 'busyrm_stock_journal', 'busyrm_production']
         importer = DatabaseCrud(kbbio_connector)
-        for table in busy_sales_table:
+        for table in busyrm_purchase_table:
             importer.delete_date_range_query(table, start_date= startdate, end_date=enddate, commit=commit)
     else:
         logger.critical(f"Start date: {startdate} should be equal or greater than end date: {enddate}.")
 
 
-def delete_busy_material(from_date:str, to_date:str):    
+def delete_busy_material(from_date: str, to_date: str):    
     KBBIOBase.metadata.create_all(kbbio_engine)
 
-    tables_list = list(busy_tables.keys())
+    tables_list = ["busyrm_mrfp", "busyrm_mitp"]
     importer = DatabaseCrud(kbbio_connector)
+
     for table in tables_list:
-        if "mitp" in table or "mrfp" in table:
-            importer.delete_date_range_query(table, start_date=from_date, end_date= to_date, commit=True)
+        importer.delete_date_range_query(table, start_date=from_date, end_date=to_date, commit=True)
+
 
 
 def delete_tally_data(start_date:str, end_date:str, commit:bool):    
@@ -91,7 +92,7 @@ def delete_tally_data(start_date:str, end_date:str, commit:bool):
 def import_busy_sales(filename:str):
     KBBIOBase.metadata.create_all(kbbio_engine)
     
-    busy_files = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*sales*{filename}.xlsx", recursive=True)
+    busy_files = glob.glob("E:\\automated_busy_downloads\\" + f"**\\*sales*{filename}.xlsx", recursive=True)
     if len(busy_files) != 0:
         for file in busy_files:
             excel_data = BusyDataProcessor(file)
@@ -111,12 +112,34 @@ def import_busy_sales(filename:str):
     else:
         logger.critical("No File for today's date found to import in database")        
 
+def import_busyrm_purchase(filename:str):
+    KBBIOBase.metadata.create_all(kbbio_engine)
+    
+    busy_files = glob.glob("E:\\automated_busy_downloads\\" + f"**\\*purchase*{filename}.xlsx", recursive=True)
+    if len(busy_files) != 0:
+        for file in busy_files:
+            excel_data = BusyDataProcessor(file)
+            importer = DatabaseCrud(kbbio_connector)
+            if get_filename(file) == 'purchase':
+                importer.import_data('busyrm_purchase', excel_data.clean_and_transform(), commit=True)
+    
+            if get_filename(file) == 'purchase_return':
+                importer.import_data('busyrm_purchase_return', excel_data.clean_and_transform(), commit=True)
+
+            if get_filename(file) == 'purchase_order':
+                importer.import_data('busyrm_purchase_order', excel_data.clean_and_transform(), commit=True)
+
+            else:
+                logger.error(f"{get_filename(file)} and {get_compname(file)} of {file} didn't match the criteria")    
+
+    else:
+        logger.critical("No File for today's date found to import in database") 
 
 
 def import_busy_purchase(filename:str):    
     KBBIOBase.metadata.create_all(kbbio_engine)
         
-    busy_files = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*purchase*{filename}.xlsx", recursive=True)
+    busy_files = glob.glob("E:\\automated_busy_downloads\\" + f"**\\*purchase*{filename}.xlsx", recursive=True)
     if len(busy_files) != 0:
         for file in busy_files:
             excel_data = BusyDataProcessor(file)
@@ -139,9 +162,9 @@ def import_busy_masters_material(file_name:str):
     KBBIOBase.metadata.create_all(kbbio_engine)
     # today_date = "17-Apr-2024"
 
-    pattern_master = f"D:\\automated_busy_downloads\\**\\*master*{file_name}.xlsx"
-    pattern_item = f"D:\\automated_busy_downloads\\**\\*items*{file_name}.xlsx"
-    pattern_material = f"D:\\automated_busy_downloads\\**\\*material*{file_name}.xlsx"
+    pattern_master = f"E:\\automated_busy_downloads\\**\\*master*{file_name}.xlsx"
+    pattern_item = f"E:\\automated_busy_downloads\\**\\*items*{file_name}.xlsx"
+    pattern_material = f"E:\\automated_busy_downloads\\**\\*material*{file_name}.xlsx"
 
     busy_files_material = glob.glob(pattern_material, recursive=True)
     busy_files_master = glob.glob(pattern_master, recursive=True)
@@ -154,40 +177,17 @@ def import_busy_masters_material(file_name:str):
             importer = DatabaseCrud(kbbio_connector)
 
             if get_filename(file) == 'material_issued_to_party':
-                importer.import_data('busy_mitp', excel_data.clean_and_transform(), commit=True)
+                importer.import_data('busyrm_mitp', excel_data.clean_and_transform(), commit=True)
                 
             if get_filename(file) == 'material_received_from_party':
-                importer.import_data('busy_mrfp', excel_data.clean_and_transform(), commit=True)
+                importer.import_data('busyrm_mrfp', excel_data.clean_and_transform(), commit=True)
 
-            if get_filename(file) == "master_accounts" and get_compname(file) == "comp0005":
-                importer.import_data('busy_acc_kbbio', excel_data.clean_and_transform(), commit=True)
 
-            if get_filename(file) == "master_accounts" and get_compname(file) == "comp0010":
-                importer.import_data('busy_acc_agri', excel_data.clean_and_transform(), commit=True)
+            if get_filename(file) == "master_accounts" and get_compname(file) == "comp0003":
+                importer.import_data('busyrm_acc', excel_data.clean_and_transform(), commit=True)
 
-            if get_filename(file) == "master_accounts" and get_compname(file) == "comp0011":
-                importer.import_data('busy_acc_greenera', excel_data.clean_and_transform(), commit=True)
-
-            if get_filename(file) == "master_accounts" and get_compname(file) == "comp0014":
-                importer.import_data('busy_acc_newage', excel_data.clean_and_transform(), commit=True)
-            
-            if get_filename(file) == "master_accounts" and get_compname(file) == "comp0015":
-                importer.import_data('busy_acc_100x', excel_data.clean_and_transform(), commit=True)
-
-            if get_filename(file) == "items" and get_compname(file) == "comp0005":
-                importer.import_data('busy_items_kbbio', excel_data.clean_and_transform(), commit=True)
-
-            if get_filename(file) == "items" and get_compname(file) == "comp0015":
-                importer.import_data('busy_items_100x', excel_data.clean_and_transform(), commit=True)
-
-            if get_filename(file) == "items" and get_compname(file) == "comp0011":
-                importer.import_data('busy_items_greenera', excel_data.clean_and_transform(), commit=True)
-
-            if get_filename(file) == "items" and get_compname(file) == "comp0014":
-                importer.import_data('busy_items_newage', excel_data.clean_and_transform(), commit=True)
-            
-            if get_filename(file) == "items" and get_compname(file) == "comp0010":
-                importer.import_data('busy_items_agri', excel_data.clean_and_transform(), commit=True)
+            if get_filename(file) == "items" and get_compname(file) == "comp0003":
+                importer.import_data('busyrm_items', excel_data.clean_and_transform(), commit=True)
 
     else:
         logger.critical("No File for today's date found to import in database")
@@ -197,7 +197,7 @@ def import_busy_masters_material(file_name:str):
 def import_tally_data(date):    
     KBBIOBase.metadata.create_all(kbbio_engine)
     
-    tally_files = glob.glob("D:\\automated_tally_downloads\\" + f"**\\*{date}.xlsx", recursive=True)
+    tally_files = glob.glob("E:\\automated_tally_downloads\\" + f"**\\*{date}.xlsx", recursive=True)
     if len(tally_files) != 0:
         for file in tally_files:
             excel_data = TallyDataProcessor(file)
@@ -244,9 +244,9 @@ def import_outstanding_tallydata(dates: list, monthly: bool):
             first_day_of_current_month = datetime.today().replace(day=1)
             previous_month = (first_day_of_current_month - timedelta(days=1)).strftime('%B-%Y')    
              
-            tally_files = glob.glob(f"D:\\monthly_data\\**\\{previous_month}" + f"**\\*outstanding_{date}.xlsx",  recursive=True)
+            tally_files = glob.glob(f"E:\\monthly_data\\**\\{previous_month}" + f"**\\*outstanding_{date}.xlsx",  recursive=True)
         else:
-            tally_files = glob.glob(rf"D:\automated_tally_downloads\**\*outstanding_{date}.xlsx", recursive= True)
+            tally_files = glob.glob(rf"E:\automated_tally_downloads\**\*outstanding_{date}.xlsx", recursive= True)
         
         # Using glob to search recursively
         if tally_files:  # Same as checking if len(tally_files) != 0
@@ -258,21 +258,21 @@ def import_outstanding_tallydata(dates: list, monthly: bool):
 
 
 
-def import_kbe_outstanding_tallydata(dates: list):
-    KBEBase.metadata.create_all(kbe_engine)
+# def import_kbe_outstanding_tallydata(dates: list):
+#     KBEBase.metadata.create_all(kbe_engine)
 
-    for date in dates:
-        tally_files = glob.glob(rf"D:\automated_kbe_downloads\**\*kbe_outstanding_{date}.xlsx", recursive= True)
+#     for date in dates:
+#         tally_files = glob.glob(rf"D:\automated_kbe_downloads\**\*kbe_outstanding_{date}.xlsx", recursive= True)
         
-        # Using glob to search recursively
-        if tally_files: 
-            for file in tally_files:
-                excel_data = TallyDataProcessor(file)
-                importer = DatabaseCrud(kbe_connector)
-                if get_filename(file) == 'kbe_outstanding':
-                    importer.import_data('outstanding_balance', excel_data.clean_and_transform(), commit=True)
-        else:
-            print("No KBE Outstanding Files")
+#         # Using glob to search recursively
+#         if tally_files: 
+#             for file in tally_files:
+#                 excel_data = TallyDataProcessor(file)
+#                 importer = DatabaseCrud(kbe_connector)
+#                 if get_filename(file) == 'kbe_outstanding':
+#                     importer.import_data('outstanding_balance', excel_data.clean_and_transform(), commit=True)
+#         else:
+#             print("No KBE Outstanding Files")
 
 
 
@@ -283,7 +283,7 @@ def import_receivables_tallydata(dates: list, monthly: bool):
             first_day_of_current_month = datetime.today().replace(day=1)
             previous_month = (first_day_of_current_month - timedelta(days=1)).strftime('%B-%Y')
             
-            tally_files = glob.glob(f"D:\\monthly_data\\**\\{previous_month}" + f"**\\*receivables_{date}.xlsx",  recursive=True)
+            tally_files = glob.glob(f"E:\\monthly_data\\**\\{previous_month}" + f"**\\*receivables_{date}.xlsx",  recursive=True)
         else:
             tally_files = glob.glob(rf"D:\automated_tally_downloads\**\*receivables_{date}.xlsx", recursive= True)
         if tally_files:
@@ -298,22 +298,22 @@ def import_receivables_tallydata(dates: list, monthly: bool):
 def import_busy_stock(filename:str):    
     KBBIOBase.metadata.create_all(kbbio_engine)
         
-    busy_files = glob.glob("D:\\automated_busy_downloads\\" + f"**\\*stock_transfer_{filename}.xlsx", recursive=True) + \
-                 glob.glob("D:\\automated_busy_downloads\\" + f"**\\*production_{filename}.xlsx", recursive=True) + \
-                 glob.glob("D:\\automated_busy_downloads\\" + f"**\\*stock_journal_{filename}.xlsx", recursive=True)
+    busy_files = glob.glob("E:\\automated_busy_downloads\\" + f"**\\*stock_transfer_{filename}.xlsx", recursive=True) + \
+                 glob.glob("E:\\automated_busy_downloads\\" + f"**\\*production_{filename}.xlsx", recursive=True) + \
+                 glob.glob("E:\\automated_busy_downloads\\" + f"**\\*stock_journal_{filename}.xlsx", recursive=True)
     
     if len(busy_files) != 0:
         for file in busy_files:
             excel_data = BusyDataProcessor(file)
             importer = DatabaseCrud(kbbio_connector)
             if get_filename(file) == 'stock_transfer':
-                importer.import_data('busy_stock_transfer', excel_data.clean_and_transform(), commit=True)
+                importer.import_data('busyrm_stock_transfer', excel_data.clean_and_transform(), commit=True)
     
             if get_filename(file) == 'stock_journal':
-                importer.import_data('busy_stock_journal', excel_data.clean_and_transform(), commit=True)
+                importer.import_data('busyrm_stock_journal', excel_data.clean_and_transform(), commit=True)
 
             if get_filename(file) == 'production':
-                importer.import_data('production', excel_data.clean_and_transform(), commit=True)
+                importer.import_data('busyrm_production', excel_data.clean_and_transform(), commit=True)
 
             else:
                 logger.error(f"{get_filename(file)} and {get_compname(file)} of {file} didn't match the criteria")    
@@ -626,56 +626,56 @@ def get_latest_date_from_api() -> str | None:
         return None
 
 
-def update_exchange_rate(dates: list):
-    currency_list = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'HKD', 'THB', 'SGD', 'INR']
+# def update_exchange_rate(dates: list):
+#     currency_list = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'HKD', 'THB', 'SGD', 'INR']
     
-    KBEBase.metadata.create_all(kbe_engine)
-    logger.info(f'Update exchange rate table for {dates}')
+#     KBEBase.metadata.create_all(kbe_engine)
+#     logger.info(f'Update exchange rate table for {dates}')
     
-    exchange_rate_records = []
+#     exchange_rate_records = []
     
-    # Retrieve the latest date from the API for INR entries
-    latest_date = get_latest_date_from_api()
-    if not latest_date:
-        logger.error("Failed to retrieve the latest date; cannot update exchange rates.")
-        return
+#     # Retrieve the latest date from the API for INR entries
+#     latest_date = get_latest_date_from_api()
+#     if not latest_date:
+#         logger.error("Failed to retrieve the latest date; cannot update exchange rates.")
+#         return
     
-    for dte in dates:
-        for currency in currency_list:
-            if currency == 'INR':
-                # Add INR record with rate 1 and the latest date from the API
-                exchange_rate_records.append({
-                    "date": latest_date,
-                    "currency": "INR",
-                    "exchange_rate": 1
-                })
-            else:
-                # Fetch rate and date for other currencies
-                rate_info = get_exchange_rate_in_inr(currency, dte)
-                if rate_info:
-                    rate = rate_info.get("rate", 0)
-                    date_rate = rate_info.get("date")
+#     for dte in dates:
+#         for currency in currency_list:
+#             if currency == 'INR':
+#                 # Add INR record with rate 1 and the latest date from the API
+#                 exchange_rate_records.append({
+#                     "date": latest_date,
+#                     "currency": "INR",
+#                     "exchange_rate": 1
+#                 })
+#             else:
+#                 # Fetch rate and date for other currencies
+#                 rate_info = get_exchange_rate_in_inr(currency, dte)
+#                 if rate_info:
+#                     rate = rate_info.get("rate", 0)
+#                     date_rate = rate_info.get("date")
                     
-                    exchange_rate_records.append({
-                        "date": date_rate,
-                        "currency": currency,
-                        "exchange_rate": rate
-                    })
+#                     exchange_rate_records.append({
+#                         "date": date_rate,
+#                         "currency": currency,
+#                         "exchange_rate": rate
+#                     })
     
-    if exchange_rate_records:
-        df_exchange_rates = pd.DataFrame(exchange_rate_records)
-        df_exchange_rates = df_exchange_rates.drop_duplicates(subset=['date', 'currency', 'exchange_rate'])
+#     if exchange_rate_records:
+#         df_exchange_rates = pd.DataFrame(exchange_rate_records)
+#         df_exchange_rates = df_exchange_rates.drop_duplicates(subset=['date', 'currency', 'exchange_rate'])
         
-        db_crud = DatabaseCrud(kbe_connector)
-        db_crud.delete_date_range_query(
-            table_name='exchange_rate', 
-            start_date=latest_date, 
-            end_date=latest_date, 
-            commit=True
-        )
+#         db_crud = DatabaseCrud(kbe_connector)
+#         db_crud.delete_date_range_query(
+#             table_name='exchange_rate', 
+#             start_date=latest_date, 
+#             end_date=latest_date, 
+#             commit=True
+#         )
         
-        db_crud.import_data(table_name='exchange_rate', df=df_exchange_rates, commit=True)
-        logger.info(f"Data imported for {set(df_exchange_rates['date'].to_list())}")
+#         db_crud.import_data(table_name='exchange_rate', df=df_exchange_rates, commit=True)
+#         logger.info(f"Data imported for {set(df_exchange_rates['date'].to_list())}")
 
 
 

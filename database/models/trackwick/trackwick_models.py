@@ -1,5 +1,5 @@
 from sqlalchemy import MetaData, Column, Integer, String, Date, BigInteger, Float, DateTime, func, Time, Text
-from Database.models.base import KBBIOBase
+from database.models.base import KBBIOBase
 
 
 metadata = MetaData()

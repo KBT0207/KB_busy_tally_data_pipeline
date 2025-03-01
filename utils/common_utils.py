@@ -22,34 +22,39 @@ def is_process_running(process_name:str) -> bool:
 
 
 
-from Database.models.busy_models.busy_accounts import (BusyAccounts100x,
+from database.models.busy_models.busy_accounts import (BusyAccounts100x,
                                                        BusyAccountsAgri,
                                                        BusyAccountsGreenEra,
                                                        BusyAccountsKBBIO,
                                                        BusyAccountsNewAge)
-from Database.models.busy_models.busy_items import (BusyItems100x,
+from database.models.busy_models.busy_items import (BusyItems100x,
                                                     BusyItemsAgri,
                                                     BusyItemsGreenEra,
                                                     BusyItemsKBBIO,
                                                     BusyItemsNewAge)
-from Database.models.busy_models.busy_pricing import BusyPricingKBBIO
-from Database.models.busy_models.busy_reports import (MITPKBBIO, MRFPKBBIO,
+from database.models.busy_models.busy_pricing import BusyPricingKBBIO
+from database.models.busy_models.busy_reports import (MITPKBBIO, MRFPKBBIO,
                                                       SalesKBBIO, SalesOrderKBBIO, SalesReturnKBBIO, 
                                                       Production, StockJournal, StockTransfer, PurchaseKBBIO, PurchaseReturnKBBIO )
-from Database.models.tally_models.tally_report_models import (
+from database.models.tally_models.tally_report_models import (
     DebtorsBalance, TallyAccounts, TallyJournal, TallyOutstandingBalance,
     TallyPayment, TallyPurchase, TallyPurchaseReturn, TallyReceipts,
     TallyReceivables, TallySales, TallySalesReturn, TestTable)
 
-from Database.models.kbe_models.export_models import KBEOutstanding, ExchangeRate, KBEAccounts
+from database.models.kbe_models.export_models import KBEOutstanding, ExchangeRate, KBEAccounts
 
-from Database.models.trackwick.trackwick_models import (TrackwickEmployees, TrackwickSubDealerLiquidationTasks, 
+from database.models.trackwick.trackwick_models import (TrackwickEmployees, TrackwickSubDealerLiquidationTasks, 
                                                         TrackwickFarmerLiquidationTasks, TrackwickDealerCollectionTasks, 
                                                         TrackwickDealerSalesOrderTasks, TrackwickFeedbackTasks, 
                                                         TrackwickCarTravelExpenses, TrackwickBikeTravelExpenses, 
                                                         TrackwickOtherTravelExpenses, 
                                                         )
 
+
+# from database.models.busy_models.busy_accounts_rm import (BusyAccountsKBBIORM)
+from database.models.busy_models.busy_reports_rm import (RMMITPKBBIO,RMMRFPKBBIO,RMProduction,RMStockJournal,RMStockTransfer,RMPurchaseReturnKBBIO,RMPurchaseKBBIO,RMPurchaseOrder)
+from database.models.busy_models.busy_accounts_rm import BusyAccountsKBBIORM
+from database.models.busy_models.busy_item_rm import BusyItemsKBBIORM
 
 
 def batch_date(month: int, batch: int, year: int = datetime.today().year) -> list:
@@ -100,6 +105,20 @@ busy_tables = {'busy_sales': SalesKBBIO, 'busy_sales_order': SalesOrderKBBIO, 'b
                 "busy_purchase": PurchaseKBBIO, "busy_purchase_return": PurchaseReturnKBBIO, 
             }
 
+busyrm_tables = {
+    "busyrm_purchase": RMPurchaseKBBIO, 'busyrm_purchase_order':RMPurchaseOrder,
+    "busyrm_purchase_return":RMPurchaseReturnKBBIO,
+
+    'busyrm_stock_journal':RMStockJournal, 'busyrm_stock_transfer':RMStockTransfer,
+    'busyrm_production':RMProduction,
+
+    'busyrm_mrfp':RMMRFPKBBIO, 'busyrm_mitp':RMMITPKBBIO,
+
+    "busyrm_acc":BusyAccountsKBBIORM,
+    "busyrm_items":BusyItemsKBBIORM,
+
+
+}
 
 tally_tables = {"tally_sales": TallySales, "tally_sales_return": TallySalesReturn, 
                 "tally_purchase": TallyPurchase, "tally_purchase_return": TallyPurchaseReturn, 
@@ -125,7 +144,7 @@ trackwick_tables = {"trackwick_employees": TrackwickEmployees,
                     }
 
 
-tables = {**busy_tables, **tally_tables, **other_tables, **kbe_tables, **trackwick_tables}
+tables = {**busy_tables, **tally_tables, **other_tables, **kbe_tables, **trackwick_tables,**busyrm_tables}
 
 
 tally_reports = {

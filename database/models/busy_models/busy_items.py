@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, func
-from Database.models.base import KBBIOBase
+from database.models.base import KBBIOBase
 
 
 
@@ -70,3 +70,4 @@ class BusyItemsGreenEra(KBBIOBase):
     unit = Column(String(30), nullable= False)
     tax_category = Column(String(50), nullable= False)
     created_at = Column(DateTime, server_default=func.now())
+

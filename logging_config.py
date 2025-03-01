@@ -9,13 +9,18 @@ from logtail import LogtailHandler
 
 
 
-yag = yagmail.SMTP('Jovo@kaybeebio.com', os.getenv('SENDER_EMAIL_PASSWORD'))
+yag = yagmail.SMTP('vivekkumar@kaybeeexports.com', os.getenv('SENDER_EMAIL_PASSWORD'))
 
 email_recipients = ['s.gaurav@kaybeeexports.com', 'danish@kaybeeexports.com']
 #email_recipients = ['s.gaurav@kaybeeexports.com']
 
 
-today_date = datetime.now().strftime('%d-%b-%Y')
+today_date = datetime.now().strftime('%d-%b-%Y').replace(':', '-')
+
+log_directory = 'logs'
+if not os.path.exists(log_directory):
+    os.makedirs(log_directory)
+
 
 # Logging configuration
 LOGGING_CONFIG = {

@@ -5,15 +5,15 @@ import numpy as np
 import datetime as dt
 import os
 from xlwings import view
-from Database.db_crud import DatabaseCrud
+from database.db_crud import DatabaseCrud
 from logging_config import logger
 # from utils.email import email_send
-from Database.models.busy_models.busy_pricing import BusyPricingKBBIO
-from Database.models.busy_models.busy_accounts import (BusyAccounts100x, BusyAccountsAgri, 
+from database.models.busy_models.busy_pricing import BusyPricingKBBIO
+from database.models.busy_models.busy_accounts import (BusyAccounts100x, BusyAccountsAgri, 
                                                     BusyAccountsGreenEra, BusyAccountsKBBIO,
                                                     BusyAccountsNewAge, )
-from Database.models.busy_models.busy_reports import (SalesKBBIO, SalesOrderKBBIO, SalesReturnKBBIO, MITPKBBIO, MRFPKBBIO)
-from Database.models.tally_models.tally_report_models import (TallyAccounts, TallyOutstandingBalance, 
+from database.models.busy_models.busy_reports import (SalesKBBIO, SalesOrderKBBIO, SalesReturnKBBIO, MITPKBBIO, MRFPKBBIO)
+from database.models.tally_models.tally_report_models import (TallyAccounts, TallyOutstandingBalance, 
                                                               TallySales, TallySalesReturn, TallyJournal, 
                                                               TallyPayment, TallyPurchase, TallyPurchaseReturn ,
                                                               TallyReceipts, DebtorsBalance

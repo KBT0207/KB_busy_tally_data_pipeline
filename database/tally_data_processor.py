@@ -1,12 +1,12 @@
 import pandas as pd
 import numpy as np
 from logging_config import logger
-from Database.busy_data_processor import get_compname, get_filename, get_date
+from database.busy_data_processor import get_compname, get_filename, get_date
 from utils.common_utils import tally_comp_codes, acc_comp_codes, balance_comp_codes, receivables_comp_codes, kbe_outstanding_comp_codes
 import requests
 import openpyxl
 from typing import Optional
-from Database.sql_connector import kbbio_engine, kbbio_connector, kbe_engine, kbe_connector
+from database.sql_connector import kbbio_engine, kbbio_connector
 from datetime import datetime
 
 pd.set_option('future.no_silent_downcasting', True)
@@ -282,82 +282,82 @@ def get_currency_code(format_string: str) -> str:
 
 
 
-def apply_kbe_outstanding_transformation(file_path, material_centre_name) -> pd.DataFrame:
-    try:
-        # Load the Excel file using pandas for data, but openpyxl for formats
-        df = pd.read_excel(file_path, skipfooter=1, header=None)
-        workbook = openpyxl.load_workbook(file_path, data_only=True)
-        sheet = workbook.active
+# def apply_kbe_outstanding_transformation(file_path, material_centre_name) -> pd.DataFrame:
+#     try:
+#         # Load the Excel file using pandas for data, but openpyxl for formats
+#         df = pd.read_excel(file_path, skipfooter=1, header=None)
+#         workbook = openpyxl.load_workbook(file_path, data_only=True)
+#         sheet = workbook.active
 
-        # Identify the "Date" row to start processing data from
-        date_row = df[df.iloc[:, 0] == 'Date'].index[0]
+#         # Identify the "Date" row to start processing data from
+#         date_row = df[df.iloc[:, 0] == 'Date'].index[0]
         
-        # Store the original Excel row numbers before any filtering
-        df_original = df.iloc[date_row:].reset_index(drop=True)
-        df_original.columns = df_original.iloc[0]
-        df_original = df_original.iloc[1:]
-        df_original = df_original.drop(index=1)
+#         # Store the original Excel row numbers before any filtering
+#         df_original = df.iloc[date_row:].reset_index(drop=True)
+#         df_original.columns = df_original.iloc[0]
+#         df_original = df_original.iloc[1:]
+#         df_original = df_original.drop(index=1)
         
-        # Add Excel row numbers before any filtering
-        df_original['excel_row'] = range(date_row + 3, date_row + 3 + len(df_original))
+#         # Add Excel row numbers before any filtering
+#         df_original['excel_row'] = range(date_row + 3, date_row + 3 + len(df_original))
 
-    except FileNotFoundError as e:
-        logger.warning(f"Excel File not found in the given {file_path}: {e}")
-        return None
+#     except FileNotFoundError as e:
+#         logger.warning(f"Excel File not found in the given {file_path}: {e}")
+#         return None
 
-    if df_original.empty:
-        logger.warning(f"Empty Excel File of {get_compname(file_path)} and report {get_filename(file_path)}")
-        return None
+#     if df_original.empty:
+#         logger.warning(f"Empty Excel File of {get_compname(file_path)} and report {get_filename(file_path)}")
+#         return None
 
-    # Standardize column names
-    df_original.columns = df_original.columns.str.lower()
+#     # Standardize column names
+#     df_original.columns = df_original.columns.str.lower()
 
-    mc_name = kbe_outstanding_comp_codes[int(material_centre_name)]
+#     mc_name = kbe_outstanding_comp_codes[int(material_centre_name)]
 
-    # Rename columns as needed
-    df_original = df_original.rename(columns={"ref. no.": "voucher_no", "party's name": "particulars", 
-                                              "pending": "amount", "due on": "due_on", 
-                                              "overdue": "overdue_in_days" })
+#     # Rename columns as needed
+#     df_original = df_original.rename(columns={"ref. no.": "voucher_no", "party's name": "particulars", 
+#                                               "pending": "amount", "due on": "due_on", 
+#                                               "overdue": "overdue_in_days" })
 
-    # Get raw cell formats before filtering
-    amount_col_idx = df_original.columns.get_loc("amount") + 1  # Adjust for openpyxl's 1-based indexing
-    formats_dict = {}
+#     # Get raw cell formats before filtering
+#     amount_col_idx = df_original.columns.get_loc("amount") + 1  # Adjust for openpyxl's 1-based indexing
+#     formats_dict = {}
     
-    # Store formats with their Excel row numbers
-    for row_idx in df_original['excel_row']:
-        cell = sheet.cell(row=row_idx, column=amount_col_idx)
-        formats_dict[row_idx] = cell.number_format
+#     # Store formats with their Excel row numbers
+#     for row_idx in df_original['excel_row']:
+#         cell = sheet.cell(row=row_idx, column=amount_col_idx)
+#         formats_dict[row_idx] = cell.number_format
 
-    # Filter rows where "amount" is greater than 0
-    df = df_original.loc[df_original["amount"] > 0].copy()
+#     # Filter rows where "amount" is greater than 0
+#     df = df_original.loc[df_original["amount"] > 0].copy()
     
-    df["material_centre"] = mc_name
+#     df["material_centre"] = mc_name
 
-    # Clean up the "particulars" column
-    df["particulars"] = df["particulars"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
-    df["voucher_no"] = df["voucher_no"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
+#     # Clean up the "particulars" column
+#     df["particulars"] = df["particulars"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
+#     df["voucher_no"] = df["voucher_no"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
 
-    df["currency"] = df['excel_row'].map(formats_dict)
+#     df["currency"] = df['excel_row'].map(formats_dict)
     
-    df["currency"] = df["currency"].apply(get_currency_code)
+#     df["currency"] = df["currency"].apply(get_currency_code)
 
-    if material_centre_name == 10000:
-        df["currency"]  = "USD"
-    if material_centre_name == 92021:
-        df["currency"] = 'GBP'
+#     if material_centre_name == 10000:
+#         df["currency"]  = "USD"
+#     if material_centre_name == 92021:
+#         df["currency"] = 'GBP'
 
-    from Database.db_crud import DatabaseCrud
-    db_crud = DatabaseCrud(kbe_connector)
+#     from database.db_crud import DatabaseCrud
+#     db_crud = DatabaseCrud(kbe_connector)
     
-    df["exchange_rate"] = df["currency"].apply(lambda x: db_crud.get_exchange_rate_from_db(x)).fillna(0)
+#     df["exchange_rate"] = df["currency"].apply(lambda x: db_crud.get_exchange_rate_from_db(x)).fillna(0)
 
-# Calculate amount in INR by multiplying amount by exchange_rate
-    df["amount_in_INR"] = (df["amount"] * df["exchange_rate"]).round(2)    
+# # Calculate amount in INR by multiplying amount by exchange_rate
+#     df["amount_in_INR"] = (df["amount"] * df["exchange_rate"]).round(2)    
 
-    # Drop the excel_row column as it's no longer needed
-    df = df.drop('excel_row', axis=1)
+#     # Drop the excel_row column as it's no longer needed
+#     df = df.drop('excel_row', axis=1)
 
-    return df
+#     return df
 
 
 
@@ -423,8 +423,8 @@ class TallyDataProcessor:
         elif report_type == "outstanding":
             df = apply_outstanding_balance_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
 
-        elif report_type == "kbe_outstanding":
-            df = apply_kbe_outstanding_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
+        # elif report_type == "kbe_outstanding":
+        #     df = apply_kbe_outstanding_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
         
         elif report_type == "kbe_accounts":
             df = apply_kbe_accounts_transformation(file_path=self.excel_file_path, material_centre_name=company_code)

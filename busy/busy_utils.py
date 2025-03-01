@@ -6,6 +6,7 @@ from utils import common_utils
 from dotenv import load_dotenv
 import logging
 from logging_config import logger
+import os
 
 load_dotenv('.env')
 
@@ -165,7 +166,9 @@ def busy_login(username:str, password:str):    #implement logging and end script
 
 
 def export_format(report_type:str, company:str, filename):
-    save_location = f"D:\\automated_busy_downloads\{company}\{report_type}\{filename}"
+    dirct = f"E:\\automated_busy_downloads\{company}\{report_type}"
+    os.makedirs(dirct, exist_ok=True)
+    save_location = f"E:\\automated_busy_downloads\{company}\{report_type}\{filename}"
     find_img('busy/images/busy_report_list.png')
     time.sleep(0.3)
     pg.moveTo(150, 150,duration=0.3)

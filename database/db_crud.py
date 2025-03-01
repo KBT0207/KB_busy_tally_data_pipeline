@@ -3,14 +3,14 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy import insert, delete, and_, func, cast, select, Numeric, Table, text, MetaData, desc
 from logging_config import logger
 from utils.common_utils import tables
-from Database.models.busy_models.busy_pricing import BusyPricingKBBIO
-from Database.models.busy_models.busy_accounts import (BusyAccounts100x, BusyAccountsAgri, 
+from database.models.busy_models.busy_pricing import BusyPricingKBBIO
+from database.models.busy_models.busy_accounts import (BusyAccounts100x, BusyAccountsAgri, 
                                                     BusyAccountsGreenEra, BusyAccountsKBBIO,
                                                     BusyAccountsNewAge)
-from Database.models.busy_models.busy_reports import SalesKBBIO, SalesOrderKBBIO
+from database.models.busy_models.busy_reports import SalesKBBIO, SalesOrderKBBIO
 from sqlalchemy.exc import SQLAlchemyError
-from Database.models.tally_models.tally_report_models import TallyAccounts, DebtorsBalance
-from Database.models.kbe_models.export_models import KBEAccounts, ExchangeRate
+from database.models.tally_models.tally_report_models import TallyAccounts, DebtorsBalance
+from database.models.kbe_models.export_models import KBEAccounts, ExchangeRate
 
 
 class DatabaseCrud:
