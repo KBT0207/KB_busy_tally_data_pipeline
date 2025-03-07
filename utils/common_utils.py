@@ -36,12 +36,12 @@ from database.models.busy_models.busy_pricing import BusyPricingKBBIO
 from database.models.busy_models.busy_reports import (MITPKBBIO, MRFPKBBIO,
                                                       SalesKBBIO, SalesOrderKBBIO, SalesReturnKBBIO, 
                                                       Production, StockJournal, StockTransfer, PurchaseKBBIO, PurchaseReturnKBBIO )
-from database.models.tally_models.tally_report_models import (
-    DebtorsBalance, TallyAccounts, TallyJournal, TallyOutstandingBalance,
+from database.models.kbe_models.tally_kbe_models import (
+    TallyAccounts, TallyJournal,
     TallyPayment, TallyPurchase, TallyPurchaseReturn, TallyReceipts,
-    TallyReceivables, TallySales, TallySalesReturn, TestTable)
+    TallySales, TallySalesReturn)
 
-from database.models.kbe_models.export_models import KBEOutstanding, ExchangeRate, KBEAccounts
+from database.models.kbe_models.export_models import KBEOutstanding, ExchangeRate
 
 from database.models.trackwick.trackwick_models import (TrackwickEmployees, TrackwickSubDealerLiquidationTasks, 
                                                         TrackwickFarmerLiquidationTasks, TrackwickDealerCollectionTasks, 
@@ -123,14 +123,13 @@ busyrm_tables = {
 tally_tables = {"tally_sales": TallySales, "tally_sales_return": TallySalesReturn, 
                 "tally_purchase": TallyPurchase, "tally_purchase_return": TallyPurchaseReturn, 
                 "tally_payments": TallyPayment, "tally_receipts": TallyReceipts, "tally_journal": TallyJournal, 
-                "tally_accounts": TallyAccounts, "outstanding_balance": TallyOutstandingBalance, 
-                "tally_receivables": TallyReceivables, "debtors_balance": DebtorsBalance, 
-               }
+                "tally_accounts": TallyAccounts,
+                }
 
-kbe_tables = {"outstanding_balance": KBEOutstanding, "exchange_rate": ExchangeRate, "tally_accounts": KBEAccounts }
+kbe_tables = {"outstanding_balance": KBEOutstanding, "exchange_rate": ExchangeRate,}
 
-other_tables = {"busy_pricing_kbbio": BusyPricingKBBIO, "test_table": TestTable,
-               }
+# other_tables = {"busy_pricing_kbbio": BusyPricingKBBIO, "test_table": TestTable,
+#                }
 
 trackwick_tables = {"trackwick_employees": TrackwickEmployees, 
                     'trackwick_sub_dealer_liquidation_tasks': TrackwickSubDealerLiquidationTasks, 
@@ -144,11 +143,11 @@ trackwick_tables = {"trackwick_employees": TrackwickEmployees,
                     }
 
 
-tables = {**busy_tables, **tally_tables, **other_tables, **kbe_tables, **trackwick_tables,**busyrm_tables}
+tables = {**tally_tables,**busyrm_tables}
 
 
 tally_reports = {
-                's': 'sales', 'e': 'sales_return', 'p': "purchase" , 'd': 'purchase_return',
+                's': 'sales', 'e': 'sales-return', 'p': "purchase" , 'd': 'purchase-return',
                 'y': "payments", 'r': 'receipts', 'j': 'journal',
                 }
         
@@ -269,4 +268,82 @@ receivables_comp_codes = {
                     }
 
 
+company_dict_kaybee_exports = {
+    "KAY BEE EXPORTS INTERNATIONAL PVT LTD (Thane) - (from 2024)": "Thane KBEIPL",
+    "Fab Fresh Fruits": "Thane Fab Fresh",
+    "KAY BEE EXPORTS INTERNATIONAL PVT LTD (Nagar NA) - (from 1-Apr-23)": "Nagar KBEIPL",
+    "KAY BEE EXPORTS INTERNATIONAL PVT LTD -Vashi": "Vashi KBEIPL",
+    "KAY BEE EXPORTS INTERNATIONAL PVT LTD (Gujarat)": "Gujarat KBEIPL",
+    "KAY BEE EXPORTS INTERNATIONAL PVT LTD (CARGO)": "Cargo KBEIPL",
+    "Ka Bee Exports - Thane FY2022-23 & 23-24": "Thane KBE",
+    "Kay Bee Exports - Vashi FY 2022-23 & 23-24": "Vashi KBE",
+    "Kay Bee Exports - Nagar Non Agri Divsion - FY 2021-22": "Nagar NA KBE",
+    "Kay Bee Exports - Agri Div. Nagar - FY2022-23 & 2023-24": "Nagar A KBE",
+    "Kay Bee Exports - Gujarat - FY2021-22": "Gujarat KBE",
+    "KAY BEE EXPORTS-MP FY 2021-22": "MP KBE",
+    "KAY BEE EXPORTS (JDS)": "JDS KBE",
+    "KAY BEE CARGO": "Cargo KBE",
+    "Orbit Exports (MH) from Apr-24": "Thane Orbit",
+    "Orbit Exports (Gujarat)": "Gujarat Orbit",
+    "Frexotic Foods (From Apr-24)": "Thane Frexotic",
+    "Kay Bee Agro International Pvt Ltd (GJ)": "Gujarat KBAIPL",
+    "Kay Bee Agro International Pvt Ltd (MH)": "Thane KBAIPL",
+    "Kay Bee Agro International Pvt Ltd (MP)": "MP KBAIPL",
+    "Kay Bee Farm Management Services Pvt Ltd": "MP KBFMSPL",
+    "Fruit & Veg Private Limited": "MP F&VPL",
+    "KAY BEE FRESH VEG & FRUIT PVT LTD": "MP KBFV&FPL",
+    "Kay Bee Veg Pvt Ltd": "MP KBVPL",
+    "Kay Bee Agro Farms Pvt Ltd - (From I-Apr-2016)": "Thane KBAFPL",
+    "Kay Bee veg Ltd - FY 2020-21": "UK KB Veg",
+    # "KAY BEE FRUITS INC": "USA KB Fruits",
+    "Aamrica Fresh Private Limited": "Thane Aamrica",
+    "Freshnova Private Limited": "Thane Fresh Nova",
+    "Kay Bee Fresh LLP": "Thane KB Fresh",
+    "Perfect Produce Partners": "Thane Perfect Produce",
+    "Indifuit": "Thane Indifruit",
+    }
 
+fcy = {
+    "Kay Bee Exports (FCY) FROM 20-21": "Thane KBE FCY",
+    "KAY BEE EXPORTS INTERNATIONAL PVT LTD (FCY)": "Thane KBEIPL FCY",
+    "Orbit Exports (FCY)": "Thane Orbit FCY",
+    "Kay Bee Agro International Pvt Ltd (FCY)": "Thane KBAIPL FCY",
+    "Frexotic Foods (FCY)": "Thane Frexotic FCY"
+}
+
+
+
+kaybee_exports_currency = {
+    "Thane Fab Fresh": "INR",
+    "Thane KBEIPL": "INR",
+    "Nagar KBEIPL": "INR",
+    "Vashi KBEIPL": "INR",
+    "Gujarat KBEIPL": "INR",
+    "Cargo KBEIPL": "INR",
+    "Thane KBE": "INR",
+    "Vashi KBE": "INR",
+    "Nagar NA KBE": "INR",
+    "Nagar A KBE": "INR",
+    "Gujarat KBE": "INR",
+    "MP KBE": "INR",
+    "JDS KBE": "INR",
+    "Cargo KBE": "INR",
+    "Thane Orbit": "INR",
+    "Gujarat Orbit": "INR",
+    "Thane Frexotic": "INR",
+    "Gujarat KBAIPL": "INR",
+    "Thane KBAIPL": "INR",
+    "MP KBAIPL": "INR",
+    "MP KBFMSPL": "INR",
+    "MP F&VPL": "INR",
+    "MP KBFV&FPL": "INR",
+    "MP KBVPL": "INR",
+    "Thane KBAFPL": "INR",
+    "UK KB Veg": "GBP",
+    "USA KB Fruits": "USD",
+    "Thane Aamrica": "INR",
+    "Thane Fresh Nova": "INR",
+    "Thane KB Fresh": "INR",
+    "Thane Perfect Produce": "INR",
+    "Thane Indifruit": "INR",
+}

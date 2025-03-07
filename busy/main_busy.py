@@ -152,6 +152,8 @@ purchase_dict = {'trans_list': [export_busy_reports.select_purchase_list,
 def exporting_purchase(start_date:str, end_date:str, filename:str):
 
     busy_utils.open_busy()
+    time.sleep(1)
+    pg.press('enter')
     
     for comp in companies:
 
@@ -161,6 +163,8 @@ def exporting_purchase(start_date:str, end_date:str, filename:str):
             busy_utils.busy_login(username= os.getenv('BUSY_USERNAME'),
                             password= os.getenv('BUSY_PASSWORD'))
             logger.info(f"Logged into Busy of {comp} successfully...")
+            time.sleep(1)
+            pg.press('enter')
         except Exception as e:
             logger.critical(f"Logging into Busy of {comp} Failed! : {e}")
         for rep_func, report in zip(purchase_dict['trans_list'], purchase_dict['reports']):

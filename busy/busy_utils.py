@@ -97,6 +97,8 @@ def open_busy() -> None:
             time.sleep(1)
     pg.click(location,duration=0.3)
     logger.info("Busy opened successfully..")
+    time.sleep(1)
+    pg.press('enter')
 
 
 

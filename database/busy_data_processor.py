@@ -3,9 +3,7 @@ from logging_config import logger
     
 
 def get_filename(path:str):
-    return path.split("\\")[-1].split("_", maxsplit=1)[-1].rsplit("_", 1)[:-1][0]
-
-
+    return path.split("\\")[-1].split("", maxsplit=1)[-1].rsplit("", 1)[:-1][0]
 
 
 def get_compname(path:str):
@@ -14,7 +12,6 @@ def get_compname(path:str):
 
 def get_date(path:str):
     return path.split("\\")[-1].split("_")[-1]
-
 
 
 def apply_sales_transformation(file_path:str, top_row:int) -> pd.DataFrame:

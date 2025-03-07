@@ -5,20 +5,17 @@ import pandas as pd
 from busy import main_busy
 from database import main_db
 from database.db_crud import DatabaseCrud
-from database.sql_connector import kbbio_connector
 from logging_config import logger
-from main_reports.reports import Reports
 from tally import main_tally
-from utils.common_utils import (balance_comp_codes, batch_date,
-                                receivables_comp_codes, tally_comp_codes, 
-                                kbe_outstanding_comp_codes, )
-from database.models.base import KBBIOBase
-from database.sql_connector import kbbio_engine, kbbio_connector
+from utils.common_utils import (company_dict_kaybee_exports)
+from database.models.base import KBEBase
+from database.sql_connector import kbe_connector, kbbio_engine
 from glob import glob 
-from database.tally_data_processor import TallyDataProcessor
+from database.tally_data_processor import TallyDataProcessor, apply_transformation, apply_register_transformation
+from database.sql_connector import kbbio_engine, kbbio_connector, kbe_connector, kbe_engine
 
 
-from database.main_db import get_filename, get_compname
+from database.tally_data_processor import get_compname_tally, get_filename_tally,get_date_tally
 
 from database.busy_data_processor import *
 
@@ -38,8 +35,6 @@ def daily_busy_purchase():
     main_db.delete_busy_purchase(startdate= date1, enddate= date2, commit= True)
     main_db.import_busyrm_purchase(filename= file_name)
     
-    
-
 def daily_busy_stock():
     date1 = "2024-04-01"
     # date2 = "2024-03-31"
@@ -54,8 +49,6 @@ def daily_busy_stock():
     main_db.delete_busy_stock(startdate= date1, enddate= date2, commit= True)
     main_db.import_busy_stock(filename= file_name)
     
-    
-
 def busy_material_masters():
     # if manual download kindly reffer this
     fromdate = "01-04-2024"
@@ -81,14 +74,23 @@ def busy_material_masters():
     main_db.import_busy_masters_material(file_name= file_name)
 
 
-
-
+def tally_kbexports():
+    fromdate = "2024-04-01"
+    today = datetime.today().strftime('%Y-%m-%d')
+    main_tally.exporting_data(company=list(company_dict_kaybee_exports.keys()), 
+                                fromdate=fromdate, 
+                                todate=today, 
+                                filename=today)
+    
+    # main_db.delete_tally_data(start_date=fromdate,end_date=today,commit=True)
+    # main_db.import_tally_data(date=today)
 
 
 if __name__ == "__main__":
     daily_busy_purchase()
     daily_busy_stock()
     busy_material_masters()
+    tally_kbexports()
 
     # function_name = sys.argv[1] if len(sys.argv) > 1 else None
     # if function_name:

@@ -17,7 +17,8 @@ email_recipients = ['s.gaurav@kaybeeexports.com', 'danish@kaybeeexports.com']
 
 today_date = datetime.now().strftime('%d-%b-%Y').replace(':', '-')
 
-log_directory = 'logs'
+log_directory = 'E:/logs'
+log_file = os.path.join(log_directory, f"main_{today_date}.log")
 if not os.path.exists(log_directory):
     os.makedirs(log_directory)
 
@@ -39,7 +40,7 @@ LOGGING_CONFIG = {
 
         'file_handler': {
             'class': 'logging.handlers.TimedRotatingFileHandler',
-            'filename': f'logs/main_{today_date}.log',
+            'filename': log_file,
             'when': 'midnight', 
             'interval': 1,
             'backupCount': 30,

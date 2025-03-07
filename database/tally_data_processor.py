@@ -1,18 +1,31 @@
 import pandas as pd
 import numpy as np
 from logging_config import logger
-from database.busy_data_processor import get_compname, get_filename, get_date
-from utils.common_utils import tally_comp_codes, acc_comp_codes, balance_comp_codes, receivables_comp_codes, kbe_outstanding_comp_codes
+
+from utils.common_utils import company_dict_kaybee_exports, kaybee_exports_currency
 import requests
-import openpyxl
-from typing import Optional
-from database.sql_connector import kbbio_engine, kbbio_connector
+from database.sql_connector import kbe_connector, kbe_connection, kbe_engine
 from datetime import datetime
+
+
+def get_filename_tally(path:str):
+    return path.split("\\")[-1].rsplit("_", 2)[-2]
+
+def get_compname_tally(path:str):
+    return path.split("\\")[-1].rsplit("_", 2)[0]
+
+
+def get_date_tally(path:str):
+    return path.split("\\")[-1].split("_")[-1].removesuffix(".xlsx")
+
 
 pd.set_option('future.no_silent_downcasting', True)
 
 
-def apply_transformation(file_path, material_centre_name) -> pd.DataFrame:
+def apply_transformation(file_path, material_centre_name:str) -> pd.DataFrame:
+    
+    mc = material_centre_name.replace('_', " ")
+     
     try:
         df = pd.read_excel(file_path, skipfooter= 1, header=None)
         date_row = df[df.iloc[:, 0] == 'Date'].index[0]
@@ -24,15 +37,20 @@ def apply_transformation(file_path, material_centre_name) -> pd.DataFrame:
         print(e)
         logger.warning(f"Excel File not found in the given {file_path}: {e}")
     if df.empty:
-        logger.warning(f"Empty Excel File of {get_compname(file_path)} and report {get_filename(file_path)}")
+        logger.warning(f"Empty Excel File of {get_compname_tally(file_path)} and report {get_filename_tally(file_path)}")
         return None
     df.columns = df.columns.str.lower().str.replace(" ", "_").str.replace(".", "")
-    mc_name = tally_comp_codes[int(material_centre_name)]
     df = df.rename(columns= {"vch_type": "voucher_type", "vch_no": "voucher_no"})
+    
+    material_center = company_dict_kaybee_exports.get(mc)
+
+    currency_name = kaybee_exports_currency.get(material_center)
 
     df.loc[:, ["credit", "debit"]] = df.loc[:, ["credit", "debit"]].fillna(0)
 
-    df["material_centre"] = mc_name
+    df["material_centre"] = material_center
+    df["currency"] = currency_name
+    
     df["particulars"] = df["particulars"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
     df["voucher_no"] = df["voucher_no"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
 
@@ -41,9 +59,9 @@ def apply_transformation(file_path, material_centre_name) -> pd.DataFrame:
 
     return df
 
-
-
 def apply_register_transformation(file_path, material_centre_name) -> pd.DataFrame:
+    mc = material_centre_name.replace('_', " ")
+    print('After Space Clear : ', mc)
     try:
         df = pd.read_excel(file_path, skipfooter= 1, header=None)
         date_row = df[df.iloc[:, 0] == 'Date'].index[0]
@@ -55,14 +73,17 @@ def apply_register_transformation(file_path, material_centre_name) -> pd.DataFra
         print(e)
         logger.warning(f"Excel File not found in the given {file_path}: {e}")
     if df.empty:
-        logger.warning(f"Empty Excel File of {get_compname(file_path)} and report {get_filename(file_path)}")
+        logger.warning(f"Empty Excel File of {get_compname_tally(file_path)} and report {get_filename_tally(file_path)}")
         return None
     df.columns = df.columns.str.lower().str.replace(" ", "_").str.replace(".", "")
-    mc_name = tally_comp_codes[int(material_centre_name)]
     
+    currency_name = kaybee_exports_currency.get(mc)
+    print(currency_name)
     df = df.rename(columns= {"vch_no": "voucher_no"})
     
-    df["material_centre"] = mc_name
+    df["material_centre"] = mc
+    df["currency"] = currency_name
+    
     df["particulars"] = df["particulars"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
     df["voucher_no"] = df["voucher_no"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
     df.loc[:,["date",'voucher_no']] = df.loc[:,["date",'voucher_no']].ffill()
@@ -75,14 +96,14 @@ def apply_register_transformation(file_path, material_centre_name) -> pd.DataFra
     df["amount_type"] = np.where(df['credit'] != 0, 'credit', 'debit')
     df = df.drop(columns= ["vch_type", "debit", "credit"])
     df['particulars'] = np.where(df['particulars'] == "(cancelled)", "Cancelled", df['particulars'])
-    df = df[['date', 'particulars', 'voucher_no','material_centre', 'amount', 'amount_type', ]]
+    df = df[['date', 'particulars', 'voucher_no','material_centre', 'amount', 'amount_type',"currency", ]]
     df = df.loc[~df["particulars"].isna()]
 
     return df
 
-
-
 def apply_accounts_transformation(file_path, material_centre_name) -> pd.DataFrame:
+    mc = material_centre_name.replace('_', " ")
+    currency_name = kaybee_exports_currency.get(mc)
     try:
         df = pd.read_excel(file_path, header=None)
         header_row = df[df.iloc[:, 0] == 'Sl. No.'].index[0]
@@ -92,17 +113,17 @@ def apply_accounts_transformation(file_path, material_centre_name) -> pd.DataFra
     except FileNotFoundError as e:
         logger.warning(f"Excel File not found in the given {file_path}: {e}")
     if df.empty:
-        logger.warning(f"Empty Excel File of {get_compname(file_path)} and report {get_filename(file_path)}")
+        logger.warning(f"Empty Excel File of {get_compname_tally(file_path)} and report {get_filename_tally(file_path)}")
         return None
     df.columns = df.columns.str.lower().str.replace(" ", "_").str.replace(".", "")
-    mc_name = acc_comp_codes[int(material_centre_name)]
     df = df.drop(columns="sl_no", axis='columns')
     
     df = df.rename(columns= {"name_of_ledger": "ledger_name", "state_name": "state", 
                              "gstin/un": "gst_no",
                              })
 
-    df["material_centre"] = mc_name
+    df["material_centre"] = mc
+    df["currency"] = currency_name
 
     df["alias_code"] = df["ledger_name"].str.extract(pat= r'\(([^()]*?/[^()]*?)\)')
     df["alias_code"] = df["alias_code"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
@@ -116,9 +137,8 @@ def apply_accounts_transformation(file_path, material_centre_name) -> pd.DataFra
     
     return df
 
-
-
 def apply_kbe_accounts_transformation(file_path, material_centre_name) -> pd.DataFrame:
+    mc = material_centre_name.replace('_', " ")
     try:
         df = pd.read_excel(file_path, header=None)
         header_row = df[df.iloc[:, 0] == 'Sl. No.'].index[0]
@@ -128,15 +148,14 @@ def apply_kbe_accounts_transformation(file_path, material_centre_name) -> pd.Dat
     except FileNotFoundError as e:
         logger.warning(f"Excel File not found in the given {file_path}: {e}")
     if df.empty:
-        logger.warning(f"Empty Excel File of {get_compname(file_path)} and report {get_filename(file_path)}")
+        logger.warning(f"Empty Excel File of {get_compname_tally(file_path)} and report {get_filename_tally(file_path)}")
         return None
     df.columns = df.columns.str.lower().str.replace(" ", "_").str.replace(".", "")
-    mc_name = kbe_outstanding_comp_codes[int(material_centre_name)]
     df = df.drop(columns=["sl_no", "state_name"], axis='columns', errors= 'ignore')
     
     df = df.rename(columns= {"name_of_ledger": "ledger_name" })
 
-    df["material_centre"] = mc_name
+    df["material_centre"] = mc
 
     df["alias_code"] = df["ledger_name"].str.extract(pat= r'\(([^()]*?/[^()]*?)\)')
     df["alias_code"] = df["alias_code"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
@@ -153,9 +172,6 @@ def apply_kbe_accounts_transformation(file_path, material_centre_name) -> pd.Dat
     df["credit_days"] = 0    
     return df
 
-
-
-
 def apply_items_transformation(file_path:str) -> pd.DataFrame:
     try:
         df = pd.read_excel(file_path, header=None)
@@ -167,7 +183,7 @@ def apply_items_transformation(file_path:str) -> pd.DataFrame:
         print(e)
         logger.warning(f"Excel File not found in the given {file_path}: {e}")
     if df.empty:
-        logger.warning(f"Empty Excel File of {get_compname(file_path)} and report {get_filename(file_path)}")
+        logger.warning(f"Empty Excel File of {get_compname_tally(file_path)} and report {get_filename_tally(file_path)}")
         return None
     df.columns = df.columns.str.lower().str.replace(" ", "_").str.replace(".", "")
 
@@ -183,9 +199,8 @@ def apply_items_transformation(file_path:str) -> pd.DataFrame:
     
     return df
 
-
-
 def apply_outstanding_balance_transformation(file_path, material_centre_name) -> pd.DataFrame:
+    mc = 'test'
     try:
         df = pd.read_excel(file_path, header=None, skipfooter=1)
         credit_index = df.loc[df.eq('Credit').any(axis=1)].index[0]
@@ -196,22 +211,19 @@ def apply_outstanding_balance_transformation(file_path, material_centre_name) ->
     except FileNotFoundError as e:
         logger.warning(f"Excel File not found in the given {file_path}: {e}")
     if df.empty:
-        logger.warning(f"Empty Excel File of {get_compname(file_path)} and report {get_filename(file_path)}")
+        logger.warning(f"Empty Excel File of {get_compname_tally(file_path)} and report {get_filename_tally(file_path)}")
         return None
     df.columns = df.columns.str.lower()
-    mc_name = balance_comp_codes[int(material_centre_name)]
 
     df = df.rename(columns={np.nan: "particulars"})
-    df["date"] = get_date(path=file_path)
+    df["date"] = get_date_tally(path=file_path)
     df['date'] = pd.to_datetime(df['date'].str.removesuffix('.xlsx'), dayfirst=True)
-    df["material_centre"] = mc_name
+    df["material_centre"] = mc
 
     df["particulars"] = df["particulars"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
     df.loc[:, ["credit", "debit"]] = df[["credit", "debit"]].fillna(0)
 
     return df
-
-
 
 def get_exchange_rate_in_inr(currency_code, date=None) -> dict | None:
     if date:
@@ -240,11 +252,6 @@ def get_exchange_rate_in_inr(currency_code, date=None) -> dict | None:
         # Log the exception if needed and return None
         logger.error(f"Failed to fetch exchange rate for {currency_code} on {date}: {e}")
         return None
-
-
-
-
-
 
 def get_currency_code(format_string: str) -> str:
     """
@@ -312,7 +319,7 @@ def get_currency_code(format_string: str) -> str:
 #     # Standardize column names
 #     df_original.columns = df_original.columns.str.lower()
 
-#     mc_name = kbe_outstanding_comp_codes[int(material_centre_name)]
+#     mc = kbe_outstanding_comp_codes[int(material_centre_name)]
 
 #     # Rename columns as needed
 #     df_original = df_original.rename(columns={"ref. no.": "voucher_no", "party's name": "particulars", 
@@ -331,7 +338,7 @@ def get_currency_code(format_string: str) -> str:
 #     # Filter rows where "amount" is greater than 0
 #     df = df_original.loc[df_original["amount"] > 0].copy()
     
-#     df["material_centre"] = mc_name
+#     df["material_centre"] = mc
 
 #     # Clean up the "particulars" column
 #     df["particulars"] = df["particulars"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
@@ -361,40 +368,40 @@ def get_currency_code(format_string: str) -> str:
 
 
 
-def apply_receivables_transformation(file_path, material_centre_name) -> pd.DataFrame:
-    try:
-        df = pd.read_excel(file_path, header=None, skipfooter=1)
-        date_index = df.loc[df.eq('Date').any(axis=1)].index[0]
-        df = df.drop(range(date_index)).reset_index(drop=True)
-        df.columns = df.iloc[0]
-        df = df.drop(index=0)
-        df = df.iloc[1:].reset_index(drop=True)
+# def apply_receivables_transformation(file_path, material_centre_name) -> pd.DataFrame:
+    # try:
+    #     df = pd.read_excel(file_path, header=None, skipfooter=1)
+    #     date_index = df.loc[df.eq('Date').any(axis=1)].index[0]
+    #     df = df.drop(range(date_index)).reset_index(drop=True)
+    #     df.columns = df.iloc[0]
+    #     df = df.drop(index=0)
+    #     df = df.iloc[1:].reset_index(drop=True)
         
-    except FileNotFoundError as e:
-        logger.warning(f"Excel File not found in the given {file_path}: {e}")
-    if df.empty:
-        logger.warning(f"Empty Excel File of {get_compname(file_path)} and report {get_filename(file_path)}")
-        return None
-    df.columns = df.columns.str.lower().str.replace(" ", "_").str.replace(".", "")
-    mc_name = receivables_comp_codes[int(material_centre_name)]
+    # except FileNotFoundError as e:
+    #     logger.warning(f"Excel File not found in the given {file_path}: {e}")
+    # if df.empty:
+    #     logger.warning(f"Empty Excel File of {get_compname_tally(file_path)} and report {get_filename_tally(file_path)}")
+    #     return None
+    # df.columns = df.columns.str.lower().str.replace(" ", "_").str.replace(".", "")
+    # mc = receivables_comp_codes[int(material_centre_name)]
 
-    df = df.rename(columns={'date': 'voucher_date', 'ref_no': 'voucher_no', 
-                            "party's_name": "particulars", 'opening': 'opening_amt', 
-                            'pending': 'pending_amt', 'due_on': 'due_date', 
-                            'overdue': 'overdue_days', 
-                            })
-    df["date"] = get_date(path=file_path)
-    df['date'] = df['date'].str.removesuffix('.xlsx')
-    date_columns = ['date', 'voucher_date', 'due_date']
-    for col in date_columns:
-         df[col] = pd.to_datetime(df[col], dayfirst=True)
+    # df = df.rename(columns={'date': 'voucher_date', 'ref_no': 'voucher_no', 
+    #                         "party's_name": "particulars", 'opening': 'opening_amt', 
+    #                         'pending': 'pending_amt', 'due_on': 'due_date', 
+    #                         'overdue': 'overdue_days', 
+    #                         })
+    # df["date"] = get_date_tally(path=file_path)
+    # df['date'] = df['date'].str.removesuffix('.xlsx')
+    # date_columns = ['date', 'voucher_date', 'due_date']
+    # for col in date_columns:
+    #      df[col] = pd.to_datetime(df[col], dayfirst=True)
 
-    df["material_centre"] = mc_name
+    # df["material_centre"] = mc_name
 
-    df["particulars"] = df["particulars"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
-    df["voucher_no"] = df["voucher_no"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
+    # df["particulars"] = df["particulars"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
+    # df["voucher_no"] = df["voucher_no"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
 
-    return df
+    # return df
 
 
 class TallyDataProcessor:
@@ -405,10 +412,10 @@ class TallyDataProcessor:
     def clean_and_transform(self):
         df = None
 
-        company_code = get_compname(self.excel_file_path)
-        report_type = get_filename(self.excel_file_path)
+        company_code = get_compname_tally(self.excel_file_path)
+        report_type = get_filename_tally(self.excel_file_path)
         
-        if report_type in ['sales', 'sales_return', 'purchase', 'purchase_return']:
+        if report_type in ['sales', 'sales-return', 'purchase', 'purchase-return']:
             df = apply_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
         
         elif report_type in ['receipts', 'payments', 'journal']:
@@ -420,22 +427,23 @@ class TallyDataProcessor:
         # elif report_type == "items":
         #     df = apply_items_transformation(file_path=self.excel_file_path)
 
-        elif report_type == "outstanding":
-            df = apply_outstanding_balance_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
+        # elif report_type == "outstanding":
+        #     df = apply_outstanding_balance_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
 
-        # elif report_type == "kbe_outstanding":
-        #     df = apply_kbe_outstanding_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
+        # # elif report_type == "kbe_outstanding":
+        # #     df = apply_kbe_outstanding_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
         
-        elif report_type == "kbe_accounts":
-            df = apply_kbe_accounts_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
+        # elif report_type == "kbe_accounts":
+        #     df = apply_kbe_accounts_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
 
-        elif report_type == "receivables":
-            df = apply_receivables_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
+        # elif report_type == "receivables":
+        #     df = apply_receivables_transformation(file_path=self.excel_file_path, material_centre_name=company_code)
         
         if df is None:
             logger.error("Dataframe is None!")
             return None
 
         return df
+
 
 

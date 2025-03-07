@@ -2,8 +2,9 @@ import glob
 import pandas as pd
 import os
 from datetime import datetime, timedelta
-from database.sql_connector import kbbio_engine, kbbio_connector
+from database.sql_connector import kbbio_engine, kbbio_connector, kbe_connector, kbe_engine
 from database.busy_data_processor import BusyDataProcessor, get_filename, get_compname
+from database.tally_data_processor import get_compname_tally,get_date_tally,get_filename_tally
 from database.tally_data_processor import TallyDataProcessor
 from database.models.base import KBBIOBase, KBEBase
 from database.db_crud import DatabaseCrud
@@ -25,8 +26,6 @@ def truncate_busy_masters():
         if "acc" in table or "items" in table:
             importer.truncate_table(table_name=table, commit=True)
     
-
-
 def delete_busy_sales(startdate:str, enddate:str, commit:bool):   
     if startdate <= enddate:
         KBBIOBase.metadata.create_all(kbbio_engine)
@@ -37,7 +36,6 @@ def delete_busy_sales(startdate:str, enddate:str, commit:bool):
             importer.delete_date_range_query(table, start_date= startdate, end_date=enddate, commit=commit)
     else:
         logger.critical(f"Start date: {startdate} should be equal or greater than end date: {enddate}.")
-
 
 def delete_busy_purchase(startdate:str, enddate:str, commit:bool):   
     if startdate <= enddate:
@@ -50,7 +48,6 @@ def delete_busy_purchase(startdate:str, enddate:str, commit:bool):
     else:
         logger.critical(f"Start date: {startdate} should be equal or greater than end date: {enddate}.")
 
-
 def delete_busy_stock(startdate:str, enddate:str, commit:bool):   
     if startdate <= enddate:
         KBBIOBase.metadata.create_all(kbbio_engine)
@@ -62,7 +59,6 @@ def delete_busy_stock(startdate:str, enddate:str, commit:bool):
     else:
         logger.critical(f"Start date: {startdate} should be equal or greater than end date: {enddate}.")
 
-
 def delete_busy_material(from_date: str, to_date: str):    
     KBBIOBase.metadata.create_all(kbbio_engine)
 
@@ -72,13 +68,11 @@ def delete_busy_material(from_date: str, to_date: str):
     for table in tables_list:
         importer.delete_date_range_query(table, start_date=from_date, end_date=to_date, commit=True)
 
-
-
 def delete_tally_data(start_date:str, end_date:str, commit:bool):    
-    KBBIOBase.metadata.create_all(kbbio_engine)
+    KBEBase.metadata.create_all(kbe_engine)
 
     tables_list = list(tally_tables.keys())
-    importer = DatabaseCrud(kbbio_connector)
+    importer = DatabaseCrud(kbe_connector)
     
     exclude_tables = ['tally_accounts', 'outstanding_balance', 'tally_receivables']
     for table in tables_list:
@@ -86,8 +80,6 @@ def delete_tally_data(start_date:str, end_date:str, commit:bool):
             importer.delete_date_range_query(table, start_date= start_date, 
                                              end_date=end_date, commit=commit)
     importer.truncate_table(table_name= 'tally_accounts', commit= commit)
-
-
 
 def import_busy_sales(filename:str):
     KBBIOBase.metadata.create_all(kbbio_engine)
@@ -135,7 +127,6 @@ def import_busyrm_purchase(filename:str):
     else:
         logger.critical("No File for today's date found to import in database") 
 
-
 def import_busy_purchase(filename:str):    
     KBBIOBase.metadata.create_all(kbbio_engine)
         
@@ -155,8 +146,6 @@ def import_busy_purchase(filename:str):
 
     else:
         logger.critical("No File for today's date found to import in database")        
-
-
 
 def import_busy_masters_material(file_name:str):
     KBBIOBase.metadata.create_all(kbbio_engine)
@@ -192,52 +181,49 @@ def import_busy_masters_material(file_name:str):
     else:
         logger.critical("No File for today's date found to import in database")
 
-
-
-def import_tally_data(date):    
-    KBBIOBase.metadata.create_all(kbbio_engine)
+def import_tally_data(date):
+    KBEBase.metadata.create_all(kbe_engine)
     
     tally_files = glob.glob("E:\\automated_tally_downloads\\" + f"**\\*{date}.xlsx", recursive=True)
     if len(tally_files) != 0:
         for file in tally_files:
+            print(file)
             excel_data = TallyDataProcessor(file)
-            importer = DatabaseCrud(kbbio_connector)
-            if get_filename(file) == 'sales':
+            importer = DatabaseCrud(kbe_connector)
+            if get_filename_tally(file) == 'sales':
                 importer.import_data('tally_sales', excel_data.clean_and_transform(), commit=True)
     
-            if get_filename(file) == 'sales_return':
+            if get_filename_tally(file) == 'sales-return':
                 importer.import_data('tally_sales_return', excel_data.clean_and_transform(), commit=True)
 
-            if get_filename(file) == 'purchase':
+            if get_filename_tally(file) == 'purchase':
                 importer.import_data('tally_purchase', excel_data.clean_and_transform(), commit=True)
     
-            if get_filename(file) == 'purchase_return':
+            if get_filename_tally(file) == 'purchase-return':
                 importer.import_data('tally_purchase_return', excel_data.clean_and_transform(), commit=True)
             
-            if get_filename(file) == 'payments':
+            if get_filename_tally(file) == 'payments':
                 importer.import_data('tally_payments', excel_data.clean_and_transform(), commit=True)
 
-            if get_filename(file) == 'receipts':
+            if get_filename_tally(file) == 'receipts':
                 importer.import_data('tally_receipts', excel_data.clean_and_transform(), commit=True)
 
-            if get_filename(file) == 'journal':
+            if get_filename_tally(file) == 'journal':
                 importer.import_data('tally_journal', excel_data.clean_and_transform(), commit=True)
 
-            if get_filename(file) == 'accounts':
-                importer.import_accounts_data(df=excel_data.clean_and_transform(), commit=True)
+            # if get_filename_tally(file) == 'accounts':
+            #     importer.import_accounts_data(df=excel_data.clean_and_transform(), commit=True)
 
-            # if get_filename(file) == 'items':
+            # if get_filename_tally(file) == 'items':
             #     importer.import_data('tally_items', excel_data.clean_and_transform(), commit=True)
 
-                logger.info(f"{get_filename(file)} and {get_compname(file)} imported into database.. ")
+                logger.info(f"{get_filename_tally(file)} and {get_compname(file)} imported into database.. ")
 
     else:
         logger.critical("No File for today's date found to import in database")
 
-
-
 def import_outstanding_tallydata(dates: list, monthly: bool):
-    KBBIOBase.metadata.create_all(kbbio_engine)
+    KBEBase.metadata.create_all(kbe_engine)
 
     for date in dates:
         if monthly:
@@ -253,7 +239,7 @@ def import_outstanding_tallydata(dates: list, monthly: bool):
             for file in tally_files:
                 excel_data = TallyDataProcessor(file)
                 importer = DatabaseCrud(kbbio_connector)
-                if get_filename(file) == 'outstanding':
+                if get_filename_tally(file) == 'outstanding':
                     importer.import_data('outstanding_balance', excel_data.clean_and_transform(), commit=True)
 
 
@@ -277,7 +263,7 @@ def import_outstanding_tallydata(dates: list, monthly: bool):
 
 
 def import_receivables_tallydata(dates: list, monthly: bool):    
-    KBBIOBase.metadata.create_all(kbbio_engine)
+    KBEBase.metadata.create_all(kbe_engine)
     for date in dates:
         if monthly:
             first_day_of_current_month = datetime.today().replace(day=1)
@@ -290,10 +276,8 @@ def import_receivables_tallydata(dates: list, monthly: bool):
             for file in tally_files:
                 excel_data = TallyDataProcessor(file)
                 importer = DatabaseCrud(kbbio_connector)
-                if get_filename(file) == 'receivables':
+                if get_filename_tally(file) == 'receivables':
                     importer.import_data('tally_receivables', excel_data.clean_and_transform(), commit=True)
-
-
 
 def import_busy_stock(filename:str):    
     KBBIOBase.metadata.create_all(kbbio_engine)
@@ -320,8 +304,6 @@ def import_busy_stock(filename:str):
 
     else:
         logger.critical("No File for today's date found to import in database")
-
-
 
 def dealer_price_validation_report(from_date:str, to_date:str, effective_date:str, send_email:bool, exceptions:list = None) -> None:
     """Generated dealer price validation report as per the arguments.
@@ -369,8 +351,6 @@ def dealer_price_validation_report(from_date:str, to_date:str, effective_date:st
         except Exception as e:
             logger.critical(f"Failed to email the Busy Sales Price Validation Report : {e}")
 
-
-
 def salesorder_salesman_report(from_date:str, to_date:str, send_email:bool, exceptions:list = None) -> None:
     reports = Reports(kbbio_connector)
     
@@ -405,8 +385,6 @@ def salesorder_salesman_report(from_date:str, to_date:str, send_email:bool, exce
             logger.info(f"Successfully emailed the Busy SalesOrder Salesman Validation Report.")
         except Exception as e:
             logger.critical(f"Failed to email the Busy SalesOrder Salesman Validation Report : {e}")
-
-
 
 def volume_discount_report(dates:list, send_email:bool, exceptions:list = None) -> None:
     
@@ -449,8 +427,6 @@ def volume_discount_report(dates:list, send_email:bool, exceptions:list = None) 
         except Exception as e:
             logger.critical(f"Failed to email the Busy Sales Volume Discount Report : {e}")
 
-
-
 def cash_discount_report(dates:list, send_email:bool, exceptions:list = None) -> None:
 
     def filename_date(date_range= dates) -> str:
@@ -491,8 +467,6 @@ def cash_discount_report(dates:list, send_email:bool, exceptions:list = None) ->
         except Exception as e:
             logger.critical(f"Failed to email the Busy Sales Cash Discount Report : {e}")
 
-
-
 def busy_tally_sales_reco(start_date:str, end_date:str, send_email:bool, exceptions:list = None) -> None:
     report = Reports(kbbio_connector)
     try:
@@ -530,8 +504,6 @@ def busy_tally_sales_reco(start_date:str, end_date:str, send_email:bool, excepti
             logger.info(f"Successfully emailed the Busy-Tally Sales Reco Report.")
         except Exception as e:
             logger.critical(f"Failed to email the Busy-Tally Sales Reco Report: {e}")
-
-
 
 def busy_tally_salesreturn_reco(start_date:str, end_date:str, send_email:bool, exceptions:list = None) -> None:
     report = Reports(kbbio_connector)
@@ -571,8 +543,6 @@ def busy_tally_salesreturn_reco(start_date:str, end_date:str, send_email:bool, e
         except Exception as e:
             logger.critical(f"Failed to email the Busy-Tally Sales Return Reco Report: {e}")
 
-
-
 def salesorder_mitp_reco_report(start_date:str, end_date:str, send_email:bool, exceptions:list = None) -> None:
     reports = Reports(kbbio_connector)
     salesorder_df = reports.salesorder_mitp_reco(fromdate= start_date, todate= end_date, exceptions= exceptions)
@@ -602,8 +572,6 @@ def salesorder_mitp_reco_report(start_date:str, end_date:str, send_email:bool, e
             logger.info(f"Successfully emailed the Busy Sales Order - MITP Reco.")
         except Exception as e:
             logger.critical(f"Failed to email the Busy Sales Order - MITP Reco : {e}")
-
-
 
 def get_latest_date_from_api() -> str | None:
     """

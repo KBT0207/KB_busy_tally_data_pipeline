@@ -86,6 +86,16 @@ kbbio_connection = kbbio_engine.connect()
 
 # Check autocommit status using the connection
 
+USERNAME_LOCAL = os.getenv('DB_USERNAME_LOCAL')
+PASSWORD_LOCAL = os.getenv('DB_PASSWORD_LOCAL')
+HOST_LOCAL = os.getenv('DB_HOST_LOCAL')
+PORT_LOCAL = os.getenv('DB_PORT_LOCAL')
+KBE_DATABASE_LOCALHOST = os.getenv('KBE_DATABASE_LOCAL')
 
+
+
+kbe_connector = DatabaseConnector(USERNAME_LOCAL, PASSWORD_LOCAL, HOST_LOCAL, PORT_LOCAL, KBE_DATABASE_LOCALHOST)
+kbe_engine = kbe_connector.engine
+kbe_connection = kbe_engine.connect()
 
 

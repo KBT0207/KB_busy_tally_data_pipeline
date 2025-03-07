@@ -34,16 +34,16 @@ class KBEOutstanding(KBEBase):
 
 
 
-class KBEAccounts(KBEBase):
-    __tablename__ = 'tally_accounts'
+# class KBEAccounts(KBEBase):
+#     __tablename__ = 'tally_accounts'
 
-    id = Column(Integer, primary_key= True, autoincrement= True, index= True)
-    ledger_name = Column(String(250), nullable= False)
-    alias_code = Column(String(100), nullable= True)
-    under = Column(String(100), nullable= False)
-    opening_balance = Column(BigInteger, nullable=True)
-    material_centre = Column(String(50), nullable=False)
-    salesman = Column(String(250), nullable= True)
-    country = Column(String(100), nullable= True)
-    credit_days = Column(Integer, nullable=False)
-    created_at = Column(DateTime, server_default=func.now())
+#     id = Column(Integer, primary_key= True, autoincrement= True, index= True)
+#     ledger_name = Column(String(250), nullable= False)
+#     alias_code = Column(String(100), nullable= True)
+#     under = Column(String(100), nullable= False)
+#     opening_balance = Column(BigInteger, nullable=True)
+#     material_centre = Column(String(50), nullable=False)
+#     salesman = Column(String(250), nullable= True)
+#     country = Column(String(100), nullable= True)
+#     credit_days = Column(Integer, nullable=False)
+#     created_at = Column(DateTime, server_default=func.now())

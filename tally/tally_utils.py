@@ -31,16 +31,42 @@ def close_rdc() -> None:
 def start_tally() -> None:
     pg.hotkey('win', 'r')
     time.sleep(0.5)
-    pg.typewrite(r'C:\Program Files\TallyPrime\tally.exe', interval=0.1)
+    pg.typewrite(r"C:\Program Files\TallyPrime\tally.exe", interval=0.1)
     pg.press('enter')    
     
-
-
+def tally_data_server():
+    location = None
+    while location == None:
+        try:
+            location = pg.locateOnScreen('tally/images/tally_data_server1.png', confidence= 0.9)
+            if location:
+                time.sleep(1)
+                pg.click(location)
+                time.sleep(1)
+                pg.press('enter')
+            else:
+                logger.info("Not Found Server")
+        except:
+            time.sleep(1)
+            
+def ho_server():
+    location = None
+    while location == None:
+        try:
+            location = pg.locateOnScreen('tally/images/ho_server.png', confidence= 0.9)
+        except:
+            time.sleep(1)
+    
 
 def select_company(company_code):
+    tally_data_server()
+    time.sleep(0.5)
+    ho_server()
+    time.sleep(0.5)
     find_img('tally/images/tally_start.png', conf=0.95)
     time.sleep(1)
-    pg.typewrite(str(company_code), interval=0.2)
+    pg.typewrite(company_code, interval=0.2)
+    time.sleep(1)
     pg.press("enter")
     find_img('tally/images/tally_username.png')
     pg.typewrite(os.getenv('TALLY_USERNAME'), interval=0.1)
@@ -149,9 +175,17 @@ def export_report_data(path, filename):
 
     find_img("tally/images/folder_path.png")
     pg.click()
+    time.sleep(1)
     pg.press('enter')
+    pg.typewrite("Specify Path",interval=0.2)
+    time.sleep(1)
+    pg.press('enter')
+    time.sleep(1)
     pg.typewrite(path, interval=0.2)
-    pg.press('enter', presses=2, interval=0.4)
+    pg.press('enter')
+    time.sleep(1)
+    pg.press('enter')
+    time.sleep(1)
     
     pg.press('down')
     pg.press('enter')
@@ -186,13 +220,18 @@ def export_accounts_data(path, filename):
     pg.press('enter')
     pg.typewrite('excel', interval=0.3)
     pg.press('enter')
-
     find_img("tally/images/folder_path.png")
     pg.click()
     pg.press('enter')
+    pg.typewrite("Specify Path",interval=0.2)
+    time.sleep(1)
+    pg.press('enter')
+    time.sleep(1)
     pg.typewrite(path, interval=0.2)
-    pg.press('enter', presses=2, interval=0.4)
-    
+    pg.press('enter')
+    time.sleep(1)
+    pg.press('enter')
+    time.sleep(1)
     pg.press('down')
     pg.press('enter')
     pg.typewrite(filename, interval=0.2)
