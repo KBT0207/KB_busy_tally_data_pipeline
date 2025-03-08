@@ -295,7 +295,7 @@ company_dict_kaybee_exports = {
     "Kay Bee Veg Pvt Ltd": "MP KBVPL",
     "Kay Bee Agro Farms Pvt Ltd - (From I-Apr-2016)": "Thane KBAFPL",
     "Kay Bee veg Ltd - FY 2020-21": "UK KB Veg",
-    # "KAY BEE FRUITS INC": "USA KB Fruits",
+    "KAY BEE FRUITS INC": "USA KB Fruits",
     "Aamrica Fresh Private Limited": "Thane Aamrica",
     "Freshnova Private Limited": "Thane Fresh Nova",
     "Kay Bee Fresh LLP": "Thane KB Fresh",
@@ -303,12 +303,12 @@ company_dict_kaybee_exports = {
     "Indifuit": "Thane Indifruit",
     }
 
-fcy = {
-    "Kay Bee Exports (FCY) FROM 20-21": "Thane KBE FCY",
-    "KAY BEE EXPORTS INTERNATIONAL PVT LTD (FCY)": "Thane KBEIPL FCY",
-    "Orbit Exports (FCY)": "Thane Orbit FCY",
-    "Kay Bee Agro International Pvt Ltd (FCY)": "Thane KBAIPL FCY",
-    "Frexotic Foods (FCY)": "Thane Frexotic FCY"
+fcy_company = {
+    "Frexotic Foods (FCY)": "FCY Frexotic",
+    "Kay Bee Exports (FCY) FROM 20-21": "FCY KBE",
+    "KAY BEE EXPORTS INTERNATIONAL PVT LTD (FCY)": "FCY KBEIPL",
+    "Orbit Exports (FCY)": "FCY Orbit",
+    "Kay Bee Agro International Pvt Ltd (FCY)": "FCY KBAIPL",
 }
 
 

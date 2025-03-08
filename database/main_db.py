@@ -74,12 +74,12 @@ def delete_tally_data(start_date:str, end_date:str, commit:bool):
     tables_list = list(tally_tables.keys())
     importer = DatabaseCrud(kbe_connector)
     
-    exclude_tables = ['tally_accounts', 'outstanding_balance', 'tally_receivables']
+    exclude_tables = ['tally_accounts', 'outstanding_balance', 'tally_receivables','exchange_rate']
     for table in tables_list:
         if table not in exclude_tables:
             importer.delete_date_range_query(table, start_date= start_date, 
                                              end_date=end_date, commit=commit)
-    importer.truncate_table(table_name= 'tally_accounts', commit= commit)
+    # importer.truncate_table(table_name= 'tally_accounts', commit= commit)
 
 def import_busy_sales(filename:str):
     KBBIOBase.metadata.create_all(kbbio_engine)

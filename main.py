@@ -3,23 +3,13 @@ import time
 from datetime import date, datetime, timedelta
 import pandas as pd
 from busy import main_busy
-from database import main_db
+from database import main_db, tally_data_processor
 from database.db_crud import DatabaseCrud
 from logging_config import logger
-from tally import main_tally
-from utils.common_utils import (company_dict_kaybee_exports)
+from tally import main_tally, tally_utils
+from utils.common_utils import (company_dict_kaybee_exports, fcy_company)
+from database.sql_connector import kbe_engine
 from database.models.base import KBEBase
-from database.sql_connector import kbe_connector, kbbio_engine
-from glob import glob 
-from database.tally_data_processor import TallyDataProcessor, apply_transformation, apply_register_transformation
-from database.sql_connector import kbbio_engine, kbbio_connector, kbe_connector, kbe_engine
-
-
-from database.tally_data_processor import get_compname_tally, get_filename_tally,get_date_tally
-
-from database.busy_data_processor import *
-
-
 
 def daily_busy_purchase():
     date1 = "2024-04-01"
@@ -68,7 +58,7 @@ def busy_material_masters():
     # file_name = f'{fromdate_str} to {todate_str}-{end_date}'
     
     main_busy.exporting_master_and_material(from_date= fromdate, to_date=todate, filename= file_name, send_email= False)
-    time.sleep(1)
+    # time.sleep(1)
     main_db.delete_busy_material(from_date= fromdate_str, to_date= todate_str)
     main_db.truncate_busy_masters()
     main_db.import_busy_masters_material(file_name= file_name)
@@ -76,21 +66,35 @@ def busy_material_masters():
 
 def tally_kbexports():
     fromdate = "2024-04-01"
-    today = datetime.today().strftime('%Y-%m-%d')
-    main_tally.exporting_data(company=list(company_dict_kaybee_exports.keys()), 
-                                fromdate=fromdate, 
-                                todate=today, 
-                                filename=today)
+    today = '2025-03-06'
+    # today = datetime.today().strftime('%Y-%m-%d')
+    # main_tally.exporting_data(company=list(company_dict_kaybee_exports.keys()), 
+    #                             fromdate=fromdate, 
+    #                             todate=today, 
+    #                             filename=today)
     
-    # main_db.delete_tally_data(start_date=fromdate,end_date=today,commit=True)
-    # main_db.import_tally_data(date=today)
+    main_db.delete_tally_data(start_date=fromdate,end_date=today,commit=True)
+    main_db.import_tally_data(date=today)
 
+def fcy_tally_kbexports():
+    fromdate = "2024-04-01"
+    # today = '2025-01-31'
+    today = datetime.today().strftime('%Y-%m-%d')
+    main_tally.fcy_exporting_data(fromdate=fromdate, todate=today,
+                                  company=list(fcy_company.keys()),
+                                  filename=today
+        
+    )
 
 if __name__ == "__main__":
-    daily_busy_purchase()
-    daily_busy_stock()
-    busy_material_masters()
-    tally_kbexports()
+    # daily_busy_purchase()
+    # daily_busy_stock()
+    # busy_material_masters()
+    # tally_kbexports()
+    # fcy_tally_kbexports()
+    path = r"C:\Users\vivek\Desktop\FCY_KBE_sales_2025-03-08.xlsx"
+    print(tally_data_processor.apply_transformation(file_path=path,material_centre_name="FCY KBE"))
+
 
     # function_name = sys.argv[1] if len(sys.argv) > 1 else None
     # if function_name:

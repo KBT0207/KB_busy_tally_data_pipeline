@@ -57,7 +57,6 @@ def ho_server():
         except:
             time.sleep(1)
     
-
 def select_company(company_code):
     tally_data_server()
     time.sleep(0.5)
@@ -110,8 +109,6 @@ def select_report(report_type):
         pg.hotkey('alt','f5')
         time.sleep(3)
   
-
-
 def change_period(from_date, to_date):
     find_img('tally/images/report_list.png')
     time.sleep(2)
@@ -121,8 +118,6 @@ def change_period(from_date, to_date):
     pg.typewrite(to_date, interval=0.2)
     pg.press('enter')
 
-
-
 def change_receivables_period(from_date, to_date):
     find_img('tally/images/remove_line.png')
     time.sleep(2)
@@ -131,7 +126,6 @@ def change_receivables_period(from_date, to_date):
     pg.press('enter')
     pg.typewrite(to_date, interval=0.2)
     pg.press('enter')
-
 
 
 def change_period_balance(from_date, to_date):
@@ -223,7 +217,7 @@ def export_accounts_data(path, filename):
     find_img("tally/images/folder_path.png")
     pg.click()
     pg.press('enter')
-    pg.typewrite("Specify Path",interval=0.2)
+    pg.typewrite("Specify Path",interval=0.1)
     time.sleep(1)
     pg.press('enter')
     time.sleep(1)
@@ -444,3 +438,75 @@ def exporting_reports(report:str, from_date:str, to_date:str,  path:str, filenam
     export_report_data(path= path, filename= filename)
     time.sleep(1.5)
     back_to_tally_home(times=esc)
+
+
+def fcy_exporting_reports(report:str, from_date:str, to_date:str,  path:str, filename:str, esc:int):
+    time.sleep(1)
+    select_report(report_type= report)
+    time.sleep(1)
+    change_period(from_date= from_date , to_date= to_date) 
+    time.sleep(1)
+    fcy_export_report_data(path= path, filename= filename)
+    time.sleep(1.5)
+    back_to_tally_home(times=esc)
+    
+def helper_forex_currency():
+    while True:
+        try:
+            time.sleep(1)
+            loc = pg.locateOnScreen(r'tally/images/forex.png', confidence=0.9)
+            if loc:
+                pg.click(loc)
+                time.sleep(1)
+                pg.press('enter')
+                break
+        except pg.ImageNotFoundException:
+            print("Forex image not found, retrying...")
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+        time.sleep(1)
+
+def fcy_export_report_data(path, filename):
+    find_img('tally/images/report_list.png')
+    time.sleep(1)
+    pg.hotkey('ctrl', 'e')
+    time.sleep(1.5)
+    pg.press('c')
+    time.sleep(2)
+    pg.press('down')
+    time.sleep(1)
+    helper_forex_currency()
+    time.sleep(1)
+    find_img('tally/images/export_settings.png', conf=0.95 )
+    time.sleep(1)
+    pg.click()
+    time.sleep(0.5)
+    pg.press('down')
+    pg.press('enter')
+    pg.typewrite('excel', interval=0.3)
+    pg.press('enter')
+
+    find_img("tally/images/folder_path.png")
+    pg.click()
+    time.sleep(1)
+    pg.press('enter')
+    pg.typewrite("Specify Path",interval=0.2)
+    time.sleep(1)
+    pg.press('enter')
+    time.sleep(1)
+    pg.typewrite(path, interval=0.2)
+    pg.press('enter')
+    time.sleep(1)
+    pg.press('enter')
+    time.sleep(1)
+    
+    pg.press('down')
+    pg.press('enter')
+    pg.typewrite(filename, interval=0.2)
+    pg.press('enter')
+
+    pg.hotkey("ctrl", "a")
+    time.sleep(1)
+    pg.press('e')
+
+    find_img(img='tally/images/report_list.png')
