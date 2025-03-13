@@ -20,7 +20,7 @@ def daily_busy_purchase():
     
     file_name = f'{date1} to {date2}'
     main_busy.exporting_purchase(start_date= date1, end_date= date2, 
-                              filename= file_name)
+                            filename= file_name)
     time.sleep(1)
     main_db.delete_busy_purchase(startdate= date1, enddate= date2, commit= True)
     main_db.import_busyrm_purchase(filename= file_name)
@@ -34,7 +34,7 @@ def daily_busy_stock():
     
     file_name = f'{date1} to {date2}'
     main_busy.exporting_stock(start_date= date1, end_date= date2, 
-                              filename= file_name)
+                            filename= file_name)
     time.sleep(1)
     main_db.delete_busy_stock(startdate= date1, enddate= date2, commit= True)
     main_db.import_busy_stock(filename= file_name)
@@ -44,7 +44,7 @@ def busy_material_masters():
     fromdate = "01-04-2024"
     # todate = "31-03-2024"
     # end_date = '2024-02-17'
-   
+
     
     # fromdate = datetime.now().replace(day=180).strftime("%d-%m-%Y")
 
@@ -66,12 +66,12 @@ def busy_material_masters():
 
 def tally_kbexports():
     fromdate = "2024-04-01"
-    today = '2025-03-06'
+    today = '2025-03-10'
     # today = datetime.today().strftime('%Y-%m-%d')
-    # main_tally.exporting_data(company=list(company_dict_kaybee_exports.keys()), 
-    #                             fromdate=fromdate, 
-    #                             todate=today, 
-    #                             filename=today)
+    main_tally.exporting_data(company=list(company_dict_kaybee_exports.keys()), 
+                                fromdate=fromdate, 
+                                todate=today, 
+                                filename=today)
     
     main_db.delete_tally_data(start_date=fromdate,end_date=today,commit=True)
     main_db.import_tally_data(date=today)
@@ -80,21 +80,22 @@ def fcy_tally_kbexports():
     fromdate = "2024-04-01"
     # today = '2025-01-31'
     today = datetime.today().strftime('%Y-%m-%d')
-    main_tally.fcy_exporting_data(fromdate=fromdate, todate=today,
-                                  company=list(fcy_company.keys()),
-                                  filename=today
+    # main_tally.fcy_exporting_data(fromdate=fromdate, todate=today,
+    #                             company=list(fcy_company.keys()),
+    #                             filename=today
         
-    )
+    # )
 
 if __name__ == "__main__":
     # daily_busy_purchase()
     # daily_busy_stock()
     # busy_material_masters()
-    # tally_kbexports()
+    tally_kbexports()
     # fcy_tally_kbexports()
-    path = r"C:\Users\vivek\Desktop\FCY_KBE_sales_2025-03-08.xlsx"
-    print(tally_data_processor.apply_transformation(file_path=path,material_centre_name="FCY KBE"))
 
+    path = r"E:\automated_tally_downloads\Thane Orbit\journal\Thane_Orbit_journal_2025-03-10.xlsx"
+    
+    print(tally_data_processor.apply_register_transformation(file_path= path,material_centre_name='Thane Orbit'))
 
     # function_name = sys.argv[1] if len(sys.argv) > 1 else None
     # if function_name:

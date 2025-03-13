@@ -22,7 +22,7 @@ def exporting_data(company, fromdate:str, todate:str, filename:str):
         logger.info("Tally started...")
         time.sleep(1)
         mc_name = company_dict_kaybee_exports.get(comp_name, "Unknown_Company") 
-                 
+        
         logger.info(f"{comp_name} selected...")
         
         tally_utils.select_company(company_code= comp_name)
@@ -206,7 +206,6 @@ def fcy_exporting_data(company, fromdate:str, todate:str, filename:str):
         logger.info("Tally started...")
         time.sleep(1)
         mc_name = fcy_company.get(comp_name, "Unknown_Company") 
-                 
         logger.info(f"{comp_name} selected...")
         
         tally_utils.select_company(company_code= comp_name)

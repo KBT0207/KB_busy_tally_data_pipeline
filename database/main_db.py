@@ -187,7 +187,6 @@ def import_tally_data(date):
     tally_files = glob.glob("E:\\automated_tally_downloads\\" + f"**\\*{date}.xlsx", recursive=True)
     if len(tally_files) != 0:
         for file in tally_files:
-            print(file)
             excel_data = TallyDataProcessor(file)
             importer = DatabaseCrud(kbe_connector)
             if get_filename_tally(file) == 'sales':

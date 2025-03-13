@@ -10,7 +10,7 @@ import openpyxl
 
 
 def get_filename_tally(path:str):
-    return path.split("\\")[-1].rsplit("_", 2)[-2]
+    return path.split("\\")[-1].rsplit("_", 2)  [-2]
 
 def get_compname_tally(path:str):
     return path.split("\\")[-1].rsplit("_", 2)[0]
@@ -22,25 +22,18 @@ def get_date_tally(path:str):
 
 pd.set_option('future.no_silent_downcasting', True)
 
-def apply_transformation(file_path, material_centre_name: str):
-    fcy_mc_list = ["FCY Frexotic", "FCY KBE", "FCY KBEIPL", "FCY KBAIPL"]
-
-    try:
-        if material_centre_name in fcy_mc_list:
-            print(f"Processing FCY Material Centre: {material_centre_name}")
-            return fcy_helper_apply_transformation(file_path=file_path, material_centre_name=material_centre_name)
-        else:
-            print(f"Processing Regular Material Centre: {material_centre_name}")
-            return helper_apply_transformation(file_path=file_path, material_centre_name=material_centre_name)
-    except Exception as e:
-        print(f"Error in apply_transformation: {e}")
-        return None
-
+def apply_transformation(file_path, material_centre_name: str) -> pd.DataFrame:
+    fcy_mc_list = ["FCY_Frexotic", "FCY_KBE", "FCY_KBEIPL", "FCY_KBAIPL", 'FCY_Orbit']
+    logger.info(f"material_centre_name: {material_centre_name}")
+    if material_centre_name in fcy_mc_list:
+        return fcy_helper_apply_transformation(file_path, material_centre_name)
+    else:
+        return helper_apply_transformation(file_path, material_centre_name)
 
 def helper_apply_transformation(file_path, material_centre_name:str) -> pd.DataFrame:
     
     mc = material_centre_name.replace('_', " ")
-    print('After Space Clear : ', mc)    
+    logger.info('After Space Clear : ', mc)    
     fcy_mc_list = ["FCY Frexotic", "FCY KBE", "FCY KBEIPL", "FCY KBAIPL"] 
     try:
         df = pd.read_excel(file_path, skipfooter= 1, header=None) 
@@ -50,7 +43,7 @@ def helper_apply_transformation(file_path, material_centre_name:str) -> pd.DataF
         df = df.iloc[1:]
         df = df.drop(index=1)
     except FileNotFoundError as e:
-        print(e)
+        logger.info(e)
         logger.warning(f"Excel File not found in the given {file_path}: {e}")
     if df.empty:
         logger.warning(f"Empty Excel File of {get_compname_tally(file_path)} and report {get_filename_tally(file_path)}")
@@ -59,7 +52,7 @@ def helper_apply_transformation(file_path, material_centre_name:str) -> pd.DataF
     df = df.rename(columns= {"vch_type": "voucher_type", "vch_no": "voucher_no"})
     
     material_center = mc
- 
+
     currency_name = kaybee_exports_currency.get(material_center,None)
 
     df.loc[:, ["credit", "debit"]] = df.loc[:, ["credit", "debit"]].fillna(0)
@@ -70,10 +63,10 @@ def helper_apply_transformation(file_path, material_centre_name:str) -> pd.DataF
     
     # df["fcy"] = "Yes" if material_center in fcy_mc_set else "No"
     df["fcy"] = df["material_centre"].apply(lambda x: "Yes" if x in fcy_mc_list else "No")
-    print("Final DataFrame Before Insertion:")
-    print(df[["material_centre", "fcy"]].head())  # Check the 'material_centre' and 'fcy' columns
+    logger.info("Final DataFrame Before Insertion:")
+    logger.info(df[["material_centre", "fcy"]].head())  # Check the 'material_centre' and 'fcy' columns
 
-   
+
     
     df["particulars"] = df["particulars"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
     df["voucher_no"] = df["voucher_no"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
@@ -83,88 +76,169 @@ def helper_apply_transformation(file_path, material_centre_name:str) -> pd.DataF
 
     return df
 
-def fcy_helper_apply_transformation(file_path, material_centre_name: str) -> pd.DataFrame:
-    mc = material_centre_name.replace('_', " ")
-    print('After Space Clear:', mc)
-    
-    fcy_mc_list = ["FCY Frexotic", "FCY KBE", "FCY KBEIPL", "FCY KBAIPL"]
-    currency_symbols = ["₹", "CAD", "$", "€", "£", "USD", "INR", "GBP", "AUD"]  # ✅ Updated list
-
+def fcy_helper_apply_transformation(file_path, material_centre_name):
     try:
-        df = pd.read_excel(file_path, skipfooter=1, header=None)
-        workbook = openpyxl.load_workbook(file_path, data_only=True)
-        sheet = workbook.active
-        date_row = df[df.iloc[:, 0] == 'Date'].index[0]
-        df = df.iloc[date_row:].reset_index(drop=True)
-        df.columns = df.iloc[0]
-        df = df.iloc[1:]
-        df = df.drop(index=1)
-    except FileNotFoundError as e:
-        print(e)
-        return None
+        fcy_mc_list = ["FCY Frexotic", "FCY KBE", "FCY KBEIPL", "FCY KBAIPL", 'FCY Orbit']
+        mc = material_centre_name.replace('_', " ")
 
-    if df.empty:
-        print(f"Empty Excel File: {file_path}")
-        return None
+        # Load the workbook
+        try:
+            wb = openpyxl.load_workbook(file_path)
+            ws = wb.active
+        except Exception as e:
+            logger.info(f"Error loading the Excel file: {e}")
+            return None
 
-    df.columns = df.columns.str.lower().str.replace(" ", "_").str.replace(".", "")
-    df = df.rename(columns={"vch_type": "voucher_type", "vch_no": "voucher_no"})
+        # Currency symbols and their corresponding codes
+        currency_map = {
+            "AU$": "AUD",
+            "$": "USD",
+            "€": "EUR",
+            "£": "GBP",
+            "₹": "INR",
+            "AUD": "AUD",
+            "CAD": "CAD",
+        }
 
-    material_center = mc
+        # Initialize variables for columns
+        header_row = None
+        debit_column_index = None
+        credit_column_index = None
 
-    # ✅ Currency Extraction Logic
-    currency_column = []
-    for row_idx, row in enumerate(sheet.iter_rows(min_row=2, max_row=len(df) + 1, min_col=5, max_col=5)):  # ✅ Focus on relevant column
-        row_currency = "None"
+        # Iterate through the rows to find the relevant columns
+        try:
+            for row_id, row in enumerate(ws.iter_rows(values_only=True), start=1):
+                if 'Date' in row:
+                    header_row = row_id
+                if 'Debit' in row:
+                    debit_column_index = row.index('Debit') + 1
+                if 'Credit' in row:
+                    credit_column_index = row.index('Credit') + 1
+
+                # Exit once all required columns are found
+                if header_row and debit_column_index and credit_column_index:
+                    break
+        except Exception as e:
+            logger.info(f"Error processing rows for columns: {e}")
+            return None
+
+        # Function to check the format and extract the currency symbol
+        def extract_currency_from_format(cell):
+            """Extracts the currency symbol from the cell's number format."""
+            try:
+                number_format = cell.number_format
+                # Checking for AU$ in number format (if it's used in formatting)
+                if 'AU$' in number_format or 'AUD' in number_format or 'A$' in number_format:
+                    return 'AU$'
+                if '$' in number_format:
+                    return '$'
+                elif '€' in number_format:
+                    return '€'
+                elif '£' in number_format:
+                    return '£'
+                elif '¥' in number_format:
+                    return '¥'
+                elif 'CAD' in number_format:
+                    return 'CAD'
+                return None
+            except Exception as e:
+                logger.info(f"Error extracting currency from format: {e}")
+                return None
+
+        # Function to extract currency from a string value
+        def extract_currency_from_string(value):
+            """Extracts the currency symbol from a string value."""
+            try:
+                value_str = str(value).strip()
+                for symbol, code in currency_map.items():
+                    if symbol in value_str:
+                        return symbol  # Return the exact symbol found
+                return None
+            except Exception as e:
+                logger.info(f"Error extracting currency from string: {e}")
+                return None
+
+        # Add a new column for the unified currency (Debit or Credit) in memory
+        currency_data = []
+
+        # Now iterate through the rows starting from the row after the header
+        try:
+            for row in range(header_row + 1, ws.max_row + 1):
+                debit_cell = ws.cell(row=row, column=debit_column_index)
+                credit_cell = ws.cell(row=row, column=credit_column_index)
+
+                # First check if the currency symbol is extracted from number format in Debit column
+                debit_currency_symbol = extract_currency_from_format(debit_cell)
+                credit_currency_symbol = extract_currency_from_format(credit_cell)
+
+                # If no symbol is found in the number format, check the string value for Debit column
+                if not debit_currency_symbol:
+                    debit_currency_symbol = extract_currency_from_string(debit_cell.value)
+                if not credit_currency_symbol:
+                    credit_currency_symbol = extract_currency_from_string(credit_cell.value)
+
+                # If currency is found in Debit, use it; otherwise, use Credit
+                if debit_currency_symbol:
+                    currency_code = currency_map.get(debit_currency_symbol, None)
+                elif credit_currency_symbol:
+                    currency_code = currency_map.get(credit_currency_symbol, None)
+                else:
+                    currency_code = None
+
+                # Collect the row data and add the currency column
+                row_data = [cell.value for cell in ws[row]]
+                row_data.append(currency_code)  # Add the currency column
+                currency_data.append(row_data)
+        except Exception as e:
+            logger.info(f"Error processing rows for currency extraction: {e}")
+            return None
+
+        # Create a Pandas DataFrame with the extracted data
+        try:
+            df = pd.DataFrame(currency_data, columns=[cell.value for cell in ws[header_row]] + ["Currency"])
+            df.columns = df.columns.str.lower().str.replace(" ", "_").str.replace(".", "")
+        except Exception as e:
+            logger.info(f"Error creating DataFrame: {e}")
+            return None
+
+        # Data cleaning and transformation
+        try:
+            df['currency'] = df['currency'].fillna('Unknown')
+            df['date'] = pd.to_datetime(df['date'], errors='coerce').dt.strftime('%Y-%m-%d')
+            df = df.drop(index=[0, df.index[-1]])
+            df = df.reset_index(drop=True)
+            df[['debit', 'credit']] = df[['debit', 'credit']].fillna(0)
+            df = df.rename(columns={"vch_type": "voucher_type", "vch_no": "voucher_no"})
+
+            df['material_centre'] = mc
+            df['fcy'] = df['material_centre'].apply(lambda x: 'Yes' if x in fcy_mc_list else 'No')
+
+            df['particulars'] = df['particulars'].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
+            df['voucher_no'] = df['voucher_no'].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
+            df['voucher_no'] = df['voucher_no'].fillna(df['particulars'])
+
+            df = df.loc[~df['particulars'].isna()]
+
+            df = df[['date', 'particulars', "voucher_type", 'voucher_no', 'debit', 'credit', 'material_centre', "currency", 'fcy']]
+
+            df['debit'] = pd.to_numeric(df['debit'].astype(str).str.replace(',', ''), errors='coerce')
+            df['credit'] = pd.to_numeric(df['credit'].astype(str).str.replace(',', ''), errors='coerce')
+
+            # Saving the result to an Excel file
+            df.to_excel('result.xlsx')
+        except Exception as e:
+            logger.info(f"Error in data cleaning and transformation: {e}")
+            return None
         
-        for cell in row:
-            cell_value = str(cell.value) if cell.value else ""
-            cell_format = str(cell.number_format)  # ✅ Ensure format is a string
-            
-            # ✅ Debugging output for better tracking
-            print(f"Row {row_idx + 2} | Value: {cell_value} | Format: {cell_format}")
+        return df
 
-            # ✅ Check both value and format for currency symbols
-            for symbol in currency_symbols:
-                if symbol in cell_value or symbol in cell_format:
-                    row_currency = symbol
-                    break  # ✅ Stop once a match is found
-            
-            if row_currency != "None":
-                break  # ✅ Exit early if currency is detected
-
-        currency_column.append(row_currency)  # ✅ Append extracted currency
-
-    # ✅ Ensure extracted currency matches DataFrame length
-    if len(currency_column) != len(df):
-        print(f"Warning: Mismatch! DataFrame has {len(df)} rows, but extracted {len(currency_column)} currency values!")
-        currency_column = currency_column[:len(df)]  # ✅ Trim if necessary
-
-    df["currency"] = currency_column  # ✅ Add extracted currency column
-
-    df.loc[:, ["credit", "debit"]] = df.loc[:, ["credit", "debit"]].fillna(0)
-    df["material_centre"] = material_center
-    df["fcy"] = df["material_centre"].apply(lambda x: "Yes" if x in fcy_mc_list else "No")
-
-    # ✅ Final Debugging
-    print("Final DataFrame Before Insertion:")
-    print(df[["voucher_no", "currency"]].tail(10))  # ✅ Show last 10 rows for verification
-
-    df["particulars"] = df["particulars"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
-    df["voucher_no"] = df["voucher_no"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
-
-    df["voucher_no"] = df["voucher_no"].fillna(df["particulars"])
-    df = df.loc[~df["particulars"].isna()]
-    df.to_excel(r"C:\Users\vivek\Desktop\test.xlsx", index=False)
-
-    return df
-
-
-
+    except Exception as e:
+        logger.info(f"An error occurred: {e}")
+        return None
 
 def apply_register_transformation(file_path, material_centre_name) -> pd.DataFrame:
     mc = material_centre_name.replace('_', " ")
-    print('After Space Clear : ', mc)
+    logger.info('After Space Clear : ', mc)
     fcy_columns = ["FCY Frexotic", "FCY KBE", "FCY KBEIPL", "FCY KBAIPL"]
     try:
         df = pd.read_excel(file_path, skipfooter= 1, header=None)
@@ -174,7 +248,7 @@ def apply_register_transformation(file_path, material_centre_name) -> pd.DataFra
         df = df.iloc[1:]
         df = df.drop(index=1)
     except FileNotFoundError as e:
-        print(e)
+        logger.info(e)
         logger.warning(f"Excel File not found in the given {file_path}: {e}")
     if df.empty:
         logger.warning(f"Empty Excel File of {get_compname_tally(file_path)} and report {get_filename_tally(file_path)}")
@@ -182,7 +256,7 @@ def apply_register_transformation(file_path, material_centre_name) -> pd.DataFra
     df.columns = df.columns.str.lower().str.replace(" ", "_").str.replace(".", "")
     
     currency_name = kaybee_exports_currency.get(mc)
-    print(currency_name)
+    logger.info(currency_name)
     df = df.rename(columns= {"vch_no": "voucher_no"})
     
     material_center = mc
@@ -190,8 +264,8 @@ def apply_register_transformation(file_path, material_centre_name) -> pd.DataFra
     df["currency"] = currency_name
     df["fcy"] = "Yes" if material_center in fcy_columns else "No"
     
-    print("Final DataFrame Before Insertion:")
-    print(df[["material_centre", "fcy"]].head())
+    logger.info("Final DataFrame Before Insertion:")
+    logger.info(df[["material_centre", "fcy"]].head())
     
     
     df["particulars"] = df["particulars"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
@@ -208,7 +282,7 @@ def apply_register_transformation(file_path, material_centre_name) -> pd.DataFra
     df['particulars'] = np.where(df['particulars'] == "(cancelled)", "Cancelled", df['particulars'])
     df = df[['date', 'particulars', 'voucher_no','material_centre', 'amount', 'amount_type',"currency",'fcy',]]
     df = df.loc[~df["particulars"].isna()]
-
+    df["voucher_no"] = df["voucher_no"].fillna('Blank')
     return df
 
 def apply_accounts_transformation(file_path, material_centre_name) -> pd.DataFrame:
@@ -229,8 +303,8 @@ def apply_accounts_transformation(file_path, material_centre_name) -> pd.DataFra
     df = df.drop(columns="sl_no", axis='columns')
     
     df = df.rename(columns= {"name_of_ledger": "ledger_name", "state_name": "state", 
-                             "gstin/un": "gst_no",
-                             })
+                            "gstin/un": "gst_no",
+                            })
 
     df["material_centre"] = mc
     df["currency"] = currency_name
@@ -290,7 +364,7 @@ def apply_items_transformation(file_path:str) -> pd.DataFrame:
         df.columns = df.iloc[0]
         df = df.iloc[1:]
     except FileNotFoundError as e:
-        print(e)
+        logger.info(e)
         logger.warning(f"Excel File not found in the given {file_path}: {e}")
     if df.empty:
         logger.warning(f"Empty Excel File of {get_compname_tally(file_path)} and report {get_filename_tally(file_path)}")
@@ -300,7 +374,7 @@ def apply_items_transformation(file_path:str) -> pd.DataFrame:
     df = df.drop(columns="sl_no", axis='columns')
     
     df = df.rename(columns= {"name_of_item": "item_name",
-                             })
+                            })
 
     df["item_name"] = df["item_name"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
     df["under"] = df["under"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)

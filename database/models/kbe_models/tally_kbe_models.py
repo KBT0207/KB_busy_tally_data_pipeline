@@ -15,8 +15,8 @@ class TallySales(KBEBase):
     debit = Column(Float, nullable= False, default=0)
     credit = Column(Float, nullable= False, default=0)
     material_centre = Column(String(50), nullable=False)
-    currency = Column(String(10), nullable=False)
-    fcy = Column(String(3), nullable=False)
+    currency = Column(String(50), nullable=False)
+    fcy = Column(String(50),nullable=False)
     created_at = Column(DateTime, server_default=func.now())
 
 
@@ -33,7 +33,7 @@ class TallySalesReturn(KBEBase):
     credit = Column(Float, nullable= False, default=0)
     material_centre = Column(String(50), nullable=False)
     currency = Column(String(50), nullable=False)
-    fcy = Column(String(3), nullable=False)
+    fcy = Column(String(50), nullable=False)
     created_at = Column(DateTime, server_default=func.now())
 
 
@@ -50,7 +50,7 @@ class TallyPurchase(KBEBase):
     credit = Column(Float, nullable= False, default=0)
     material_centre = Column(String(50), nullable=False)
     currency = Column(String(50), nullable=False)
-    fcy = Column(String(3), nullable=False)
+    fcy = Column(String(50), nullable=False)
     created_at = Column(DateTime, server_default=func.now())
 
 
@@ -67,7 +67,7 @@ class TallyPurchaseReturn(KBEBase):
     credit = Column(Float, nullable= False, default=0)
     material_centre = Column(String(50), nullable=False)
     currency = Column(String(50), nullable=False)
-    fcy = Column(String(3), nullable=False)
+    fcy = Column(String(50), nullable=False)
     created_at = Column(DateTime, server_default=func.now())
 
 
@@ -80,11 +80,11 @@ class TallyPayment(KBEBase):
     particulars = Column(String(255), nullable= False)
     voucher_no = Column(String(100), nullable= False)
     material_centre = Column(String(50), nullable=False)
-    amount = Column(DECIMAL(10,2), nullable=False)
+    amount = Column(Float, nullable=False)
     amount_type = Column(String(10), nullable=True)
     material_centre = Column(String(50), nullable=False)
     currency = Column(String(50), nullable=False)
-    fcy = Column(String(3), nullable=False)
+    fcy = Column(String(50), nullable=False)
     created_at = Column(DateTime, server_default=func.now())
 
 
@@ -97,11 +97,11 @@ class TallyReceipts(KBEBase):
     particulars = Column(String(255), nullable= False)
     voucher_no = Column(String(100), nullable= False)
     material_centre = Column(String(50), nullable=False)
-    amount = Column(DECIMAL(10,2), nullable=False)
+    amount = Column(Float, nullable=False)
     amount_type = Column(String(10), nullable=True)
     material_centre = Column(String(50), nullable=False)
     currency = Column(String(50), nullable=False)
-    fcy = Column(String(3), nullable=False)
+    fcy = Column(String(50), nullable=False)
     created_at = Column(DateTime, server_default=func.now())
 
 
@@ -114,11 +114,11 @@ class TallyJournal(KBEBase):
     particulars = Column(String(255), nullable= False)
     voucher_no = Column(String(100), nullable= False)
     material_centre = Column(String(50), nullable=False)
-    amount = Column(DECIMAL(10,2), nullable=False)
+    amount = Column(Float, nullable=False)
     amount_type = Column(String(10), nullable=True)
     material_centre = Column(String(50), nullable=False)
     currency = Column(String(50), nullable=False)
-    fcy = Column(String(3), nullable=False)
+    fcy = Column(String(50), nullable=False)
     created_at = Column(DateTime, server_default=func.now())
 
 
@@ -137,7 +137,7 @@ class TallyAccounts(KBEBase):
     busy_name = Column(String(250), nullable= True)
     dealer_code = Column(String(100), nullable= True)
     material_centre = Column(String(50), nullable=False)
-    fcy = Column(String(3), nullable=False)
+    fcy = Column(String(50), nullable=False)
     created_at = Column(DateTime, server_default=func.now())
 
 
@@ -149,12 +149,12 @@ class TallyItems(KBEBase):
     item_name = Column(String(250), nullable= False)
     under = Column(String(100), nullable= False)
     units = Column(String(50), nullable= False)
-    opening_qty = Column(DECIMAL(10,2), nullable= False)
-    rate = Column(DECIMAL(10,2), nullable= False)
+    opening_qty = Column(Float, nullable= False)
+    rate = Column(Float, nullable= False)
     per = Column(String(50), nullable= False)
-    opening_balance = Column(DECIMAL(10,2), nullable=False, default=0)
+    opening_balance = Column(Float, nullable=False, default=0)
     material_centre = Column(String(50), nullable=False)
-    fcy = Column(String(3), nullable=False)
+    fcy = Column(String(50), nullable=False)
     created_at = Column(DateTime, server_default=func.now())
 
 

@@ -171,7 +171,7 @@ def export_report_data(path, filename):
     pg.click()
     time.sleep(1)
     pg.press('enter')
-    pg.typewrite("Specify Path",interval=0.2)
+    pg.typewrite("Specify Path",interval=0.1)
     time.sleep(1)
     pg.press('enter')
     time.sleep(1)
