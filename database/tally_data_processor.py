@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from logging_config import logger
+from io import BytesIO
 
 from utils.common_utils import company_dict_kaybee_exports, kaybee_exports_currency, fcy_company
 import requests
@@ -29,6 +30,13 @@ def apply_transformation(file_path, material_centre_name: str) -> pd.DataFrame:
         return fcy_helper_apply_transformation(file_path, material_centre_name)
     else:
         return helper_apply_transformation(file_path, material_centre_name)
+    
+def apply_register_transformation(file_path, material_centre_name: str) -> pd.DataFrame:
+    fcy_mc_list = ["FCY_Frexotic", "FCY_KBE", "FCY_KBEIPL", "FCY_KBAIPL",'FCY_Orbit']
+    if material_centre_name in fcy_mc_list:
+        return fcy_helper_apply_register_transformation(file_path, material_centre_name)
+    else:
+        return helper_apply_register_transformation(file_path, material_centre_name)
 
 def helper_apply_transformation(file_path, material_centre_name:str) -> pd.DataFrame:
     
@@ -236,10 +244,10 @@ def fcy_helper_apply_transformation(file_path, material_centre_name):
         logger.info(f"An error occurred: {e}")
         return None
 
-def apply_register_transformation(file_path, material_centre_name) -> pd.DataFrame:
+def helper_apply_register_transformation(file_path, material_centre_name) -> pd.DataFrame:
     mc = material_centre_name.replace('_', " ")
     logger.info('After Space Clear : ', mc)
-    fcy_columns = ["FCY Frexotic", "FCY KBE", "FCY KBEIPL", "FCY KBAIPL"]
+    fcy_columns = ["FCY Frexotic", "FCY KBE", "FCY KBEIPL", "FCY KBAIPL", 'FCY Orbit']
     try:
         df = pd.read_excel(file_path, skipfooter= 1, header=None)
         date_row = df[df.iloc[:, 0] == 'Date'].index[0]
@@ -284,6 +292,160 @@ def apply_register_transformation(file_path, material_centre_name) -> pd.DataFra
     df = df.loc[~df["particulars"].isna()]
     df["voucher_no"] = df["voucher_no"].fillna('Blank')
     return df
+
+def fcy_helper_apply_register_transformation(file_path, material_centre_name):
+    mc = material_centre_name.replace('_', " ")
+    fcy_columns = ["FCY Frexotic", "FCY KBE", "FCY KBEIPL", "FCY KBAIPL", 'FCY Orbit']
+
+    try:
+        wb = openpyxl.load_workbook(file_path)
+        ws = wb.active
+    except Exception as e:
+        logger.info(f"Error loading the Excel file: {e}")
+        return None
+
+    currency_map = {"AU$": "AUD", "$": "USD", "€": "EUR", "£": "GBP", "₹": "INR", "AUD": "AUD", "CAD": "CAD", "A$": "AUD"}
+
+    header_row = None
+    credit_column_index = None
+    debit_column_index = None
+    particular_column_index = None
+
+    def extract_currency_from_format(cell):
+        """Extracts the currency symbol from the cell's number format."""
+        try:
+            number_format = cell.number_format
+            if 'AU$' in number_format or 'AUD' in number_format or 'A$' in number_format:
+                return 'AU$'
+            if '$' in number_format:
+                return '$'
+            elif '€' in number_format:
+                return '€'
+            elif '£' in number_format:
+                return '£'
+            elif '¥' in number_format:
+                return '¥'
+            elif 'CAD' in number_format:
+                return 'CAD'
+            return None
+        except Exception as e:
+            logger.info(f"Error extracting currency from format: {e}")
+            return None
+
+    def extract_currency_from_string(value):
+        """Extracts the currency symbol from a string value."""
+        try:
+            value_str = str(value).strip()
+            for symbol, code in currency_map.items():
+                if symbol in value_str:
+                    return symbol  # Return the exact symbol found
+            return None
+        except Exception as e:
+            logger.info(f"Error extracting currency from string: {e}")
+            return None
+
+    try:
+        for row_id, row in enumerate(ws.iter_rows(values_only=True), start=1):
+            if 'Date' in row:
+                header_row = row_id
+            if 'Credit' in row:
+                credit_column_index = row.index('Credit') + 1
+            if 'Debit' in row:
+                debit_column_index = row.index('Debit') + 1
+            if 'Particulars' in row:
+                particular_column_index = row.index('Particulars') + 1
+            if header_row and particular_column_index and credit_column_index and debit_column_index:
+                break
+
+        ws.delete_cols(particular_column_index + 1)
+        ws.cell(header_row, particular_column_index + 1, "rate")
+        ws.cell(header_row, credit_column_index, "currency")
+        ws.cell(header_row, credit_column_index + 1, "rate_currency")
+
+    except Exception as e:
+        logger.info(f"Error processing rows for columns: {e}")
+        return None
+
+    try:
+        for row in range(header_row + 1, ws.max_row + 1):
+            debit_cell = ws.cell(row=row, column=debit_column_index - 1)
+            credit_cell = ws.cell(row=row, column=credit_column_index - 1)
+            rate_cell = ws.cell(row=row, column=particular_column_index + 1)
+            rate_currency_symbol = extract_currency_from_format(rate_cell)
+            if not rate_currency_symbol:
+                rate_currency_symbol = extract_currency_from_string(rate_cell)
+            currency_code = extract_currency_from_format(credit_cell)
+            if not currency_code:
+                currency_code = extract_currency_from_string(credit_cell.value)
+            if not currency_code:
+                currency_code = extract_currency_from_format(debit_cell)
+                if not currency_code:
+                    currency_code = extract_currency_from_string(debit_cell.value)
+                if not currency_code:
+                    currency_code = None
+            ws.cell(row=row, column=credit_column_index, value=currency_map.get(currency_code))
+            ws.cell(row=row, column=credit_column_index + 1, value=currency_map.get(rate_currency_symbol))
+
+    except Exception as e:
+        logger.info(f"Error processing rows for currency extraction: {e}")
+        return None
+
+    buffer = BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+
+    try:
+        df = pd.read_excel(buffer, skipfooter=1, header=None)
+        logger.info(df.columns)
+        date_row = df[df.iloc[:, 0] == 'Date'].index[0]
+        df = df.iloc[date_row:].reset_index(drop=True)
+        df.columns = df.iloc[0]
+        df = df.iloc[1:]
+        df = df.drop(index=1)
+
+        if df.empty:
+            logger.info("The DataFrame is empty after processing.")
+            return None
+        logger.info("Data read successfully with pandas:")
+
+        try:
+            df.columns = df.columns.str.lower().str.replace(".", "").str.replace(" ", "_")
+            df = df.rename(columns= {"vch_no": "voucher_no"})
+            df['date'] = pd.to_datetime(df['date'], errors='coerce').dt.strftime('%Y-%m-%d')
+            cols_bfill = ['rate','rate_currency']
+            df[cols_bfill] = df[cols_bfill].bfill(limit=1)
+            df['date'] = df['date'].ffill()
+            columns_conditional_ffill = ['voucher_no']
+            for column in columns_conditional_ffill:
+                vch_to_dc = df[["date", column]].dropna().set_index('date')[column].to_dict()
+                df.loc[:, column] = df['date'].map(vch_to_dc)
+            df = df.dropna(subset=['debit', 'credit'], how='all')
+            df.loc[:,['credit', 'debit']] = df.loc[:,['credit', 'debit']].fillna(0)
+            df["particulars"] = df["particulars"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
+            df["voucher_no"] = df["voucher_no"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
+            df['amount'] = np.where((df['credit'] != 0), df['credit'], df['debit'])
+            df['amount'] = np.where((df['debit'] != 0), df['debit'], df['amount'])
+            df["amount_type"] = np.where(df['credit'] != 0, 'credit', 'debit')
+            df.loc[df['currency'].isnull() & (df['amount_type'] == 'debit'), 'amount'] = df['amount'] / df['rate']
+            df.loc[df['currency'].isnull() & (df['amount_type'] == 'credit'), 'amount'] = df['amount'] / df['rate']
+            df['currency'] = df['currency'].fillna(df['rate_currency'])
+            df = df.drop(columns= ["vch_type", "debit", "credit"])
+            df['particulars'] = np.where(df['particulars'] == "(cancelled)", "Cancelled", df['particulars'])
+            df["material_centre"] = mc
+            df["fcy"] = "Yes" if mc in fcy_columns else "No"
+            df = df.loc[~df["particulars"].isna()]
+            df["voucher_no"] = df["voucher_no"].fillna('Blank')
+            df = df[['date', 'particulars' ,'voucher_no','material_centre', 'amount', 'amount_type',"currency",'fcy']]
+            df['amount'] = pd.to_numeric(df['amount']).round(2)
+
+            return df
+        except Exception as e:
+            logger.info(f"Error during DataFrame operations: {e}")
+            return None
+
+    except Exception as e:
+        print(f"Error reading the modified file with pandas: {e}")
+        return None
 
 def apply_accounts_transformation(file_path, material_centre_name) -> pd.DataFrame:
     mc = material_centre_name.replace('_', " ")
