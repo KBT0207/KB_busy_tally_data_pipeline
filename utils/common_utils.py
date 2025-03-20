@@ -269,13 +269,16 @@ receivables_comp_codes = {
 
 
 company_dict_kaybee_exports = {
+    'KAY BEE EXPORTS INTERNATIONAL PVT LTD (Phaltan NA) - (from 1-Apr-23)':'Phaltan KBEIPL',
+    'Kay Bee Exports - Agri Division Phaltan 21-22':'Phaltan NA KBE',
+    'KAY BEE EXPORTS (PHALTAN) FY21-22':'Phaltan A KBE',
     "KAY BEE EXPORTS INTERNATIONAL PVT LTD (Thane) - (from 2024)": "Thane KBEIPL",
     "Fab Fresh Fruits": "Thane Fab Fresh",
     "KAY BEE EXPORTS INTERNATIONAL PVT LTD (Nagar NA) - (from 1-Apr-23)": "Nagar KBEIPL",
     "KAY BEE EXPORTS INTERNATIONAL PVT LTD -Vashi": "Vashi KBEIPL",
     "KAY BEE EXPORTS INTERNATIONAL PVT LTD (Gujarat)": "Gujarat KBEIPL",
     "KAY BEE EXPORTS INTERNATIONAL PVT LTD (CARGO)": "Cargo KBEIPL",
-    "Ka Bee Exports - Thane FY2022-23 & 23-24": "Thane KBE",
+    "Kay Bee Exports - Thane FY2022-23 & 23-24": "Thane KBE",
     "Kay Bee Exports - Vashi FY 2022-23 & 23-24": "Vashi KBE",
     "Kay Bee Exports - Nagar Non Agri Divsion - FY 2021-22": "Nagar NA KBE",
     "Kay Bee Exports - Agri Div. Nagar - FY2022-23 & 2023-24": "Nagar A KBE",
@@ -293,7 +296,7 @@ company_dict_kaybee_exports = {
     "Fruit & Veg Private Limited": "MP F&VPL",
     "KAY BEE FRESH VEG & FRUIT PVT LTD": "MP KBFV&FPL",
     "Kay Bee Veg Pvt Ltd": "MP KBVPL",
-    "Kay Bee Agro Farms Pvt Ltd - (From I-Apr-2016)": "Thane KBAFPL",
+    "Kay Bee Agro Farms Pvt Ltd - (From 1-Apr-2016)": "Thane KBAFPL",
     "Kay Bee veg Ltd - FY 2020-21": "UK KB Veg",
     "KAY BEE FRUITS INC": "USA KB Fruits",
     "Aamrica Fresh Private Limited": "Thane Aamrica",
