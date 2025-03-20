@@ -314,6 +314,9 @@ fcy_company = {
 
 
 kaybee_exports_currency = {
+    'Phaltan KBEIPL':'INR',
+    'Phaltan NA KBE':'INR',
+    'Phaltan A KBE': "INR",
     "Thane Fab Fresh": "INR",
     "Thane KBEIPL": "INR",
     "Nagar KBEIPL": "INR",

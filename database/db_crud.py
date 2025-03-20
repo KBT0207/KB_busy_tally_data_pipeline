@@ -383,3 +383,38 @@ class DatabaseCrud:
         
         return rate[0] if rate else 0
 
+    def delete_tally_material_centre_and_datewise(self, table_name: str, 
+                                                start_date: str, end_date: str, 
+                                                material_centre:list, commit: bool):
+        table_class = tables.get(table_name)
+        if not table_class:
+            logger.error(f"Table '{table_name}' not found in table mapping. Delete query failed to execute.")
+            return
+
+        if start_date > end_date:
+            logger.error(f"Start date '{start_date}' should be less than or equal to end date '{end_date}'.")
+            return
+
+        date_condition = table_class.date.between(start_date, end_date)
+        material_centre_condition = table_class.material_centre.in_(material_centre)
+        delete_query = delete(table_class).where(and_(date_condition, material_centre_condition))
+        
+        try:
+            with self.db_engine.connect() as connection:
+                transaction = connection.begin()
+                try:
+                    result = connection.execute(delete_query)
+                    deleted_count = result.rowcount
+                    logger.info(f"Deleted {deleted_count} rows from '{table_name}' between {start_date} and {end_date}.")
+                    
+                    if commit:
+                        transaction.commit()
+                        logger.info("Transaction committed.")
+                    else:
+                        transaction.rollback()
+                        logger.info("Transaction not committed.")
+                except SQLAlchemyError as e:
+                    transaction.rollback()
+                    logger.error(f"Error occurred during deletion: {e}")
+        except SQLAlchemyError as e:
+            logger.error(f"Connection error: {e}")

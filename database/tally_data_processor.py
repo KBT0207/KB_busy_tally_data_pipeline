@@ -2,10 +2,12 @@ import pandas as pd
 import numpy as np
 from logging_config import logger
 from io import BytesIO
+from xlwings import view
+import os
 
-from utils.common_utils import company_dict_kaybee_exports, kaybee_exports_currency, fcy_company
+from utils.common_utils import kaybee_exports_currency
 import requests
-from database.sql_connector import kbe_connector, kbe_connection, kbe_engine
+# from database.sql_connector import kbe_connector, kbe_connection, kbe_engine
 from datetime import datetime
 import openpyxl
 
@@ -24,15 +26,21 @@ def get_date_tally(path:str):
 pd.set_option('future.no_silent_downcasting', True)
 
 def apply_transformation(file_path, material_centre_name: str) -> pd.DataFrame:
+    if os.path.basename(file_path).startswith('~$'):
+        logger.info(f"Skipping temporary file: {file_path}")
+        return None
+    
     fcy_mc_list = ["FCY_Frexotic", "FCY_KBE", "FCY_KBEIPL", "FCY_KBAIPL", 'FCY_Orbit']
-    logger.info(f"material_centre_name: {material_centre_name}")
     if material_centre_name in fcy_mc_list:
         return fcy_helper_apply_transformation(file_path, material_centre_name)
     else:
         return helper_apply_transformation(file_path, material_centre_name)
-    
+
 def apply_register_transformation(file_path, material_centre_name: str) -> pd.DataFrame:
-    fcy_mc_list = ["FCY_Frexotic", "FCY_KBE", "FCY_KBEIPL", "FCY_KBAIPL",'FCY_Orbit']
+    if os.path.basename(file_path).startswith('~$'):
+        logger.info(f"Skipping temporary file: {file_path}")
+        return None
+    fcy_mc_list = ["FCY_Frexotic", "FCY_KBE", "FCY_KBEIPL", "FCY_KBAIPL", 'FCY_Orbit']
     if material_centre_name in fcy_mc_list:
         return fcy_helper_apply_register_transformation(file_path, material_centre_name)
     else:
@@ -41,7 +49,6 @@ def apply_register_transformation(file_path, material_centre_name: str) -> pd.Da
 def helper_apply_transformation(file_path, material_centre_name:str) -> pd.DataFrame:
     
     mc = material_centre_name.replace('_', " ")
-    logger.info('After Space Clear : ', mc)    
     fcy_mc_list = ["FCY Frexotic", "FCY KBE", "FCY KBEIPL", "FCY KBAIPL"] 
     try:
         df = pd.read_excel(file_path, skipfooter= 1, header=None) 
@@ -58,7 +65,8 @@ def helper_apply_transformation(file_path, material_centre_name:str) -> pd.DataF
         return None
     df.columns = df.columns.str.lower().str.replace(" ", "_").str.replace(".", "")
     df = df.rename(columns= {"vch_type": "voucher_type", "vch_no": "voucher_no"})
-    
+    df['voucher_no'] = np.where((df['date'].notnull()) & (df['voucher_no'].isnull()), 'Blank', df['voucher_no'])
+
     material_center = mc
 
     currency_name = kaybee_exports_currency.get(material_center,None)
@@ -68,13 +76,7 @@ def helper_apply_transformation(file_path, material_centre_name:str) -> pd.DataF
     df["material_centre"] = material_center
     df["currency"] = currency_name
     
-    
-    # df["fcy"] = "Yes" if material_center in fcy_mc_set else "No"
     df["fcy"] = df["material_centre"].apply(lambda x: "Yes" if x in fcy_mc_list else "No")
-    logger.info("Final DataFrame Before Insertion:")
-    logger.info(df[["material_centre", "fcy"]].head())  # Check the 'material_centre' and 'fcy' columns
-
-
     
     df["particulars"] = df["particulars"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
     df["voucher_no"] = df["voucher_no"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
@@ -217,7 +219,7 @@ def fcy_helper_apply_transformation(file_path, material_centre_name):
             df = df.reset_index(drop=True)
             df[['debit', 'credit']] = df[['debit', 'credit']].fillna(0)
             df = df.rename(columns={"vch_type": "voucher_type", "vch_no": "voucher_no"})
-
+            df['voucher_no'] = np.where((df['date'].notnull()) & (df['voucher_no'].isnull()), 'Blank', df['voucher_no'])
             df['material_centre'] = mc
             df['fcy'] = df['material_centre'].apply(lambda x: 'Yes' if x in fcy_mc_list else 'No')
 
@@ -232,8 +234,6 @@ def fcy_helper_apply_transformation(file_path, material_centre_name):
             df['debit'] = pd.to_numeric(df['debit'].astype(str).str.replace(',', ''), errors='coerce')
             df['credit'] = pd.to_numeric(df['credit'].astype(str).str.replace(',', ''), errors='coerce')
 
-            # Saving the result to an Excel file
-            df.to_excel('result.xlsx')
         except Exception as e:
             logger.info(f"Error in data cleaning and transformation: {e}")
             return None
@@ -246,7 +246,6 @@ def fcy_helper_apply_transformation(file_path, material_centre_name):
 
 def helper_apply_register_transformation(file_path, material_centre_name) -> pd.DataFrame:
     mc = material_centre_name.replace('_', " ")
-    logger.info('After Space Clear : ', mc)
     fcy_columns = ["FCY Frexotic", "FCY KBE", "FCY KBEIPL", "FCY KBAIPL", 'FCY Orbit']
     try:
         df = pd.read_excel(file_path, skipfooter= 1, header=None)
@@ -264,7 +263,6 @@ def helper_apply_register_transformation(file_path, material_centre_name) -> pd.
     df.columns = df.columns.str.lower().str.replace(" ", "_").str.replace(".", "")
     
     currency_name = kaybee_exports_currency.get(mc)
-    logger.info(currency_name)
     df = df.rename(columns= {"vch_no": "voucher_no"})
     
     material_center = mc
@@ -272,12 +270,9 @@ def helper_apply_register_transformation(file_path, material_centre_name) -> pd.
     df["currency"] = currency_name
     df["fcy"] = "Yes" if material_center in fcy_columns else "No"
     
-    logger.info("Final DataFrame Before Insertion:")
-    logger.info(df[["material_centre", "fcy"]].head())
-    
-    
     df["particulars"] = df["particulars"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
     df["voucher_no"] = df["voucher_no"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
+    df['voucher_no'] = np.where((df['date'].notnull()) & (df['voucher_no'].isnull()), 'Blank', df['voucher_no'])
     df.loc[:,["date",'voucher_no']] = df.loc[:,["date",'voucher_no']].ffill()
     df['date'] = pd.to_datetime(df["date"])
     df.loc[:,['credit', 'debit']] = df.loc[:,['credit', 'debit']].fillna(0)
@@ -290,7 +285,6 @@ def helper_apply_register_transformation(file_path, material_centre_name) -> pd.
     df['particulars'] = np.where(df['particulars'] == "(cancelled)", "Cancelled", df['particulars'])
     df = df[['date', 'particulars', 'voucher_no','material_centre', 'amount', 'amount_type',"currency",'fcy',]]
     df = df.loc[~df["particulars"].isna()]
-    df["voucher_no"] = df["voucher_no"].fillna('Blank')
     return df
 
 def fcy_helper_apply_register_transformation(file_path, material_centre_name):
@@ -374,6 +368,7 @@ def fcy_helper_apply_register_transformation(file_path, material_centre_name):
             rate_currency_symbol = extract_currency_from_format(rate_cell)
             if not rate_currency_symbol:
                 rate_currency_symbol = extract_currency_from_string(rate_cell)
+
             currency_code = extract_currency_from_format(credit_cell)
             if not currency_code:
                 currency_code = extract_currency_from_string(credit_cell.value)
@@ -395,8 +390,7 @@ def fcy_helper_apply_register_transformation(file_path, material_centre_name):
     buffer.seek(0)
 
     try:
-        df = pd.read_excel(buffer, skipfooter=1, header=None)
-        logger.info(df.columns)
+        df = pd.read_excel(buffer, engine='openpyxl',skipfooter=1)
         date_row = df[df.iloc[:, 0] == 'Date'].index[0]
         df = df.iloc[date_row:].reset_index(drop=True)
         df.columns = df.iloc[0]
@@ -410,17 +404,22 @@ def fcy_helper_apply_register_transformation(file_path, material_centre_name):
 
         try:
             df.columns = df.columns.str.lower().str.replace(".", "").str.replace(" ", "_")
+
             df = df.rename(columns= {"vch_no": "voucher_no"})
+
             df['date'] = pd.to_datetime(df['date'], errors='coerce').dt.strftime('%Y-%m-%d')
+
+            df['voucher_no'] = np.where((df['date'].notnull()) & (df['voucher_no'].isnull()), 'Blank', df['voucher_no'])
+
             cols_bfill = ['rate','rate_currency']
             df[cols_bfill] = df[cols_bfill].bfill(limit=1)
+
             df['date'] = df['date'].ffill()
-            columns_conditional_ffill = ['voucher_no']
-            for column in columns_conditional_ffill:
-                vch_to_dc = df[["date", column]].dropna().set_index('date')[column].to_dict()
-                df.loc[:, column] = df['date'].map(vch_to_dc)
+            df['voucher_no'] = df['voucher_no'].ffill()
             df = df.dropna(subset=['debit', 'credit'], how='all')
+
             df.loc[:,['credit', 'debit']] = df.loc[:,['credit', 'debit']].fillna(0)
+
             df["particulars"] = df["particulars"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
             df["voucher_no"] = df["voucher_no"].str.replace('\n', '', regex=True).str.replace('_x000D_', '', regex=True)
             df['amount'] = np.where((df['credit'] != 0), df['credit'], df['debit'])
@@ -432,7 +431,7 @@ def fcy_helper_apply_register_transformation(file_path, material_centre_name):
             df = df.drop(columns= ["vch_type", "debit", "credit"])
             df['particulars'] = np.where(df['particulars'] == "(cancelled)", "Cancelled", df['particulars'])
             df["material_centre"] = mc
-            df["fcy"] = "Yes" if mc in fcy_columns else "No"
+            df["fcy"] = df["material_centre"].apply(lambda x: "Yes" if x in fcy_columns else "No")
             df = df.loc[~df["particulars"].isna()]
             df["voucher_no"] = df["voucher_no"].fillna('Blank')
             df = df[['date', 'particulars' ,'voucher_no','material_centre', 'amount', 'amount_type',"currency",'fcy']]

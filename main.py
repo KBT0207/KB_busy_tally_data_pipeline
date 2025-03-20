@@ -66,14 +66,14 @@ def busy_material_masters():
 
 def tally_kbexports():
     fromdate = "2024-04-01"
-    today = '2025-03-08'
-    # today = datetime.today().strftime('%Y-%m-%d')
-    # main_tally.exporting_data(company=list(company_dict_kaybee_exports.keys()), 
-    #                             fromdate=fromdate, 
-    #                             todate=today, 
-    #                             filename=today)
+    today = '2025-03-18'
+    today = datetime.today().strftime('%Y-%m-%d')
+    main_tally.exporting_data(company=list(company_dict_kaybee_exports.keys()), 
+                                fromdate=fromdate, 
+                                todate=today, 
+                                filename=today)
     
-    main_db.delete_tally_data(start_date=fromdate,end_date=today,commit=True)
+    main_db.delete_tally_data(start_date=fromdate,end_date=today,commit=True, date=today)
     main_db.import_tally_data(date=today)
 
 def fcy_tally_kbexports():
@@ -103,6 +103,7 @@ if __name__ == "__main__":
     #             logger.error(f"Error running function {function_name}: {e}")
     #     else:
     #         logger.error(f"Function '{function_name}' does not exist.")
+
 
 
 
