@@ -12,8 +12,6 @@ from logging_config import logger
 def exporting_data(company, fromdate:str, todate:str, filename:str):
     from_date_str = datetime.strptime(fromdate, '%Y-%m-%d').strftime('%d-%m-%Y')
     to_date_str = datetime.strptime(todate, '%Y-%m-%d').strftime('%d-%m-%Y')
-
-
     for comp_name in company:
         time.sleep(2)
         pg.hotkey("win", "d")
@@ -45,17 +43,17 @@ def exporting_data(company, fromdate:str, todate:str, filename:str):
         # tally_utils.export_accounts_data(path= fr"E:\automated_tally_downloads\{mc_name}\accounts",
         #                 filename= f"{mc_name}_accounts_{filename}.xlsx")    
 
-        time.sleep(2)
-        pg.press('esc')
-        time.sleep(2)
-        pg.press('esc')
-        logger.info(f"Exported accounts of {mc_name} of {filename}")
+        # time.sleep(2)
+        # pg.press('esc')
+        # time.sleep(2)
+        # pg.press('esc')
+        # logger.info(f"Exported accounts of {mc_name} of {filename}")
 
         # tally_utils.change_company()
     
-        time.sleep(2)
+        time.sleep(5)
         pg.press('esc')
-        time.sleep(4)
+        time.sleep(5)
         pg.press('y')
     
     

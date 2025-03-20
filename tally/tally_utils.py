@@ -26,8 +26,6 @@ def close_rdc() -> None:
         pg.click()
         time.sleep(2)
 
-
-
 def start_tally() -> None:
     pg.hotkey('win', 'r')
     time.sleep(0.5)
@@ -48,6 +46,21 @@ def tally_data_server():
                 logger.info("Not Found Server")
         except:
             time.sleep(1)
+
+def specify_path():
+    location = None
+    while location == None:
+        try:
+            location = pg.locateOnScreen('tally/images/specify_path.png', confidence= 0.9)
+            if location:
+                time.sleep(1)
+                pg.click(location)
+                time.sleep(1)
+                pg.press('enter')
+            else:
+                logger.info("Not Found Server")
+        except:
+            time.sleep(1)
             
 def ho_server():
     location = None
@@ -56,12 +69,33 @@ def ho_server():
             location = pg.locateOnScreen('tally/images/ho_server.png', confidence= 0.9)
         except:
             time.sleep(1)
+
+def phaltan_rdc():
+    location = None
+    while location == None:
+        try:
+            location = pg.locateOnScreen('tally/images/phaltan_rdc.png', confidence= 0.9)
+        except:
+            time.sleep(1)
+    
     
 def select_company(company_code):
-    tally_data_server()
-    time.sleep(0.5)
-    ho_server()
-    time.sleep(0.5)
+    path = r'\\ho-nas\Server Data\IT & MIS\Jovo Tally\Data'
+    phaltan_rdc_comp = ['KAY BEE EXPORTS INTERNATIONAL PVT LTD (Phaltan NA) - (from 1-Apr-23)', 'Kay Bee Exports - Agri Division Phaltan 21-22', 'KAY BEE EXPORTS (PHALTAN) FY21-22']
+    if company_code in phaltan_rdc_comp:
+        specify_path()
+        time.sleep(1)
+        pg.typewrite(path, interval=0.2)
+        pg.press('enter')
+        time.sleep(1)
+        phaltan_rdc()
+        time.sleep(1)
+    else:
+        tally_data_server()
+        time.sleep(0.5)
+        ho_server()
+        time.sleep(0.5)
+
     find_img('tally/images/tally_start.png', conf=0.95)
     time.sleep(1)
     pg.typewrite(company_code, interval=0.2)
@@ -72,6 +106,8 @@ def select_company(company_code):
     pg.press('enter')
     pg.typewrite(os.getenv('TALLY_PASSWORD'), interval=0.1)
     pg.press('enter')
+
+
 
 
 def select_kbe_company(company_code):
@@ -94,7 +130,6 @@ def select_kbe_company(company_code):
     pg.press('enter')
     pg.typewrite(os.getenv('TALLY_PASSWORD'), interval=0.1)
     pg.press('enter')
-
 
 def select_report(report_type):
     find_img('tally/images/tally_gateway.png')

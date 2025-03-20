@@ -225,6 +225,7 @@ def exporting_master_and_material(from_date:str, to_date:str, filename:str, send
             busy_utils.busy_login(username= os.getenv('BUSY_USERNAME'),
                             password= os.getenv('BUSY_PASSWORD'))
             logger.info(f"Logged into Busy of {comp} successfully...")
+            pg.press('enter')
         except Exception as e:
             logger.critical(f"Logging into Busy of {comp} Failed! : {e}")
             
@@ -349,11 +350,14 @@ def exporting_stock(start_date:str , end_date:str, filename:str):
     for comp in companies:
 
         busy_utils.company_selection(comp_code = comp)
+        # change financial year comming
+
         
         try:
             busy_utils.busy_login(username= os.getenv('BUSY_USERNAME'),
                             password= os.getenv('BUSY_PASSWORD'))
             logger.info(f"Logged into Busy of {comp} successfully...")
+            pg.press('enter')
         except Exception as e:
             logger.critical(f"Logging into Busy of {comp} Failed! : {e}")
         

@@ -65,30 +65,32 @@ def busy_material_masters():
 
 
 def tally_kbexports():
-    fromdate = "2024-04-01"
-    today = '2025-03-18'
-    today = datetime.today().strftime('%Y-%m-%d')
+    fromdate = (datetime.today().date()-timedelta(days=100)).strftime('%Y-%m-%d')
+    today = datetime.today().date().strftime('%Y-%m-%d')
+
     main_tally.exporting_data(company=list(company_dict_kaybee_exports.keys()), 
                                 fromdate=fromdate, 
                                 todate=today, 
                                 filename=today)
     
-    main_db.delete_tally_data(start_date=fromdate,end_date=today, file_date=today, commit=True)
-    main_db.import_tally_data(date=today)
+    # main_db.delete_tally_data(start_date=fromdate,end_date=today, file_date=today, commit=True)
+    # main_db.import_tally_data(date=today)
 
 def fcy_tally_kbexports():
-    fromdate = "2024-04-01"
-    today = datetime.today().strftime('%Y-%m-%d')
+    fromdate = (datetime.today().date()-timedelta(days=100)).strftime('%Y-%m-%d')
+    today = datetime.today().date().strftime('%Y-%m-%d')
     main_tally.fcy_exporting_data(fromdate=fromdate, todate=today,
                                 company=list(fcy_company.keys()),
                                 filename=today)
+    # main_db.delete_tally_data(start_date=fromdate,end_date=today, file_date=today, commit=True)
+    # main_db.import_tally_data(date=today)
 
 if __name__ == "__main__":
     # daily_busy_purchase()
     # daily_busy_stock()
     # busy_material_masters()
     tally_kbexports()
-    # fcy_tally_kbexports()
+    fcy_tally_kbexports()
 
     # function_name = sys.argv[1] if len(sys.argv) > 1 else None
     # if function_name:

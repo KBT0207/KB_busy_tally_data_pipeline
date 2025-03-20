@@ -103,6 +103,7 @@ def open_busy() -> None:
 
 
 
+
 def company_selection(comp_code:str):
     """Selected the company in Busy
 
@@ -114,6 +115,15 @@ def company_selection(comp_code:str):
     pg.typewrite(comp_code)
     pg.press('tab')
     pg.press("enter")
+
+    time.sleep(4)
+    try:
+        loc = pg.locateOnScreen('busy/images/waning.png',confidence=0.95)
+        if loc:
+            time.sleep(1)
+            pg.press('y')
+    except:
+        pass
     
 
 

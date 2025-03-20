@@ -81,6 +81,7 @@ def delete_tally_data(start_date:str, end_date:str, file_date:str, commit:bool):
         material_centre_list = list(set(material_centres))
         
         delete_tally_data_mc_wise = DatabaseCrud(kbe_connector)
+        print(delete_tally_data_mc_wise)
 
     tables_list = list(tally_tables.keys())
     
