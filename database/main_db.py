@@ -68,10 +68,10 @@ def delete_busy_material(from_date: str, to_date: str):
     for table in tables_list:
         importer.delete_date_range_query(table, start_date=from_date, end_date=to_date, commit=True)
 
-def delete_tally_data(start_date:str, end_date:str, commit:bool, date): 
+def delete_tally_data(start_date:str, end_date:str, file_date:str, commit:bool): 
     
     KBEBase.metadata.create_all(kbe_engine)
-    tally_files = glob.glob("E:\\automated_tally_downloads\\" + f"**\\*{date}.xlsx", recursive=True)
+    tally_files = glob.glob("E:\\automated_tally_downloads\\" + f"**\\*{file_date}.xlsx", recursive=True)
     material_centres = []
     if len(tally_files) != 0:
         for file in tally_files:
@@ -89,7 +89,7 @@ def delete_tally_data(start_date:str, end_date:str, commit:bool, date):
         if table not in exclude_tables:
             delete_tally_data_mc_wise.delete_tally_material_centre_and_datewise(table, 
                                             start_date= start_date, end_date=end_date, 
-                                            commit=commit, material_centre= ['FCY Orbit'])
+                                            commit=commit, material_centre=material_centre_list)
     # importer.truncate_table(table_name= 'tally_accounts', commit= commit)
 
 def import_busy_sales(filename:str):

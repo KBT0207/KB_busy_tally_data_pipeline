@@ -65,10 +65,10 @@ class DatabaseConnector:
         return f'mysql+pymysql://{encoded_username}:{encoded_password}@{self.host}:{self.port}/{self.database}?autocommit=false'
 
 
-USERNAME = os.getenv('DB_USERNAME_LOCAL')
-PASSWORD = os.getenv('DB_PASSWORD_LOCAL')
-HOST = os.getenv('DB_HOST_LOCAL')
-PORT = os.getenv('DB_PORT_LOCAL')
+USERNAME = os.getenv('DB_USERNAME')
+PASSWORD = os.getenv('DB_PASSWORD')
+HOST = os.getenv('DB_HOST')
+PORT = os.getenv('DB_PORT')
 KBBIO_DATABASE = os.getenv('KBBIO_DATABASE')
 
 KBE_DATABASE = os.getenv('KBE_DATABASE')
@@ -80,21 +80,7 @@ kbbio_connection = kbbio_engine.connect()
 
 
 
-# kbe_connector = DatabaseConnector(USERNAME, PASSWORD, HOST, PORT, KBE_DATABASE)
-# kbe_engine = kbe_connector.engine
-# kbe_connection = kbe_engine.connect()
-
-
-
-USERNAME_LOCAL = os.getenv('DB_USERNAME_LOCAL')
-PASSWORD_LOCAL = os.getenv('DB_PASSWORD_LOCAL')
-HOST_LOCAL = os.getenv('DB_HOST_LOCAL')
-PORT_LOCAL = os.getenv('DB_PORT_LOCAL')
-KBE_DATABASE_LOCALHOST = os.getenv('KBE_DATABASE_LOCAL')
-
-
-
-kbe_connector = DatabaseConnector(USERNAME_LOCAL, PASSWORD_LOCAL, HOST_LOCAL, PORT_LOCAL, KBE_DATABASE_LOCALHOST)
+kbe_connector = DatabaseConnector(USERNAME, PASSWORD, HOST, PORT, KBE_DATABASE)
 kbe_engine = kbe_connector.engine
 kbe_connection = kbe_engine.connect()
 
