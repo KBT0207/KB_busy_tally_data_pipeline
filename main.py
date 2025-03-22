@@ -73,8 +73,8 @@ def tally_kbexports():
                                 todate=today, 
                                 filename=today)
     
-    # main_db.delete_tally_data(start_date=fromdate,end_date=today, file_date=today, commit=True)
-    # main_db.import_tally_data(date=today)
+    main_db.delete_tally_data(start_date=fromdate,end_date=today, file_date=today, commit=True)
+    main_db.import_tally_data(date=today)
 
 def fcy_tally_kbexports():
     fromdate = (datetime.today().date()-timedelta(days=100)).strftime('%Y-%m-%d')
@@ -82,8 +82,8 @@ def fcy_tally_kbexports():
     main_tally.fcy_exporting_data(fromdate=fromdate, todate=today,
                                 company=list(fcy_company.keys()),
                                 filename=today)
-    # main_db.delete_tally_data(start_date=fromdate,end_date=today, file_date=today, commit=True)
-    # main_db.import_tally_data(date=today)
+    main_db.delete_tally_data(start_date=fromdate,end_date=today, file_date=today, commit=True)
+    main_db.import_tally_data(date=today)
 
 if __name__ == "__main__":
     # daily_busy_purchase()
