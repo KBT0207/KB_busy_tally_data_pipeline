@@ -65,8 +65,10 @@ def busy_material_masters():
 
 
 def tally_kbexports():
-    fromdate = (datetime.today().date()-timedelta(days=100)).strftime('%Y-%m-%d')
+    # fromdate = '2024-04-01'
+    fromdate = (datetime.today().date()-timedelta(days=180)).strftime('%Y-%m-%d')
     today = datetime.today().date().strftime('%Y-%m-%d')
+    # today = '2025-03-23'
 
     main_tally.exporting_data(company=list(company_dict_kaybee_exports.keys()), 
                                 fromdate=fromdate, 
@@ -77,8 +79,10 @@ def tally_kbexports():
     main_db.import_tally_data(date=today)
 
 def fcy_tally_kbexports():
-    fromdate = (datetime.today().date()-timedelta(days=100)).strftime('%Y-%m-%d')
+    # fromdate = '2024-04-01'
+    fromdate = (datetime.today().date()-timedelta(days=180)).strftime('%Y-%m-%d')
     today = datetime.today().date().strftime('%Y-%m-%d')
+    # today = '2024-04-02'
     main_tally.fcy_exporting_data(fromdate=fromdate, todate=today,
                                 company=list(fcy_company.keys()),
                                 filename=today)
@@ -86,9 +90,9 @@ def fcy_tally_kbexports():
     main_db.import_tally_data(date=today)
 
 if __name__ == "__main__":
-    # daily_busy_purchase()
-    # daily_busy_stock()
-    # busy_material_masters()
+    daily_busy_purchase()
+    daily_busy_stock()
+    busy_material_masters()
     tally_kbexports()
     fcy_tally_kbexports()
 

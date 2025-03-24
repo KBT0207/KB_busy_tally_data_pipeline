@@ -12,6 +12,18 @@ load_dotenv('.env')
 pg.FAILSAFE = True
 pg.PAUSE = 1
 
+def while_close_tally():
+    loc = None
+    while loc == None:
+        try:
+            time.sleep(5)
+            loc = pg.locateOnScreen("tally/images/quit.png",confidence=0.9)
+            if loc:
+                time.sleep(1)
+                pg.press('y')
+        except Exception as e:
+            time.sleep(5)
+            pg.press('esc')
 
 def close_rdc() -> None:
     """Closes the RDC if its running.
@@ -106,8 +118,6 @@ def select_company(company_code):
     pg.press('enter')
     pg.typewrite(os.getenv('TALLY_PASSWORD'), interval=0.1)
     pg.press('enter')
-
-
 
 
 def select_kbe_company(company_code):

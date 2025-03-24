@@ -51,10 +51,11 @@ def exporting_data(company, fromdate:str, todate:str, filename:str):
 
         # tally_utils.change_company()
     
-        time.sleep(5)
-        pg.press('esc')
-        time.sleep(5)
-        pg.press('y')
+        # time.sleep(8)
+        # pg.press('esc')
+        # time.sleep(8)
+        # pg.press('y')
+        tally_utils.while_close_tally()
     
     
         logger.info("Tally closed ...")
@@ -226,18 +227,20 @@ def fcy_exporting_data(company, fromdate:str, todate:str, filename:str):
         # tally_utils.export_accounts_data(path= fr"E:\automated_tally_downloads\{mc_name}\accounts",
         #                 filename= f"{mc_name}_accounts_{filename}.xlsx")    
 
-        time.sleep(2)
-        pg.press('esc')
-        time.sleep(2)
-        pg.press('esc')
-        logger.info(f"Exported accounts of {mc_name} of {filename}")
+        # time.sleep(2)
+        # pg.press('esc')
+        # time.sleep(2)
+        # pg.press('esc')
+        # logger.info(f"Exported accounts of {mc_name} of {filename}")
 
         # tally_utils.change_company()
     
-        time.sleep(2)
-        pg.press('esc')
-        time.sleep(4)
-        pg.press('y')
+        # time.sleep(2)
+        # pg.press('esc')
+        # time.sleep(4)
+        # pg.press('y')
+
+        tally_utils.while_close_tally()
     
     
         logger.info("Tally closed ...")
