@@ -287,10 +287,8 @@ company_dict_kaybee_exports = {
     # "KAY BEE EXPORTS (JDS)": "JDS KBE",
     # "KAY BEE CARGO": "Cargo KBE",
     # "Orbit Exports (MH) from Apr-24": "Thane Orbit",
-    # "Orbit Exports (Gujarat)": "Gujarat Orbit",
-
-    
-    "Frexotic Foods (From Apr-24)": "Thane Frexotic",
+    # "Orbit Exports (Gujarat)": "Gujarat Orbit",    
+    # "Frexotic Foods (From Apr-24)": "Thane Frexotic",
     "Kay Bee Agro International Pvt Ltd (GJ)": "Gujarat KBAIPL",
     "Kay Bee Agro International Pvt Ltd (MH)": "Thane KBAIPL",
     "Kay Bee Agro International Pvt Ltd (MP)": "MP KBAIPL",

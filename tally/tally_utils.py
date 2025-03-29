@@ -40,7 +40,7 @@ def close_rdc() -> None:
 
 def start_tally() -> None:
     pg.hotkey('win', 'r')
-    time.sleep(0.5)
+    time.sleep(1)
     pg.typewrite(r"C:\Program Files\TallyPrime\tally.exe", interval=0.1)
     pg.press('enter')    
     
@@ -104,9 +104,9 @@ def select_company(company_code):
         time.sleep(1)
     else:
         tally_data_server()
-        time.sleep(0.5)
+        time.sleep(1)
         ho_server()
-        time.sleep(0.5)
+        time.sleep(1)
 
     find_img('tally/images/tally_start.png', conf=0.95)
     time.sleep(1)
@@ -206,7 +206,7 @@ def export_report_data(path, filename):
     find_img('tally/images/export_settings.png', conf=0.95 )
     time.sleep(1)
     pg.click()
-    time.sleep(0.5)
+    time.sleep(1)
     pg.press('down')
     pg.press('enter')
     pg.typewrite('excel', interval=0.3)
@@ -247,14 +247,14 @@ def export_accounts_data(path, filename):
     pg.press('c')
     time.sleep(2)
     pg.press('down')
-    time.sleep(0.5)
+    time.sleep(1)
     pg.press('enter')
     pg.typewrite( 'Name (Alias)', interval=0.2)
     pg.press("enter")
     find_img('tally/images/export_settings.png', conf=0.95 )
     time.sleep(1)
     pg.click()
-    time.sleep(0.5)
+    time.sleep(1)
     pg.press('down')
     pg.press('enter')
     pg.typewrite('excel', interval=0.3)
@@ -287,7 +287,7 @@ def export_accounts_data(path, filename):
 
 def export_balance_data(path, filename):
     find_img('tally/images/remove_line.png')
-    time.sleep(0.5)
+    time.sleep(1)
     pg.hotkey('ctrl', 'e')
     time.sleep(1.5)
     pg.press('c')
@@ -297,7 +297,7 @@ def export_balance_data(path, filename):
     find_img('tally/images/export_settings.png', conf=0.95 )
     time.sleep(1)
     pg.click()
-    time.sleep(0.5)
+    time.sleep(1)
     pg.press('down')
     pg.press('enter')
     pg.typewrite('excel', interval=0.3)
@@ -325,7 +325,7 @@ def export_balance_data(path, filename):
 
 def export_kbe_balance_data(path, filename):
     find_img('tally/images/remove_line.png')
-    time.sleep(0.5)
+    time.sleep(1)
     pg.hotkey('ctrl', 'e')
     time.sleep(1.5)
     pg.press('c')
@@ -335,7 +335,7 @@ def export_kbe_balance_data(path, filename):
     find_img('tally/images/export_settings.png', conf=0.95 )
     time.sleep(1)
     pg.click()
-    time.sleep(0.5)
+    time.sleep(1)
     pg.press('down')
     pg.press('enter')
     pg.typewrite('excel', interval=0.3)
@@ -378,7 +378,7 @@ def back_to_tally_home(times):
 
 def change_company():
     find_img('tally/images/tally_gateway.png')
-    time.sleep(0.5)
+    time.sleep(1)
     pg.hotkey('alt', 'f1')
     time.sleep(1)
     pg.press('y')
@@ -395,7 +395,7 @@ def accounts():
     pg.press('enter')
     find_img(img='tally/images/ledgers_list.png')
     pg.press('f5')
-    time.sleep(0.5)
+    time.sleep(1)
     
     
 
@@ -525,7 +525,7 @@ def fcy_export_report_data(path, filename):
     find_img('tally/images/export_settings.png', conf=0.95 )
     time.sleep(1)
     pg.click()
-    time.sleep(0.5)
+    time.sleep(1)
     pg.press('down')
     pg.press('enter')
     pg.typewrite('excel', interval=0.3)

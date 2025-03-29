@@ -33,7 +33,7 @@ def select_masters():
     while location == None:
         try:
             location = pg.locateOnScreen('busy/images/busy_administration.png', confidence= 0.9)
-            pg.click(location)    
+            pg.click(location)   
         except Exception:
             try:
                 location = pg.locateOnScreen('busy/images/busy_sel_administration.png', confidence= 0.9)

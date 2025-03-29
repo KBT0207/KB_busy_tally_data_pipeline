@@ -24,7 +24,8 @@ companies = ['comp0003']
 material_dict = {'trans_list': [export_busy_reports.select_mrfp_list, 
                                 export_busy_reports.select_mitp_list,
                                 ], 
-                'reports': ["material_received_from_party", "material_issued_to_party",
+                'reports': ["material_received_from_party",
+                            "material_issued_to_party",
                             ]}
 
 stock_dict = {"trans_list": [export_busy_reports.select_stock_transfer_list, 
@@ -225,11 +226,10 @@ def exporting_master_and_material(from_date:str, to_date:str, filename:str, send
             busy_utils.busy_login(username= os.getenv('BUSY_USERNAME'),
                             password= os.getenv('BUSY_PASSWORD'))
             logger.info(f"Logged into Busy of {comp} successfully...")
-            pg.press('enter')
         except Exception as e:
             logger.critical(f"Logging into Busy of {comp} Failed! : {e}")
             
-        # curr_date = datetime.today().strftime("%d-%b-%Y")
+        curr_date = datetime.today().strftime("%d-%b-%Y")
 
         for rep_func, report in zip(material_dict['trans_list'], material_dict['reports']):
         
@@ -261,6 +261,7 @@ def exporting_master_and_material(from_date:str, to_date:str, filename:str, send
                 logger.critical(f"Failed to go back busy home! : {e}")
 
         try:
+            time.sleep(4)
             export_busy_reports.select_masters()
             export_busy_reports.select_accounts()
             busy_utils.export_format(report_type= "master_accounts", 
@@ -270,7 +271,7 @@ def exporting_master_and_material(from_date:str, to_date:str, filename:str, send
             busy_utils.return_to_busy_home(esc=6)
             time.sleep(5)
             logger.info(f"Master Accounts for {comp} generated successfully and back to busy home...")
-        except:
+        except Exception as e:
             logger.critical(f"Failed to go back busy home! : {e}")
       
         try:
@@ -282,7 +283,7 @@ def exporting_master_and_material(from_date:str, to_date:str, filename:str, send
                     
             logger.info(f"Items Data for {comp} generated successfully and back to busy home...")
             busy_utils.return_to_busy_home(esc=5)
-        except:
+        except Exception as e:
             logger.critical(f"Failed to go back busy home! : {e}")
 
         try:    

@@ -65,8 +65,8 @@ def busy_material_masters():
 
 
 def tally_kbexports():
-    # fromdate = '2024-04-01'
-    fromdate = (datetime.today().date()-timedelta(days=180)).strftime('%Y-%m-%d')
+    fromdate = '2024-04-01'
+    # fromdate = (datetime.today().date()-timedelta(days=180)).strftime('%Y-%m-%d')
     today = datetime.today().date().strftime('%Y-%m-%d')
     # today = '2025-03-23'
 
@@ -79,8 +79,8 @@ def tally_kbexports():
     main_db.import_tally_data(date=today)
 
 def fcy_tally_kbexports():
-    # fromdate = '2024-04-01'
-    fromdate = (datetime.today().date()-timedelta(days=180)).strftime('%Y-%m-%d')
+    fromdate = '2024-04-01'
+    # fromdate = (datetime.today().date()-timedelta(days=180)).strftime('%Y-%m-%d')
     today = datetime.today().date().strftime('%Y-%m-%d')
     # today = '2024-04-02'
     main_tally.fcy_exporting_data(fromdate=fromdate, todate=today,
@@ -90,22 +90,12 @@ def fcy_tally_kbexports():
     main_db.import_tally_data(date=today)
 
 if __name__ == "__main__":
+    tally_kbexports()
+    fcy_tally_kbexports()
     daily_busy_purchase()
     daily_busy_stock()
     busy_material_masters()
-    tally_kbexports()
-    fcy_tally_kbexports()
 
-    # function_name = sys.argv[1] if len(sys.argv) > 1 else None
-    # if function_name:
-    #     if function_name in globals() and callable(globals()[function_name]):
-    #         try:
-    #             logger.info(f"Running function: {function_name}")
-    #             globals()[function_name]()
-    #         except Exception as e:
-    #             logger.error(f"Error running function {function_name}: {e}")
-    #     else:
-    #         logger.error(f"Function '{function_name}' does not exist.")
 
 
 
