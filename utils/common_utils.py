@@ -278,7 +278,7 @@ company_dict_kaybee_exports = {
     # "KAY BEE EXPORTS INTERNATIONAL PVT LTD -Vashi": "Vashi KBEIPL",
     # "KAY BEE EXPORTS INTERNATIONAL PVT LTD (Gujarat)": "Gujarat KBEIPL",
     # "KAY BEE EXPORTS INTERNATIONAL PVT LTD (CARGO)": "Cargo KBEIPL",
-    # "Kay Bee Exports - Thane FY2022-23 & 23-24": "Thane KBE",
+    # "Kay Bee Exports - Thane (From Apr-24)": "Thane KBE",
     # "Kay Bee Exports - Vashi FY 2022-23 & 23-24": "Vashi KBE",
     # "Kay Bee Exports - Nagar Non Agri Divsion - FY 2021-22": "Nagar NA KBE",
     # "Kay Bee Exports - Agri Div. Nagar - FY2022-23 & 2023-24": "Nagar A KBE",
@@ -289,6 +289,7 @@ company_dict_kaybee_exports = {
     # "Orbit Exports (MH) from Apr-24": "Thane Orbit",
     # "Orbit Exports (Gujarat)": "Gujarat Orbit",    
     # "Frexotic Foods (From Apr-24)": "Thane Frexotic",
+    
     "Kay Bee Agro International Pvt Ltd (GJ)": "Gujarat KBAIPL",
     "Kay Bee Agro International Pvt Ltd (MH)": "Thane KBAIPL",
     "Kay Bee Agro International Pvt Ltd (MP)": "MP KBAIPL",
